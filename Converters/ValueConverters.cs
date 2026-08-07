@@ -102,4 +102,24 @@ namespace SmartFanCooling.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts int tab index to Visibility (Visible if matches ConverterParameter, Collapsed otherwise).
+    /// </summary>
+    public class IntToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is int currentTab && parameter != null && int.TryParse(parameter.ToString(), out int targetTab))
+            {
+                return currentTab == targetTab ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+            }
+            return Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

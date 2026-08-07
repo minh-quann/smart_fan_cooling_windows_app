@@ -11,6 +11,12 @@ namespace SmartFanCooling
 
         public App()
         {
+            this.UnhandledException += (sender, e) =>
+            {
+                e.Handled = true;
+                string log = $"{DateTime.Now}: {e.Message}\n{e.Exception}\n";
+                System.IO.File.WriteAllText(System.IO.Path.Combine(System.AppContext.BaseDirectory, "crash.log"), log);
+            };
             this.InitializeComponent();
         }
 
@@ -20,8 +26,16 @@ namespace SmartFanCooling
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            MainWindowInstance = new MainWindow();
-            MainWindowInstance.Activate();
+            try
+            {
+                MainWindowInstance = new MainWindow();
+                MainWindowInstance.Activate();
+            }
+            catch (Exception ex)
+            {
+                string log = $"{DateTime.Now}: OnLaunched Error: {ex.Message}\n{ex}\n";
+                System.IO.File.WriteAllText(System.IO.Path.Combine(System.AppContext.BaseDirectory, "crash.log"), log);
+            }
         }
     }
 }

@@ -15,6 +15,7 @@
             <converters:StringMatchConverter x:Key="StringMatchConverter" />
             <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
             <converters:FloatFormatConverter x:Key="FloatFormatConverter" />
+            <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

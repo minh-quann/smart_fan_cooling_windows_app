@@ -3,116 +3,823 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid RowDefinitions="Auto, *, Auto">
-        <!-- Header Title Bar -->
-        <Border Grid.Row="0" Padding="16,12" Background="{ThemeResource LayerOnAccentFillColorDefaultBrush}">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
-                    <FontIcon Glyph="&#xE9CA;" FontSize="24" Foreground="{ThemeResource SystemAccentColor}"/>
-                    <TextBlock Text="LLANO SMART FAN COOLING" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
-                </StackPanel>
+    <Grid>
+        <NavigationView x:Name="MainNav"
+                        PaneDisplayMode="Left"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="True"
+                        SelectionChanged="MainNav_SelectionChanged">
 
-                <!-- Connection Panel -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                    <ComboBox ItemsSource="{Binding AvailableComPorts}" SelectedItem="{Binding SelectedComPort, Mode=TwoWay}" Width="110"/>
-                    <Button Command="{Binding RefreshComPortsCommand}" ToolTipService.ToolTip="Refresh Ports">
-                        <FontIcon Glyph="&#xE72C;" FontSize="14"/>
-                    </Button>
-                    <Button Content="{Binding IsConnected, Converter={StaticResource ConnectTextConverter}}" 
-                            Command="{Binding ToggleConnectionCommand}"
-                            Style="{ThemeResource DefaultAccentButtonStyle}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+            <!-- Sidebar Left Menu Items -->
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Tổng Quan Hệ Thống" Tag="0">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE80F;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Profile &amp; Fan Curve" Tag="1">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D9;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Đèn LED RGB" Tag="2">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE790;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Gán App Auto-Switch" Tag="3">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE71D;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Thông Số Phần Cứng" Tag="4">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9E9;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Test GPIO &amp; Chuột" Tag="5">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE960;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="HUD Overlay Game/App" Tag="6">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7F4;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
 
-        <!-- Main Dashboard View -->
-        <ScrollViewer Grid.Row="1" Padding="24">
-            <StackPanel Spacing="20">
+            <!-- Top Header & Main Content Body -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 
-                <!-- Telemetry Cards -->
-                <Grid ColumnDefinitions="*, *, *">
-                    <!-- CPU Temp Card -->
-                    <Border Grid.Column="0" Margin="0,0,8,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="6">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE9E9;" Foreground="#FF5722"/>
-                                <TextBlock Text="CPU Temperature" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} °C'}" FontSize="32" FontWeight="Bold" Foreground="#FF5722"/>
-                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
-                                <TextBlock Text="{Binding CpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Power: {0:F1} W'}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="{Binding CpuMaxClockGHz, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Clock: {0:F2} GHz'}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <!-- Top Header Connection Bar -->
+                <Border Grid.Row="0" Padding="16,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                            <FontIcon Glyph="&#xE9CA;" FontSize="22" Foreground="{ThemeResource SystemAccentColor}"/>
+                            <StackPanel>
+                                <TextBlock Text="LLANO SMART FAN COOLING" FontSize="15" FontWeight="Bold"/>
+                                <TextBlock Text="SYSTEM CONTROL HUB - WINUI 3 NATIVE" FontSize="10" Foreground="{ThemeResource SystemAccentColor}" FontWeight="Bold"/>
                             </StackPanel>
                         </StackPanel>
-                    </Border>
 
-                    <!-- GPU Temp Card -->
-                    <Border Grid.Column="1" Margin="4,0,4,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="6">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE7F8;" Foreground="#FF9800"/>
-                                <TextBlock Text="GPU Temperature" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} °C'}" FontSize="32" FontWeight="Bold" Foreground="#FF9800"/>
+                        <!-- Connection Control Panel -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Cổng COM:" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <ComboBox ItemsSource="{Binding AvailableComPorts}" SelectedItem="{Binding SelectedComPort, Mode=TwoWay}" Width="110"/>
+                            <Button Command="{Binding RefreshComPortsCommand}" ToolTipService.ToolTip="Refresh Ports">
+                                <FontIcon Glyph="&#xE72C;" FontSize="13"/>
+                            </Button>
+                            <Button Content="{Binding IsConnected, Converter={StaticResource ConnectTextConverter}}" 
+                                    Command="{Binding ToggleConnectionCommand}"
+                                    Style="{ThemeResource AccentButtonStyle}"/>
                         </StackPanel>
-                    </Border>
-
-                    <!-- Fan RPM Card -->
-                    <Border Grid.Column="2" Margin="8,0,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                        <StackPanel Spacing="6">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE9CA;" Foreground="#00BCD4"/>
-                                <TextBlock Text="Fan Speed (RPM)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding FanRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} RPM'}" FontSize="32" FontWeight="Bold" Foreground="#00BCD4"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <!-- Fan Controls & Auto Curve -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="16">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock Text="Fan Speed Control (PWM %)" FontSize="16" FontWeight="SemiBold"/>
-                            <ToggleSwitch Grid.Column="1" Header="Auto Fan Curve" IsOn="{Binding IsAutoMode, Mode=TwoWay}"/>
-                        </Grid>
-
-                        <Slider Minimum="0" Maximum="100" Value="{Binding FanPwm, Mode=TwoWay}" IsEnabled="{Binding IsAutoMode, Converter={StaticResource InverseBoolConverter}}"/>
-                        
-                        <Grid ColumnDefinitions="Auto, *, Auto">
-                            <TextBlock Text="Current Output PWM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Grid.Column="2" Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} %'}" FontWeight="Bold" FontSize="18"/>
-                        </Grid>
-
-                        <!-- Presets -->
-                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                            <RadioButton Content="Quiet" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Quiet'}"/>
-                            <RadioButton Content="Balanced" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Balanced'}"/>
-                            <RadioButton Content="Turbo" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Turbo'}"/>
-                        </StackPanel>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
-                <!-- RGB Lighting Effects -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="RGB Lighting Effect" FontSize="16" FontWeight="SemiBold"/>
-                        <ComboBox SelectedIndex="{Binding SelectedLedMode, Mode=TwoWay}" HorizontalAlignment="Stretch">
-                            <ComboBoxItem Content="0. Off (Tắt LED)"/>
-                            <ComboBoxItem Content="1. Static (Màu Cố Định)"/>
-                            <ComboBoxItem Content="2. Breathing (Nhịp Thở)"/>
-                            <ComboBoxItem Content="3. Rainbow (Cầu Vồng)"/>
-                            <ComboBoxItem Content="4. Speed Pulse (Theo Tốc Độ Quạt)"/>
-                        </ComboBox>
-                    </StackPanel>
+                <!-- Dynamic Tab Views Container -->
+                <ScrollViewer Grid.Row="1" Padding="20">
+                    <Grid>
+
+                        <!-- TAB 0: TỔNG QUAN HỆ THỐNG (OVERVIEW - MATCHING DASHBOARD_SCREEN.DART 1:1) -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=0}">
+                            
+                            <!-- Profile Selector Row Header -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="14">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <FontIcon Glyph="&#xE9CA;" Foreground="{ThemeResource SystemAccentColor}" FontSize="18"/>
+                                        <TextBlock Text="PROFILE HỆ THỐNG:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding ActiveProfile.Name}" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}" FontSize="16" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <!-- Quick Profile Switcher Buttons -->
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                        <Button Command="{Binding SelectProfileCommand}" CommandParameter="Quiet" Padding="10,6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE706;" Foreground="#4CAF50" FontSize="13"/>
+                                                <TextBlock Text="Quiet" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding SelectProfileCommand}" CommandParameter="Balanced" Padding="10,6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE9CA;" Foreground="#00BCD4" FontSize="13"/>
+                                                <TextBlock Text="Balanced" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding SelectProfileCommand}" CommandParameter="Turbo" Padding="10,6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xEBA3;" Foreground="#FF5722" FontSize="13"/>
+                                                <TextBlock Text="Turbo" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Responsive 2-Column Dashboard Grid -->
+                            <Grid ColumnSpacing="18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="5*"/>
+                                    <ColumnDefinition Width="7*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- LEFT COLUMN: RPM Gauge Widget & Quick Fan Control Widget -->
+                                <StackPanel Grid.Column="0" Spacing="16">
+                                    
+                                    <!-- RPM Radial Gauge Card Widget -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="16" HorizontalAlignment="Center">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <FontIcon Glyph="&#xE9CA;" Foreground="{ThemeResource SystemAccentColor}" FontSize="18"/>
+                                                    <TextBlock Text="LLANO SMART FAN HUB" FontWeight="Bold" FontSize="14"/>
+                                                </StackPanel>
+                                                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,3">
+                                                    <TextBlock Text="{Binding ConnectionStatusText}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Circular RPM Display Box -->
+                                            <Border Width="190" Height="190" CornerRadius="95" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource SystemAccentColor}" BorderThickness="3" HorizontalAlignment="Center">
+                                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
+                                                    <FontIcon Glyph="&#xE9CA;" Foreground="{ThemeResource SystemAccentColor}" FontSize="28"/>
+                                                    <TextBlock Text="{Binding FanRpm}" FontSize="38" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{ThemeResource SystemAccentColor}"/>
+                                                    <TextBlock Text="RPM" FontSize="12" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}PWM: {0}%'}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Quick Fan Control Card Widget -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="14">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="ĐIỀU CHỈNH TỐC ĐỘ QUẠT" FontWeight="Bold" FontSize="14"/>
+                                                <ToggleSwitch Grid.Column="1" Header="Tự Động Fan Curve" IsOn="{Binding IsAutoMode, Mode=TwoWay}"/>
+                                            </Grid>
+
+                                            <!-- Preset Speed Buttons -->
+                                            <TextBlock Text="Mức Tốc Độ Nhanh:" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Content="Off" Command="{Binding SetQuickFanPresetCommand}" CommandParameter="0" HorizontalAlignment="Stretch" Margin="0,0,2,0"/>
+                                                <Button Grid.Column="1" Content="25%" Command="{Binding SetQuickFanPresetCommand}" CommandParameter="25" HorizontalAlignment="Stretch" Margin="2,0,2,0"/>
+                                                <Button Grid.Column="2" Content="50%" Command="{Binding SetQuickFanPresetCommand}" CommandParameter="50" HorizontalAlignment="Stretch" Margin="2,0,2,0"/>
+                                                <Button Grid.Column="3" Content="75%" Command="{Binding SetQuickFanPresetCommand}" CommandParameter="75" HorizontalAlignment="Stretch" Margin="2,0,2,0"/>
+                                                <Button Grid.Column="4" Content="Max" Command="{Binding SetQuickFanPresetCommand}" CommandParameter="100" HorizontalAlignment="Stretch" Margin="2,0,0,0"/>
+                                            </Grid>
+
+                                            <!-- PWM Slider -->
+                                            <TextBlock Text="Công Suất PWM Thủ Công (%):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
+                                            <Slider Minimum="0" Maximum="100" Value="{Binding FanPwm, Mode=TwoWay}" IsEnabled="{Binding IsAutoMode, Converter={StaticResource InverseBoolConverter}}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Đầu Ra PWM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} %'}" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource SystemAccentColor}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- RIGHT COLUMN: Hardware Cards for CPU, GPU, RAM -->
+                                <StackPanel Grid.Column="1" Spacing="16">
+                                    
+                                    <!-- CPU Telemetry Card -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <FontIcon Glyph="&#xE9E9;" Foreground="#FF5722" FontSize="20"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="Nhiệt Độ Vi Xử Lý CPU" FontWeight="Bold" FontSize="14"/>
+                                                        <TextBlock Text="{Binding CpuName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontSize="28" FontWeight="Bold" Foreground="#FF5722"/>
+                                                    <TextBlock Text="°C" FontSize="16" FontWeight="Bold" Foreground="#FF5722" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- CPU Usage Load Progress Bar -->
+                                            <ProgressBar Value="{Binding CpuUsage}" Maximum="100" Height="8" Foreground="#FF5722"/>
+
+                                            <!-- CPU Metric Pills -->
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding CpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Mức sử dụng: {0:F0}%'}" FontSize="11" Foreground="#FF5722" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding CpuMaxClockGHz, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Tốc độ Clock: {0:F2} GHz'}" FontSize="11" Foreground="#00BCD4" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding CpuFanRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Quạt CPU Laptop: {0} RPM'}" FontSize="11" Foreground="#4CAF50" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding CpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Công suất: {0:F1} W'}" FontSize="11" Foreground="#FF9800" FontWeight="SemiBold"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- GPU Telemetry Card -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <FontIcon Glyph="&#xE7F8;" Foreground="#FF9800" FontSize="20"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="Nhiệt Độ Card Đồ Họa GPU" FontWeight="Bold" FontSize="14"/>
+                                                        <TextBlock Text="{Binding GpuName}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontSize="28" FontWeight="Bold" Foreground="#FF9800"/>
+                                                    <TextBlock Text="°C" FontSize="16" FontWeight="Bold" Foreground="#FF9800" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- GPU Usage Load Progress Bar -->
+                                            <ProgressBar Value="{Binding GpuUsage}" Maximum="100" Height="8" Foreground="#FF9800"/>
+
+                                            <!-- GPU Metric Pills -->
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding GpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Mức sử dụng GPU: {0:F0}%'}" FontSize="11" Foreground="#FF9800" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding GpuClockMHz, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Xung nhịp: {0:F0} MHz'}" FontSize="11" Foreground="#00BCD4" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding GpuFanRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Quạt GPU Laptop: {0} RPM'}" FontSize="11" Foreground="#4CAF50" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding GpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Công suất GPU: {0:F1} W'}" FontSize="11" Foreground="#FF5722" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding GpuVramUsedGB, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}VRAM Used: {0:F1} GB'}" FontSize="11" Foreground="#9C27B0" FontWeight="SemiBold"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- RAM Telemetry Card -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                        <StackPanel Spacing="12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <FontIcon Glyph="&#xE7FA;" Foreground="#9C27B0" FontSize="20"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="Mức Sử Dụng RAM Hệ Thống" FontWeight="Bold" FontSize="14"/>
+                                                        <TextBlock Text="DDR4/DDR5 High Performance System RAM" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding RamUsagePercent, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontSize="28" FontWeight="Bold" Foreground="#9C27B0"/>
+                                                    <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="#9C27B0" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- RAM Usage Progress Bar -->
+                                            <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" Height="8" Foreground="#9C27B0"/>
+
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="{Binding RamStatusText}" FontSize="11" Foreground="#9C27B0" FontWeight="SemiBold"/>
+                                                </Border>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                                                    <TextBlock Text="Trạng thái: Optimal Performance" FontSize="11" Foreground="#4CAF50" FontWeight="SemiBold"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- TAB 1: PROFILE & FAN CURVE EDITOR -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="Thiết Lập Đường Cong Nhiệt Độ (Fan Curve Editor)" FontSize="16" FontWeight="Bold"/>
+                                    <TextBlock Text="Tùy chỉnh phần trăm PWM của quạt ứng với các mốc nhiệt độ CPU/GPU (°C)." Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    
+                                    <!-- Curve Sliders -->
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Mốc 30 °C:" VerticalAlignment="Center" Width="80"/>
+                                        <Slider Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP30, Mode=TwoWay}"/>
+                                        
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Mốc 40 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP40, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Mốc 50 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP50, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Mốc 60 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP60, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Mốc 70 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP70, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Mốc 80 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP80, Mode=TwoWay}"/>
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Mốc 90 °C:" VerticalAlignment="Center"/>
+                                        <Slider Grid.Row="6" Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding CurveP90, Mode=TwoWay}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 2: ĐÈN LED RGB WITH LIVE LED STRIP PREVIEW -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=2}">
+                            <!-- LED Strip Live Simulation Box -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE790;" Foreground="{ThemeResource SystemAccentColor}"/>
+                                        <TextBlock Text="MÔ PHỎNG DẢI LED RGB (WS2812B / FASTLED)" FontWeight="Bold" FontSize="14"/>
+                                    </StackPanel>
+                                    <Border Background="Black" CornerRadius="8" Height="46" Padding="16,0">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                            <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="Cấu Hình Hiệu Ứng Đèn LED RGB" FontSize="16" FontWeight="Bold"/>
+                                    
+                                    <TextBlock Text="Chế Độ LED:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <ComboBox SelectedIndex="{Binding SelectedLedMode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="0. Off (Tắt LED)"/>
+                                        <ComboBoxItem Content="1. Static (Màu Cố Định)"/>
+                                        <ComboBoxItem Content="2. Breathing (Nhịp Thở)"/>
+                                        <ComboBoxItem Content="3. Rainbow (Cầu Vồng)"/>
+                                        <ComboBoxItem Content="4. Speed Pulse (Theo Tốc Độ Quạt)"/>
+                                    </ComboBox>
+
+                                    <TextBlock Text="Bảng Màu Nhanh:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Cyan" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#00BCD4" Background="#00BCD4" Foreground="Black"/>
+                                        <Button Content="Red" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF5722" Background="#FF5722" Foreground="White"/>
+                                        <Button Content="Green" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#4CAF50" Background="#4CAF50" Foreground="Black"/>
+                                        <Button Content="Purple" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#9C27B0" Background="#9C27B0" Foreground="White"/>
+                                        <Button Content="Orange" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF9800" Background="#FF9800" Foreground="Black"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="Độ Sáng LED (%):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Slider Minimum="0" Maximum="100" Value="{Binding RgbBrightness, Mode=TwoWay}"/>
+
+                                    <TextBlock Text="Tốc Độ Hiệu Ứng (%):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Slider Minimum="1" Maximum="100" Value="{Binding RgbSpeed, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 3: GÁN APP AUTO-SWITCH -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=3}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Tự Động Chuyển Profile Theo Ứng Dụng / Game (.exe)" FontSize="16" FontWeight="Bold"/>
+                                        <ToggleSwitch Grid.Column="1" Header="Bật Auto-Switch" IsOn="{Binding IsAutoAppSwitchEnabled, Mode=TwoWay}"/>
+                                    </Grid>
+
+                                    <!-- Add App Mapping Form -->
+                                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12" Margin="0,4,0,4">
+                                        <StackPanel Spacing="10">
+                                            <TextBlock Text="Thêm Gán Ứng Dụng Mới" FontWeight="SemiBold"/>
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" PlaceholderText="Tên Ứng Dụng (VD: Game.exe)" Text="{Binding NewAppName, Mode=TwoWay}"/>
+                                                <TextBox Grid.Column="1" PlaceholderText="Đường Dẫn Executable (.exe)" Text="{Binding NewExePath, Mode=TwoWay}"/>
+                                                <ComboBox Grid.Column="2" SelectedValue="{Binding SelectedMappingProfileName, Mode=TwoWay}" SelectedValuePath="Content" Width="110">
+                                                    <ComboBoxItem Content="Turbo"/>
+                                                    <ComboBoxItem Content="Balanced"/>
+                                                    <ComboBoxItem Content="Quiet"/>
+                                                </ComboBox>
+                                                <Button Grid.Column="3" Content="Thêm" Command="{Binding AddAppMappingCommand}" Style="{ThemeResource AccentButtonStyle}"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <ListView ItemsSource="{Binding AppMappings}" SelectionMode="None">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid ColumnSpacing="12" Padding="4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding AppName}" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding ExecutablePath}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding ProfileName}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                    <CheckBox Grid.Column="2" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                                     <Button Grid.Column="3" x:Name="RemoveAppBtn" Click="RemoveAppBtn_Click" Tag="{Binding}" ToolTipService.ToolTip="Xóa Gán">
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="12" Foreground="#FF5722"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 4: THÔNG SỐ PHẦN CỨNG -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=4}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="Thông Số Cảm Biến Phần Cứng Chi Tiết" FontSize="16" FontWeight="Bold"/>
+                                    <Grid RowSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Nhiệt Độ CPU Package:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nhiệt Độ GPU Core:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="RAM Hệ Thống Đã Dùng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamStatusText}" FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Nhiệt Độ Bo Mạch Chủ:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MotherboardTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 5: TEST GPIO & CHUỘT -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=5}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="16">
+                                    <TextBlock Text="Kiểm Tra Diagnostics Chân GPIO, Núm Xoay Encoder &amp; Chuột" FontSize="16" FontWeight="Bold"/>
+                                    
+                                    <!-- Mouse Test Counters -->
+                                    <TextBlock Text="Test Bộ Đếm Cú Click Chuột (Mouse Click Diagnostics):" FontWeight="SemiBold"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Margin="0,0,4,0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                            <StackPanel>
+                                                <TextBlock Text="Chuột Trái (Left)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding MouseClickCountLeft}" FontSize="22" FontWeight="Bold"/>
+                                                <Button Content="Test Click Trái" Command="{Binding RegisterLeftMouseClickCommand}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="1" Margin="2,0,2,0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                            <StackPanel>
+                                                <TextBlock Text="Chuột Phải (Right)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding MouseClickCountRight}" FontSize="22" FontWeight="Bold"/>
+                                                <Button Content="Test Click Phải" Command="{Binding RegisterRightMouseClickCommand}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Grid.Column="2" Margin="4,0,0,0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                            <StackPanel>
+                                                <TextBlock Text="Chuột Giữa (Middle)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                <TextBlock Text="{Binding MouseClickCountMiddle}" FontSize="22" FontWeight="Bold"/>
+                                                <Button Content="Test Click Giữa" Command="{Binding RegisterMiddleMouseClickCommand}" Margin="0,8,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                    <Button Content="Reset Bộ Đếm Chuột" Command="{Binding ResetMouseTestCountersCommand}" HorizontalAlignment="Right"/>
+
+                                    <!-- GPIO Encoder Pins Status -->
+                                    <TextBlock Text="Trạng Thái Chân GPIO Encoder ESP32-S3:" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Encoder A Pin: High (1)"/>
+                                        <TextBlock Grid.Column="1" Text="Encoder B Pin: Low (0)"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 6: HUD OVERLAY GAME/APP (1:1 PARITY WITH FLUTTER OVERLAY_SETTINGS_SCREEN.DART) -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=6}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                                <StackPanel Spacing="18">
+                                    <!-- Header Title & Master Controls Bar -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                            <FontIcon Glyph="&#xE7F4;" Foreground="{ThemeResource SystemAccentColor}" FontSize="22"/>
+                                            <StackPanel>
+                                                <TextBlock Text="CẤU HÌNH HIỂN THỊ HUD OVERLAY (IN-GAME OSD TELEMETRY)" FontSize="15" FontWeight="Bold"/>
+                                                <TextBlock Text="Tùy chỉnh các chỉ số nhiệt độ, quạt, công suất hiển thị thả nổi trên game và các ứng dụng khác" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                            <ToggleSwitch Header="Bật Overlay HUD" IsOn="{Binding IsOverlayEnabled, Mode=TwoWay}"/>
+                                            <Button Content="Khôi Phục Mặc Định" Command="{Binding ResetOverlayConfigCommand}" Margin="8,0,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Responsive 2-Column Grid -->
+                                    <Grid ColumnSpacing="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="5*"/>
+                                            <ColumnDefinition Width="5*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- LEFT COLUMN: Live Preview, Position, Style, Opacity -->
+                                        <StackPanel Grid.Column="0" Spacing="16">
+                                            
+                                            <!-- Live Preview Box -->
+                                            <TextBlock Text="PREVIEW MÀN HÌNH HUD OVERLAY THỰC TẾ" FontWeight="Bold" FontSize="13"/>
+                                            <Border Background="#10141D" CornerRadius="12" Height="170" Padding="16" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                                <Grid>
+                                                    <!-- Simulated Background Game Pattern -->
+                                                    <TextBlock Text="[GAME DISPLAY ENVIRONMENT SIMULATION]" Foreground="#33FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"/>
+                                                    
+                                                    <!-- Live Preview Badge (Game PP Pill Style) -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                                        <Border Background="#CC000000" CornerRadius="4" Padding="8,4">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="TIME" FontSize="10" Foreground="#A0AAB8" FontWeight="Bold"/>
+                                                                <TextBlock Text="16:30:00" FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border Background="#CC000000" CornerRadius="4" Padding="8,4">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="CPU" FontSize="10" Foreground="#A0AAB8" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding CpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}%'}" FontSize="11" Foreground="#00E676" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}°C'}" FontSize="11" Foreground="#00E676" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding CpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}W'}" FontSize="11" Foreground="#00D2FF" FontWeight="Bold"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border Background="#CC000000" CornerRadius="4" Padding="8,4">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="GPU" FontSize="10" Foreground="#A0AAB8" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding GpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}%'}" FontSize="11" Foreground="#00E676" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}°C'}" FontSize="11" Foreground="#00E676" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding GpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}W'}" FontSize="11" Foreground="#00D2FF" FontWeight="Bold"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border Background="#CC000000" CornerRadius="4" Padding="8,4">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="LLANO FAN" FontSize="10" Foreground="#A0AAB8" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding FanRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} RPM'}" FontSize="11" Foreground="#00E5FF" FontWeight="Bold"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Position & Drag Control -->
+                                            <TextBlock Text="VỊ TRÍ VÀ DI CHUYỂN HUD (POSITION &amp; DRAG)" FontWeight="Bold" FontSize="13"/>
+                                            <Button Command="{Binding ToggleOverlayLockCommand}" HorizontalAlignment="Stretch" Padding="14,10">
+                                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                                    <FontIcon Glyph="&#xE785;" Foreground="{ThemeResource SystemAccentColor}"/>
+                                                    <TextBlock Text="❖ BẤM VÀO ĐÂY ĐỂ MỞ KHÓA KÉO DI CHUYỂN HUD (PHÍM Ctrl + Shift + O)" FontWeight="Bold"/>
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Position Presets -->
+                                            <TextBlock Text="CHỌN NHANH VỊ TRÍ MẶC ĐỊNH (TỰ ĐỘNG CHÍNH XÁC 100%):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <Button Content="Góc Trên Trái" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="top_left"/>
+                                                <Button Content="Giữa Trên" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="top_center"/>
+                                                <Button Content="Góc Trên Phải" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="top_right"/>
+                                                <Button Content="Góc Dưới Trái" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="bottom_left"/>
+                                                <Button Content="Giữa Dưới" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="bottom_center"/>
+                                                <Button Content="Góc Dưới Phải" Command="{Binding SetOverlayPositionPresetCommand}" CommandParameter="bottom_right"/>
+                                            </StackPanel>
+
+                                            <!-- Style & Opacity -->
+                                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                <TextBlock Text="ĐỘ TRONG SUỐT NỀN HUD (OPACITY):" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
+                                                    <TextBlock Text="{Binding OverlayBackgroundOpacityPercentText}" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <Slider Minimum="0.0" Maximum="1.0" StepFrequency="0.05" Value="{Binding OverlayBackgroundOpacity, Mode=TwoWay}"/>
+
+                                             <!-- Font Size Scale Selector (1080, 2K, 4K) -->
+                                             <TextBlock Text="KÍCH THƯỚC PHÔNG CHỮ HUD (FONT SIZE SCALE):" FontWeight="Bold" FontSize="12"/>
+                                             <ComboBox SelectedValue="{Binding OverlayFontSizeScale, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                 <ComboBoxItem Content="1080p (Chữ Nhỏ - Màn Full HD)" Tag="1080"/>
+                                                 <ComboBoxItem Content="2K (Chữ Vừa - Màn 1440p)" Tag="2K"/>
+                                                 <ComboBoxItem Content="4K (Chữ Lớn - Màn 4K Ultra HD)" Tag="4K"/>
+                                             </ComboBox>
+                                        </StackPanel>
+
+                                        <!-- RIGHT COLUMN: Category Sub-Tabs (Basic, CPU, GPU, Memory, Llano Fan) -->
+                                        <StackPanel Grid.Column="1" Spacing="14">
+                                            <TextBlock Text="CHỌN THÔNG SỐ NỘI DUNG HIỂN THỊ (MONITORING CONTENT)" FontWeight="Bold" FontSize="13"/>
+
+                                            <!-- Sub-Tab Header Bar matching Game PP / Armoury Crate -->
+                                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Grid.Column="0" Content="Basic" Command="{Binding SelectOverlayCategoryTabCommand}" CommandParameter="0" HorizontalAlignment="Stretch" Padding="4,6"/>
+                                                    <Button Grid.Column="1" Content="CPU" Command="{Binding SelectOverlayCategoryTabCommand}" CommandParameter="1" HorizontalAlignment="Stretch" Padding="4,6"/>
+                                                    <Button Grid.Column="2" Content="GPU" Command="{Binding SelectOverlayCategoryTabCommand}" CommandParameter="2" HorizontalAlignment="Stretch" Padding="4,6"/>
+                                                    <Button Grid.Column="3" Content="Memory" Command="{Binding SelectOverlayCategoryTabCommand}" CommandParameter="3" HorizontalAlignment="Stretch" Padding="4,6"/>
+                                                    <Button Grid.Column="4" Content="Llano Fan" Command="{Binding SelectOverlayCategoryTabCommand}" CommandParameter="4" HorizontalAlignment="Stretch" Padding="4,6"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Category Panel Content -->
+                                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="10" Padding="16">
+                                                <StackPanel Spacing="12">
+                                                    <!-- Sub-tab 0: Basic -->
+                                                    <StackPanel Spacing="10" Visibility="{Binding ActiveOverlayCategoryTab, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=0}">
+                                                        <TextBlock Text="CHẾ ĐỘ HIỂN THỊ OVERLAY" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                        <ComboBox SelectedValue="{Binding SelectedDisplayMode, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                            <ComboBoxItem Content="Luôn hiển thị trên màn hình" Tag="always"/>
+                                                            <ComboBoxItem Content="Chỉ hiển thị khi chạy Game / Ứng dụng" Tag="game_only"/>
+                                                        </ComboBox>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Khung Hình (FPS Counter)" IsChecked="{Binding ShowFps, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Thời Gian Hệ Thống (TIME)" IsChecked="{Binding ShowTime, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị % Sử Dụng RAM Hệ Thống" IsChecked="{Binding ShowRamUsage, Mode=TwoWay}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Sub-tab 1: CPU -->
+                                                    <StackPanel Spacing="10" Visibility="{Binding ActiveOverlayCategoryTab, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}">
+                                                        <TextBlock Text="THÔNG SỐ VI XỬ LÝ CPU" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
+                                                        <CheckBox Content="Hiển Thị Nhiệt Độ CPU Package (°C)" IsChecked="{Binding ShowCpuTemp, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Mức Sử Dụng CPU Package (%)" IsChecked="{Binding ShowCpuUsage, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Xung Nhịp CPU (GHz / MHz)" IsChecked="{Binding ShowCpuClock, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Công Suất Điện CPU (Watt)" IsChecked="{Binding ShowCpuPower, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Quạt CPU Laptop (RPM)" IsChecked="{Binding ShowHardwareCpuFanRpm, Mode=TwoWay}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Sub-tab 2: GPU -->
+                                                    <StackPanel Spacing="10" Visibility="{Binding ActiveOverlayCategoryTab, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=2}">
+                                                        <TextBlock Text="THÔNG SỐ CARD ĐỒ HỌA GPU" FontWeight="Bold" FontSize="12" Foreground="#0070F3"/>
+                                                        <CheckBox Content="Hiển Thị Nhiệt Độ GPU Core (°C)" IsChecked="{Binding ShowGpuTemp, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Mức Sử Dụng GPU Core (%)" IsChecked="{Binding ShowGpuUsage, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Xung Nhịp GPU (MHz)" IsChecked="{Binding ShowGpuClock, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Công Suất Điện GPU (Watt)" IsChecked="{Binding ShowGpuPower, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Dung Lượng VRAM GPU Đã Dùng (GB)" IsChecked="{Binding ShowGpuVram, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Quạt GPU Laptop (RPM)" IsChecked="{Binding ShowHardwareGpuFanRpm, Mode=TwoWay}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Sub-tab 3: Memory -->
+                                                    <StackPanel Spacing="10" Visibility="{Binding ActiveOverlayCategoryTab, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=3}">
+                                                        <TextBlock Text="THÔNG SỐ BỘ NHỚ RAM" FontWeight="Bold" FontSize="12" Foreground="#38BDF8"/>
+                                                        <CheckBox Content="Hiển Thị % RAM Hệ Thống Đã Dùng" IsChecked="{Binding ShowRamUsage, Mode=TwoWay}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Sub-tab 4: Llano Fan -->
+                                                    <StackPanel Spacing="10" Visibility="{Binding ActiveOverlayCategoryTab, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=4}">
+                                                        <TextBlock Text="THÔNG SỐ QUẠT TẢN NHIỆT LLANO" FontWeight="Bold" FontSize="12" Foreground="#00E5FF"/>
+                                                        <CheckBox Content="Hiển Thị Tốc Độ Vòng Quay Quạt Llano (RPM)" IsChecked="{Binding ShowSmartFanRpm, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Hiển Thị Mức PWM Đầu Ra (%)" IsChecked="{Binding ShowSmartFanPwm, Mode=TwoWay}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 7: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}">
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="14">
+                                    <TextBlock Text="Thiết Lập Hệ Thống &amp; Cấu Hình Ứng Dụng" FontSize="16" FontWeight="Bold"/>
+                                    
+                                    <ToggleSwitch Header="Khởi Động Cùng Windows" IsOn="{Binding StartWithWindows, Mode=TwoWay}"/>
+                                    <ToggleSwitch Header="Thu Nhỏ Xuống Khay Hệ Thống (System Tray) Khi Đóng" IsOn="{Binding MinimizeToTray, Mode=TwoWay}"/>
+
+                                    <TextBlock Text="Tốc Độ Baud Rate Cổng Serial COM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <ComboBox SelectedValue="{Binding SelectedBaudRate, Mode=TwoWay}" SelectedValuePath="Content" HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="9600"/>
+                                        <ComboBoxItem Content="115200"/>
+                                        <ComboBoxItem Content="230400"/>
+                                        <ComboBoxItem Content="921600"/>
+                                    </ComboBox>
+
+                                    <TextBlock Text="Tần Số Cập Nhật Cảm Biến Phần Cứng (ms):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Slider Minimum="250" Maximum="5000" StepFrequency="250" Value="{Binding RefreshIntervalMs, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                    </Grid>
+                </ScrollViewer>
+
+                <!-- Status Footer Bar -->
+                <Border Grid.Row="2" Padding="16,6" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 </Border>
+            </Grid>
 
-            </StackPanel>
-        </ScrollViewer>
-
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Padding="16,8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
-            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-        </Border>
+        </NavigationView>
     </Grid>
 </Window>
