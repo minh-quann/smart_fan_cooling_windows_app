@@ -17,6 +17,7 @@
             <converters:FloatFormatConverter x:Key="FloatFormatConverter" />
             <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter" />
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:StringMatchToVisibilityConverter x:Key="StringMatchToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

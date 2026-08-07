@@ -1,6 +1,6 @@
 # 🛠️ TÀI LIỆU HƯỚNG DẪN HỆ THỐNG ĐIỀU KHIỂN QUẠT LLANO SMART (DUAL OLED MODE)
 
-Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt tản nhiệt Laptop Llano Smart (Phiên bản **Dual OLED - 31 Dây**), bao gồm: **Sơ đồ đấu nối phần cứng hoàn chỉnh**, **Kiến trúc Firmware ESP32-S3 (Arduino/ESP-IDF)** và **Ứng dụng điều khiển đa nền tảng (Flutter)**.
+Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt tản nhiệt Laptop Llano Smart (Phiên bản **Dual OLED - 27 Dây**), bao gồm: **Sơ đồ đấu nối phần cứng hoàn chỉnh**, **Kiến trúc Firmware ESP32-S3 (Arduino/ESP-IDF)** và **Ứng dụng điều khiển đa nền tảng (Flutter)**.
 
 ---
 
@@ -12,7 +12,7 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 2. **Nguồn cấp chính:** Củ Nguồn Adapter Llano 12V / 3A (36W).
 3. **Bộ hạ áp & Phân phối nguồn:** Mạch hạ áp **XY3606** (12V → 5.2V / 5A, tích hợp Jack DC 5.5mm, nguồn 12V đấu trực tiếp).
 4. **Khối công suất điều tốc:** Module Dual MOSFET (HW-517).
-5. **Khối cách ly đếm xung:** Module Opto PC817 (3V-5V).
+5. **Điện trở pull-up TACH:** Điện trở 10kΩ (pull-up từ GPIO 5 lên 3.3V cho tín hiệu TACH trực tiếp).
 6. **Khối hiển thị & Thao tác chính:**
    - 🖥️ **Màn hình chính: OLED 1.3" + Con lăn Encoder + 2 Nút bấm tích hợp (CON, BAK):** Hiển thị thông số Nhiệt độ Laptop/Hệ thống, Tốc độ Quạt (RPM & % PWM), Chế độ LED; cho phép xoay núm chỉnh tốc độ, ấn núm PSH Bật/Tắt quạt, ấn nút CON Bật/Tắt LED, ấn nút BAK Đổi mode LED.
    - 🖥️ **Màn hình phụ: OLED 0.96" 4-Pin (I2C2):** Hiển thị thông số phụ / trạng thái kết nối hệ thống.
@@ -20,7 +20,7 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 
 ---
 
-### 📋 Bảng Tra Cứu Chân Cắm Chi Tiết 31 Dây (Pinout Mapping Table)
+### 📋 Bảng Tra Cứu Chân Cắm Chi Tiết 27 Dây (Pinout Mapping Table)
 
 | Module / Linh kiện | Chân trên Module | Chân kết nối trên Bo Đế ESP32-S3 (44-Pin) | STT Dây | Ghi chú & Chức năng |
 | :--- | :--- | :--- | :--- | :--- |
@@ -37,28 +37,23 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 | | `⚫ OUT −` | Dây Đen Quạt (GND) | **Dây 10** | Chân Âm Quạt (cắt mát bởi MOSFET) |
 | **Quạt Laptop Llano (3 dây)** | 🔴 Dây Đỏ | `🔴 OUT +` của MOSFET | **Dây 9** | Nguồn +12V nuôi quạt |
 | | ⚫ Dây Đen | `⚫ OUT −` của MOSFET | **Dây 10** | Chân mát cắt bởi MOSFET |
-| | 🔵 Dây Xanh (TACH) | `🔵 IN +` của Module Opto PC817 | **Dây 11** | Xung phản hồi TACH (12V) |
-| **Module Opto PC817** | `🔵 IN +` | 🔵 Dây Xanh Quạt (TACH) | **Dây 11** | Nhận xung phản hồi tốc độ quạt |
-| | `⚫ IN −` | `GND 3` (Cọc Trái Dưới 2) | **Dây 12** | Tiếp địa cách ly đầu vào Opto |
-| | `🟡 VCC` | `3V3 Out` (Cọc Trái Trên) | **Dây 13** | Nguồn 3.3V treo chân đọc Transistor |
-| | `🟣 OUT` | `GPIO 5` | **Dây 14** | Xung đếm vòng quay RPM (3.3V) |
-| | `⚫ GND` | `GND 3` (Cọc Trái Dưới 2) | **Dây 15** | Tiếp địa cách ly đầu ra Opto |
-| **Dải LED RGB WS2812B** | `🟠 +5V` | `5Vin` (ESP32) | **Dây 16** | Nguồn +5V nuôi dải LED RGB |
-| | `⚫ GND` | `GND 1` (Cọc Trái Trên) | **Dây 17** | Tiếp địa dải LED RGB |
-| | `🩵 DIN` | `GPIO 7` | **Dây 18** | Tín hiệu hiệu ứng màu FastLED |
-| **Màn Chính: OLED 1.3" + Encoder (9 Chân)** | `🟡 VCC` (Chân 9) | `3V3 Out` (ESP32) | **Dây 19** | Nguồn 3.3V nuôi Màn 1.3" & Encoder |
-| | `⚫ GND` (Chân 8) | `GND 4` (Cọc Phải Dưới) | **Dây 20** | Tiếp địa Màn 1.3" & Encoder |
-| | `🟣 CON` (Chân 1) | `GPIO 12` | **Dây 21** | Nút CON phía dưới: Bật/Tắt LED RGB |
-| | `🟪 SDA` (Chân 2) | `GPIO 8` | **Dây 22** | Dữ liệu I2C1 Màn OLED 1.3" |
-| | `🟪 SCL` (Chân 3) | `GPIO 9` | **Dây 23** | Clock I2C1 Màn OLED 1.3" |
-| | `🟢 PSH` (Chân 4) | `GPIO 14` | **Dây 24** | Ấn thẳng Núm PSH: Bật/Tắt Quạt & Chọn Menu |
-| | `🟣 TRA` (Chân 5) | `GPIO 10` | **Dây 25** | Xoay Núm: Kênh A điều tốc 0-100% |
-| | `🟣 TRB` (Chân 6) | `GPIO 11` | **Dây 26** | Xoay Núm: Kênh B điều tốc 0-100% |
-| | `🟣 BAK` (Chân 7) | `GPIO 13` | **Dây 27** | Nút BAK phía trên: Đổi chế độ LED RGB |
-| **Màn Phụ: OLED 0.96" (4 Chân)** | `🟡 VCC` | `3V3 Out` (ESP32) | **Dây 28** | Nguồn 3.3V nuôi Màn OLED 0.96" |
-| | `⚫ GND` | `GND 4` (Cọc Phải Dưới) | **Dây 29** | Tiếp địa Màn OLED 0.96" |
-| | `🟪 SCL` (SCK) | `GPIO 18` | **Dây 30** | Clock I2C2 Màn OLED 0.96" |
-| | `🟪 SDA` | `GPIO 17` | **Dây 31** | Dữ liệu I2C2 Màn OLED 0.96" |
+| | 🔵 Dây Xanh (TACH) | `GPIO 5` trực tiếp (Pull-up 10kΩ lên 3.3V) | **Dây 11** | Xung phản hồi TACH trực tiếp vào ESP32 |
+| **Dải LED RGB WS2812B** | `🟠 +5V` | `5Vin` (ESP32) | **Dây 12** | Nguồn +5V nuôi dải LED RGB |
+| | `⚫ GND` | `GND 1` (Cọc Trái Trên) | **Dây 13** | Tiếp địa dải LED RGB |
+| | `🩵 DIN` | `GPIO 7` | **Dây 14** | Tín hiệu hiệu ứng màu FastLED |
+| **Màn Chính: OLED 1.3" + Encoder (9 Chân)** | `🟡 VCC` (Chân 9) | `3V3 Out` (ESP32) | **Dây 15** | Nguồn 3.3V nuôi Màn 1.3" & Encoder |
+| | `⚫ GND` (Chân 8) | `GND 4` (Cọc Phải Dưới) | **Dây 16** | Tiếp địa Màn 1.3" & Encoder |
+| | `🟣 CON` (Chân 1) | `GPIO 12` | **Dây 17** | Nút CON phía dưới: Bật/Tắt LED RGB |
+| | `🟪 SDA` (Chân 2) | `GPIO 8` | **Dây 18** | Dữ liệu I2C1 Màn OLED 1.3" |
+| | `🟪 SCL` (Chân 3) | `GPIO 9` | **Dây 19** | Clock I2C1 Màn OLED 1.3" |
+| | `🟢 PSH` (Chân 4) | `GPIO 14` | **Dây 20** | Ấn thẳng Núm PSH: Bật/Tắt Quạt & Chọn Menu |
+| | `🟣 TRA` (Chân 5) | `GPIO 10` | **Dây 21** | Xoay Núm: Kênh A điều tốc 0-100% |
+| | `🟣 TRB` (Chân 6) | `GPIO 11` | **Dây 22** | Xoay Núm: Kênh B điều tốc 0-100% |
+| | `🟣 BAK` (Chân 7) | `GPIO 13` | **Dây 23** | Nút BAK phía trên: Đổi chế độ LED RGB |
+| **Màn Phụ: OLED 0.96" (4 Chân)** | `🟡 VCC` | `3V3 Out` (ESP32) | **Dây 24** | Nguồn 3.3V nuôi Màn OLED 0.96" |
+| | `⚫ GND` | `GND 4` (Cọc Phải Dưới) | **Dây 25** | Tiếp địa Màn OLED 0.96" |
+| | `🟪 SCL` (SCK) | `GPIO 18` | **Dây 26** | Clock I2C2 Màn OLED 0.96" |
+| | `🟪 SDA` | `GPIO 17` | **Dây 27** | Dữ liệu I2C2 Màn OLED 0.96" |
 
 ---
 
@@ -90,15 +85,15 @@ flowchart TB
         V5_IN["🔴 5Vin (Nhận 5.2V từ XY3606)"]
         
         subgraph GND_GROUP["⚫ CỌC GND VẬT LÝ TRÊN BO"]
-            GND_1["GND 1 (Trái Trên) — Dự phòng"]
-            GND_2["GND 2 (Trái Dưới 1) — GND Chung (Nguồn XY3606, MOSFET, LED RGB...)"]
-            GND_3["GND 3 (Trái Dưới 2) — Dùng cho Opto PC817"]
+            GND_1["GND 1 (Trái Trên) — GND Dải LED RGB"]
+            GND_2["GND 2 (Trái Dưới 1) — GND Chung (Nguồn XY3606, MOSFET...)"]
+            GND_3["GND 3 (Trái Dưới 2) — Dự phòng"]
             GND_4["GND 4 (Phải Dưới) — Dùng cho Màn OLED 1.3'"]
         end
 
-        V33["3V3 Out (Cấp 3.3V cho Opto & OLED 1.3')"]
+        V33["3V3 Out (Cấp 3.3V cho Pull-up TACH & OLED 1.3')"]
         GPIO4["GPIO 4 — PWM Out (25kHz)"]
-        GPIO5["GPIO 5 — RPM Interrupt In"]
+        GPIO5["GPIO 5 — TACH Trực Tiếp (Pull-up 10kΩ lên 3.3V)"]
         GPIO7["GPIO 7 — LED Data Out"]
         GPIO8["GPIO 8 — SDA Màn 1.3'"]
         GPIO9["GPIO 9 — SCL Màn 1.3'"]
@@ -122,16 +117,7 @@ flowchart TB
     subgraph FAN["🌀 Quạt Llano 12V (3 dây)"]
         FAN_RED["🔴 Dây Đỏ (+12V)"]
         FAN_BLACK["⚫ Dây Đen (GND Cắt Mát)"]
-        FAN_BLUE["🔵 Dây Xanh (TACH 12V)"]
-    end
-
-    subgraph OPTO["🔬 Module Opto PC817"]
-        direction TB
-        OPTO_INP["IN +"]
-        OPTO_INN["IN −"]
-        OPTO_VCC["VCC (3.3V)"]
-        OPTO_OUT["OUT (RPM 3.3V)"]
-        OPTO_GND["GND"]
+        FAN_BLUE["🔵 Dây Xanh (TACH trực tiếp GPIO 5)"]
     end
 
     subgraph LED["🌈 Dải LED RGB WS2812B"]
@@ -153,7 +139,7 @@ flowchart TB
         O1_VCC["VCC 3.3V (Chân 9)"]
     end
 
-    %% ===== CONNECTIONS =====
+    %% ===== CONNECTIONS (27 wires, no optocoupler) =====
     PSU -- "🔴 Dây 1: Cắm Jack 5.5mm trực tiếp" --> XY_DC_JACK
     XY_IN_P -- "🔴 Dây 2: +12V Trực tiếp sang MOSFET" --> MOS_VIN_P
     XY_IN_N -- "⚫ Dây 3: GND 12V" --> GND_2
@@ -167,32 +153,27 @@ flowchart TB
     MOS_VOUT_P -- "🔴 Dây 9: +12V Quạt" --> FAN_RED
     MOS_VOUT_N -- "⚫ Dây 10: GND Quạt" --> FAN_BLACK
 
-    FAN_BLUE -- "🔵 Dây 11: Xung TACH 12V" --> OPTO_INP
-    GND_3 -- "⚫ Dây 12: GND Opto In" --> OPTO_INN
-    V33 -- "🟡 Dây 13: 3.3V Opto VCC" --> OPTO_VCC
-    OPTO_OUT -- "🟣 Dây 14: Xung RPM 3.3V" --> GPIO5
-    GND_3 -- "⚫ Dây 15: GND Opto Out" --> OPTO_GND
+    FAN_BLUE -- "🔵 Dây 11: TACH trực tiếp (Pull-up 10kΩ)" --> GPIO5
 
-    V5_IN -- "🟠 Dây 16: +5V LED" --> LED_VCC
-    GND_2 -- "⚫ Dây 17: GND LED" --> LED_GND
-    GPIO7 -- "🩵 Dây 18: DIN FastLED" --> LED_DIN
+    V5_IN -- "🟠 Dây 12: +5V LED" --> LED_VCC
+    GND_2 -- "⚫ Dây 13: GND LED" --> LED_GND
+    GPIO7 -- "🩵 Dây 14: DIN FastLED" --> LED_DIN
 
-    V33 -- "🟡 Dây 19: 3.3V Màn 1.3'" --> O1_VCC
-    GND_4 -- "⚫ Dây 20: GND Màn 1.3'" --> O1_GND
-    GPIO12 -- "🟣 Dây 21: Nút CON Bật/Tắt LED" --> O1_CON
-    GPIO8 -- "🟪 Dây 22: SDA Màn 1.3'" --> O1_SDA
-    GPIO9 -- "🟪 Dây 23: SCL Màn 1.3'" --> O1_SCL
-    GPIO14 -- "🟢 Dây 24: Nút PSH Bật/Tắt Quạt" --> O1_PSH
-    GPIO10 -- "🟪 Dây 25: Encoder Kênh A" --> O1_TRA
-    GPIO11 -- "🟪 Dây 26: Encoder Kênh B" --> O1_TRB
-    GPIO13 -- "🟣 Dây 27: Nút BAK Đổi Mode LED" --> O1_BAK
+    V33 -- "🟡 Dây 15: 3.3V Màn 1.3'" --> O1_VCC
+    GND_4 -- "⚫ Dây 16: GND Màn 1.3'" --> O1_GND
+    GPIO12 -- "🟣 Dây 17: Nút CON Bật/Tắt LED" --> O1_CON
+    GPIO8 -- "🟪 Dây 18: SDA Màn 1.3'" --> O1_SDA
+    GPIO9 -- "🟪 Dây 19: SCL Màn 1.3'" --> O1_SCL
+    GPIO14 -- "🟢 Dây 20: Nút PSH Bật/Tắt Quạt" --> O1_PSH
+    GPIO10 -- "🟪 Dây 21: Encoder Kênh A" --> O1_TRA
+    GPIO11 -- "🟪 Dây 22: Encoder Kênh B" --> O1_TRB
+    GPIO13 -- "🟣 Dây 23: Nút BAK Đổi Mode LED" --> O1_BAK
 
     %% ===== STYLES =====
     classDef board fill:#2563eb,stroke:#1d4ed8,color:#fff,font-weight:bold
     classDef xy fill:#0284c7,stroke:#0369a1,color:#fff,font-weight:bold
     classDef mosfet fill:#059669,stroke:#047857,color:#fff,font-weight:bold
     classDef fan fill:#7c3aed,stroke:#6d28d9,color:#fff,font-weight:bold
-    classDef opto fill:#d97706,stroke:#b45309,color:#fff,font-weight:bold
     classDef led fill:#ec4899,stroke:#db2777,color:#fff,font-weight:bold
     classDef psu fill:#ef4444,stroke:#dc2626,color:#fff,font-weight:bold
     classDef oled fill:#8b5cf6,stroke:#7c3aed,color:#fff,font-weight:bold
@@ -202,7 +183,6 @@ flowchart TB
     class V5_IN,GND_1,GND_2,GND_3,GND_4,V33,GPIO4,GPIO5,GPIO7,GPIO8,GPIO9,GPIO10,GPIO11,GPIO12,GPIO13,GPIO14 board
     class MOS_VIN_P,MOS_VIN_N,MOS_TRIG,MOS_GND_TRIG,MOS_VOUT_P,MOS_VOUT_N mosfet
     class FAN_RED,FAN_BLACK,FAN_BLUE fan
-    class OPTO_INP,OPTO_INN,OPTO_VCC,OPTO_OUT,OPTO_GND opto
     class LED_VCC,LED_GND,LED_DIN led
     class O1_CON,O1_SDA,O1_SCL,O1_PSH,O1_TRA,O1_TRB,O1_BAK,O1_GND,O1_VCC oled
 
@@ -210,7 +190,6 @@ flowchart TB
     style XY3606 fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#075985
     style MOSFET fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#065f46
     style FAN fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#5b21b6
-    style OPTO fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#92400e
     style LED fill:#fdf2f8,stroke:#ec4899,stroke-width:2px,color:#9d174d
     style OLED1 fill:#f5f3ff,stroke:#8b5cf6,stroke-width:2px,color:#5b21b6
     style GND_GROUP fill:#e0e7ff,stroke:#4338ca,stroke-width:1px
@@ -290,7 +269,7 @@ flowchart LR
 ### 🎨 Bố Cục Giao Diện & Tính Năng Chi Tiết Trong App Flutter
 
 #### 1. Màn Hình Chính (Dashboard Console)
-- **Đồng hồ đo tốc độ thực (RPM Gauge):** Hiển thị vòng quay quạt thực tế theo thời gian thực (được gửi từ ESP32-S3 qua Opto PC817).
+- **Đồng hồ đo tốc độ thực (RPM Gauge):** Hiển thị vòng quay quạt thực tế theo thời gian thực (được gửi từ ESP32-S3 qua tín hiệu TACH trực tiếp).
 - **Thanh chỉnh tốc độ thủ công (Slider 0% - 100%):** Cho phép kéo thả chỉnh tốc độ tức thì.
 - **Biểu đồ Nhiệt độ CPU/GPU:** Giám sát nhiệt độ phần cứng laptop realtime.
 - **Bảng điều khiển hiệu ứng LED RGB:** Chọn màu sắc, chế độ nháy (Rainbow, Breathing, Speed Sync...).
@@ -322,17 +301,17 @@ Tạo và lưu không giới hạn các Profile làm mát:
 
 - [ ] 🔘 **Mạch hạ áp XY3606** đã nối đúng cực: Cắm Adapter 12V vào Jack DC, đo kiểm tra cọc `OUT` đạt chuẩn $5.2\text{V}$ trước khi nối sang Bo Đế.
 - [ ] 🔴 Dây nguồn $12\text{V}$ trích từ cọc Input XY3606 được đấu **TRỰC TIẾP** vào `VIN+` trên MOSFET (Không cần qua công tắc cơ).
-- [ ] ⚫ Tất cả các cọc GND trên Bo Đế (`GND 1` đến `GND 4`) đã nối tiếp địa chung với MOSFET, Opto, LED và Màn hình OLED 1.3".
-- [ ] 🔵 Dây **TACH** của quạt đã nối vào `IN+` của Opto PC817 (Tuyệt đối không cắm trực tiếp vào ESP32-S3).
+- [ ] ⚫ Tất cả các cọc GND trên Bo Đế (`GND 1` đến `GND 4`) đã nối tiếp địa chung với MOSFET, LED và Màn hình OLED 1.3".
+- [ ] 🔵 Dây **TACH** (xanh) của quạt đã nối **TRỰC TIẾP** vào `GPIO 5` trên ESP32-S3, kèm điện trở **pull-up 10kΩ** từ GPIO 5 lên `3V3 Out` (3.3V).
 - [ ] 🖥️ Màn OLED 1.3" 9 Chân đã đấu đúng thứ tự từ Chân 1 (CON) đến Chân 9 (VCC).
 - [ ] 💻 Cáp Type-C nạp code ESP32-S3 chọn đúng bản **USB CDC On Boot: Enabled**.
 - [ ] 📱 App Flutter đã cấp quyền truy cập System Performance API để đọc nhiệt độ CPU/GPU.
 
 ---
 
-## 🗺️ 6. Sơ Đồ Đấu Nối Master Chi Tiết Từng Chân & Cọc Vặn Ốc (Pin-to-Pin Master Diagram - 27 Dây)
+## 🗺️ 6. Sơ Đồ Đấu Nối Master Chi Tiết Từng Chân & Cọc Vặn Ốc (Pin-to-Pin Master Diagram - 23 Dây)
 
-Sơ đồ chi tiết 100% từng cọc vặn ốc, ký hiệu chân thực tế và màu sắc dây dẫn cho **đủ 27 đường kết nối**:
+Sơ đồ chi tiết 100% từng cọc vặn ốc, ký hiệu chân thực tế và màu sắc dây dẫn cho **đủ 23 đường kết nối**:
 
 ```mermaid
 %%{init: {'theme': 'dark', 'flowchart': { 'useMaxWidth': true, 'htmlLabels': true, 'curve': 'linear', 'padding': 30 }}}%%
@@ -359,14 +338,14 @@ flowchart TB
             P_5VIN["🔴 Cọc 5Vin (Nhận +5.2V từ XY3606 OUT+)"]
             P_GND2["⚫ Cọc GND 2 (Trái Dưới 1) — GND 12V & 5.2V"]
             P_GND1["⚫ Cọc GND 1 (Trái Trên) — GND Dải LED RGB"]
-            P_GND3["⚫ Cọc GND 3 (Trái Dưới 2) — GND Cách Ly Opto"]
+            P_GND3["⚫ Cọc GND 3 (Trái Dưới 2) — GND Dự phòng"]
             P_GND4["⚫ Cọc GND 4 (Phải Dưới) — GND Màn OLED 1.3'"]
-            P_3V3_OUT["🟡 Cọc 3V3 Out — Cấp 3.3V cho Opto & OLED 1.3'"]
+            P_3V3_OUT["🟡 Cọc 3V3 Out — Cấp 3.3V cho Pull-up TACH & OLED 1.3'"]
         end
 
         subgraph ESP_GPIO_TERMINALS ["🟢 CỌC VẶN ỐC TÍN HIỆU GPIO"]
             P_G4["🟢 Cọc GPIO 4 — Xung PWM 25kHz xuất sang MOSFET"]
-            P_G5["🟣 Cọc GPIO 5 — Xung RPM Interrupt từ Opto"]
+            P_G5["🟣 Cọc GPIO 5 — Xung RPM từ Dây TACH (Pull-up 10k)"]
             P_G7["🩵 Cọc GPIO 7 — Data LED RGB (DIN)"]
             P_G8["🟪 Cọc GPIO 8 — SDA Màn OLED 1.3'"]
             P_G9["🟪 Cọc GPIO 9 — SCL Màn OLED 1.3'"]
@@ -394,21 +373,11 @@ flowchart TB
         direction TB
         FAN_RED["🔴 Dây Đỏ (+12V Nguồn từ MOSFET VOUT+)"]
         FAN_BLACK["⚫ Dây Đen (GND Nguồn từ MOSFET VOUT-)"]
-        FAN_BLUE["🔵 Dây Xanh (TACH 12V sang Opto IN+)"]
+        FAN_BLUE["🔵 Dây Xanh (TACH 12V nối GPIO 5 qua 10k Pull-up)"]
     end
 
-    %% ===== 6. MODULE OPTO PC817 =====
-    subgraph OPTO ["🔬 6. MODULE OPTO PC817 (CÁCH LY QUANG)"]
-        direction TB
-        OPTO_INP["🔵 Cọc IN + (Dây Xanh TACH 12V từ Quạt)"]
-        OPTO_INN["⚫ Cọc IN − (Nối Cọc GND 3 Bo Đế)"]
-        OPTO_VCC["🟡 Cọc VCC (Nhận 3.3V từ Cọc 3V3 Out)"]
-        OPTO_GND["⚫ Cọc GND (Nối Cọc GND 3 Bo Đế)"]
-        OPTO_OUT["🟣 Cọc OUT (Xuất xung RPM 3.3V sang GPIO 5)"]
-    end
-
-    %% ===== 7. MÀN HÌNH DUY NHẤT OLED 1.3" + ENCODER =====
-    subgraph OLED1 ["🖥️ 7. MÀN HÌNH DUY NHẤT: OLED 1.3' + ROTARY ENCODER (9 CHÂN)"]
+    %% ===== 6. MÀN HÌNH DUY NHẤT OLED 1.3" + ENCODER =====
+    subgraph OLED1 ["🖥️ 6. MÀN HÌNH DUY NHẤT: OLED 1.3' + ROTARY ENCODER (9 CHÂN)"]
         direction TB
         O1_CON["🟣 Chân 1: CON (Nút Bật/Tắt LED — GPIO 12)"]
         O1_SDA["🟪 Chân 2: SDA (I2C1 Data — GPIO 8)"]
@@ -421,15 +390,15 @@ flowchart TB
         O1_VCC["🟡 Chân 9: VCC (Nối Cọc 3V3 Out)"]
     end
 
-    %% ===== 8. DẢI LED RGB =====
-    subgraph LED_STRIP ["🌈 8. DẢI LED RGB WS2812B"]
+    %% ===== 7. DẢI LED RGB =====
+    subgraph LED_STRIP ["🌈 7. DẢI LED RGB WS2812B"]
         direction TB
         LED_VCC["🟠 Chân +5V (Nối Cọc 5Vin ESP32)"]
         LED_GND["⚫ Chân GND (Nối Cọc GND 1)"]
         LED_DIN["🩵 Chân DIN Data (Nối Cọc GPIO 7)"]
     end
 
-    %% ===== ĐƯỜNG NỐI CHÍNH XÁC CHÂN-SANG-CHÂN (27 DÂY) =====
+    %% ===== ĐƯỜNG NỐI CHÍNH XÁC CHÂN-SANG-CHÂN (23 DÂY) =====
     P_DC_PLUG ==>|"🔴 Dây 1: Cắm Jack DC 5.5mm"| XY_DC_JACK
     XY_VIN_P ==>|"🔴 Dây 2: +12V Trực tiếp sang MOSFET"| MOS_VIN_P
     XY_VIN_N ==>|"⚫ Dây 3: GND 12V"| P_GND2
@@ -442,25 +411,21 @@ flowchart TB
     MOS_VOUT_P ==>|"🔴 Dây 9: +12V Quạt"| FAN_RED
     MOS_VOUT_N ==>|"⚫ Dây 10: GND Quạt"| FAN_BLACK
 
-    FAN_BLUE ==>|"🔵 Dây 11: Xung TACH 12V"| OPTO_INP
-    P_GND3 ==>|"⚫ Dây 12: GND Opto In"| OPTO_INN
-    P_3V3_OUT ==>|"🟡 Dây 13: 3.3V Opto VCC"| OPTO_VCC
-    OPTO_OUT ==>|"🟣 Dây 14: Xung RPM 3.3V"| P_G5
-    P_GND3 ==>|"⚫ Dây 15: GND Opto Out"| OPTO_GND
+    FAN_BLUE ==>|"🔵 Dây 11: TACH trực tiếp (Pull-up 10kΩ)"| P_G5
 
-    P_5VIN ==>|"🟠 Dây 16: +5V LED"| LED_VCC
-    P_GND1 ==>|"⚫ Dây 17: GND LED"| LED_GND
-    P_G7 ==>|"🩵 Dây 18: DIN Data"| LED_DIN
+    P_5VIN ==>|"🟠 Dây 12: +5V LED"| LED_VCC
+    P_GND1 ==>|"⚫ Dây 13: GND LED"| LED_GND
+    P_G7 ==>|"🩵 Dây 14: DIN Data"| LED_DIN
 
-    P_3V3_OUT ==>|"🟡 Dây 19: 3.3V Màn 1.3'"| O1_VCC
-    P_GND4 ==>|"⚫ Dây 20: GND Màn 1.3'"| O1_GND
-    P_G12 ==>|"🟣 Dây 21: Nút CON Bật/Tắt LED"| O1_CON
-    P_G8 ==>|"🟪 Dây 22: SDA Màn 1.3'"| O1_SDA
-    P_G9 ==>|"🟪 Dây 23: SCL Màn 1.3'"| O1_SCL
-    P_G14 ==>|"🟢 Dây 24: Nút PSH Bật/Tắt Quạt"| O1_PSH
-    P_G10 ==>|"🟪 Dây 25: Encoder Kênh A"| O1_TRA
-    P_G11 ==>|"🟪 Dây 26: Encoder Kênh B"| O1_TRB
-    P_G13 ==>|"🟣 Dây 27: Nút BAK Đổi Mode LED"| O1_BAK
+    P_3V3_OUT ==>|"🟡 Dây 15: 3.3V Màn 1.3'"| O1_VCC
+    P_GND4 ==>|"⚫ Dây 16: GND Màn 1.3'"| O1_GND
+    P_G12 ==>|"🟣 Dây 17: Nút CON Bật/Tắt LED"| O1_CON
+    P_G8 ==>|"🟪 Dây 18: SDA Màn 1.3'"| O1_SDA
+    P_G9 ==>|"🟪 Dây 19: SCL Màn 1.3'"| O1_SCL
+    P_G14 ==>|"🟢 Dây 20: Nút PSH Bật/Tắt Quạt"| O1_PSH
+    P_G10 ==>|"🟪 Dây 21: Encoder Kênh A"| O1_TRA
+    P_G11 ==>|"🟪 Dây 22: Encoder Kênh B"| O1_TRB
+    P_G13 ==>|"🟣 Dây 23: Nút BAK Đổi Mode LED"| O1_BAK
 
     %% ===== ĐỊNH DẠNG MÀU SẮC DẠNG BOARD CHO CÁC KHỐI LINH KIỆN =====
     style ADAPTER fill:#450a0a,stroke:#f87171,stroke-width:2px,color:#fecaca
@@ -472,12 +437,11 @@ flowchart TB
 
     style MOSFET fill:#022c22,stroke:#10b981,stroke-width:3px,color:#a7f3d0
     style FAN_LLANO fill:#3b0764,stroke:#c084fc,stroke-width:3px,color:#f3e8ff
-    style OPTO fill:#451a03,stroke:#d97706,stroke-width:3px,color:#fde68a
 
     style OLED1 fill:#581c87,stroke:#e879f9,stroke-width:3px,color:#fae8ff
     style LED_STRIP fill:#164e63,stroke:#22d3ee,stroke-width:3px,color:#cffafe
 
-    %% ===== ĐỊNH DẠNG MÀU SẮC ĐƯỜNG DÂY (LINK STYLES) =====
+    %% ===== ĐỊNH DẠNG MÀU SẮC ĐƯỜNG DÂY (LINK STYLES - 23 connections) =====
     linkStyle 0 stroke:#ef4444,stroke-width:4px
     linkStyle 1 stroke:#ef4444,stroke-width:4px
     linkStyle 2 stroke:#64748b,stroke-width:3px
@@ -489,22 +453,18 @@ flowchart TB
     linkStyle 8 stroke:#ef4444,stroke-width:4px
     linkStyle 9 stroke:#64748b,stroke-width:3px
     linkStyle 10 stroke:#3b82f6,stroke-width:4px
-    linkStyle 11 stroke:#64748b,stroke-width:3px
-    linkStyle 12 stroke:#eab308,stroke-width:4px
-    linkStyle 13 stroke:#a855f7,stroke-width:4px
-    linkStyle 14 stroke:#64748b,stroke-width:3px
-    linkStyle 15 stroke:#f97316,stroke-width:4px
-    linkStyle 16 stroke:#64748b,stroke-width:3px
-    linkStyle 17 stroke:#06b6d4,stroke-width:4px
-    linkStyle 18 stroke:#eab308,stroke-width:4px
-    linkStyle 19 stroke:#64748b,stroke-width:3px
+    linkStyle 11 stroke:#f97316,stroke-width:4px
+    linkStyle 12 stroke:#64748b,stroke-width:3px
+    linkStyle 13 stroke:#06b6d4,stroke-width:4px
+    linkStyle 14 stroke:#eab308,stroke-width:4px
+    linkStyle 15 stroke:#64748b,stroke-width:3px
+    linkStyle 16 stroke:#8b5cf6,stroke-width:4px
+    linkStyle 17 stroke:#ec4899,stroke-width:4px
+    linkStyle 18 stroke:#ec4899,stroke-width:4px
+    linkStyle 19 stroke:#10b981,stroke-width:4px
     linkStyle 20 stroke:#8b5cf6,stroke-width:4px
-    linkStyle 21 stroke:#ec4899,stroke-width:4px
-    linkStyle 22 stroke:#ec4899,stroke-width:4px
-    linkStyle 23 stroke:#10b981,stroke-width:4px
-    linkStyle 24 stroke:#8b5cf6,stroke-width:4px
-    linkStyle 25 stroke:#8b5cf6,stroke-width:4px
-    linkStyle 26 stroke:#8b5cf6,stroke-width:4px
+    linkStyle 21 stroke:#8b5cf6,stroke-width:4px
+    linkStyle 22 stroke:#8b5cf6,stroke-width:4px
 ```
 
 ---

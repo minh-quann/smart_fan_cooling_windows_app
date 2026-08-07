@@ -14,6 +14,40 @@ namespace SmartFanCooling
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         private static extern bool Shell_NotifyIcon(int dwMessage, ref NOTIFYICONDATA lpData);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        // WndProc subclass for tray icon messages
+        [DllImport("comctl32.dll")]
+        private static extern bool SetWindowSubclass(IntPtr hWnd, SubclassProc pfnSubclass, nuint uIdSubclass, nuint dwRefData);
+
+        [DllImport("comctl32.dll")]
+        private static extern bool RemoveWindowSubclass(IntPtr hWnd, SubclassProc pfnSubclass, nuint uIdSubclass);
+
+        [DllImport("comctl32.dll")]
+        private static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+        // Context menu Win32 API
+        [DllImport("user32.dll")]
+        private static extern IntPtr CreatePopupMenu();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern bool AppendMenu(IntPtr hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+        [DllImport("user32.dll")]
+        private static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool DestroyMenu(IntPtr hMenu);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        private delegate IntPtr SubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, nuint uIdSubclass, nuint dwRefData);
+
         private const int NIM_ADD = 0x00000000;
         private const int NIM_MODIFY = 0x00000001;
         private const int NIM_DELETE = 0x00000002;
@@ -22,6 +56,25 @@ namespace SmartFanCooling
         private const int NIF_TIP = 0x00000004;
         private const int WM_USER = 0x0400;
         private const int WM_TRAYICON = WM_USER + 1;
+        private const int WM_LBUTTONDBLCLK = 0x0203;
+        private const int WM_RBUTTONUP = 0x0205;
+        private const int WM_COMMAND = 0x0111;
+        private const uint MF_STRING = 0x0000;
+        private const uint MF_SEPARATOR = 0x0800;
+        private const uint TPM_BOTTOMALIGN = 0x0020;
+        private const uint TPM_LEFTALIGN = 0x0000;
+        private const uint TPM_RETURNCMD = 0x0100;
+
+        // Tray context menu command IDs
+        private const nuint ID_TRAY_OPEN = 2001;
+        private const nuint ID_TRAY_EXIT = 2002;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         private struct NOTIFYICONDATA
@@ -46,13 +99,14 @@ namespace SmartFanCooling
 
         private NOTIFYICONDATA _nid;
         private IntPtr _hwnd;
+        private SubclassProc? _wndProc; // prevent GC collection
 
         public MainViewModel ViewModel { get; }
 
         public MainWindow()
         {
             this.InitializeComponent();
-            this.Title = "Llano Smart Fan Cooling System - WinUI 3 Native";
+            this.Title = "Smart Fan Cooling Hub";
             _hwnd = WindowNative.GetWindowHandle(this);
 
             try
@@ -90,7 +144,7 @@ namespace SmartFanCooling
                 _nid.uID = 1001;
                 _nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
                 _nid.uCallbackMessage = WM_TRAYICON;
-                _nid.szTip = "Llano Smart Fan Cooling System (ONLINE)";
+                _nid.szTip = "Smart Fan Cooling Hub (ONLINE)";
                 
                 // Get window icon handle
                 IntPtr hIcon = SendMessage(_hwnd, 0x007F /* WM_GETICON */, (IntPtr)1 /* ICON_BIG */, IntPtr.Zero);
@@ -98,12 +152,81 @@ namespace SmartFanCooling
                 _nid.hIcon = hIcon;
 
                 Shell_NotifyIcon(NIM_ADD, ref _nid);
+
+                // Subclass window to intercept tray icon messages
+                _wndProc = TrayWndProc;
+                SetWindowSubclass(_hwnd, _wndProc, 1, 0);
             }
             catch { }
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        private IntPtr TrayWndProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, nuint uIdSubclass, nuint dwRefData)
+        {
+            if (uMsg == WM_TRAYICON)
+            {
+                int eventId = (int)(lParam.ToInt64() & 0xFFFF);
+
+                if (eventId == WM_LBUTTONDBLCLK)
+                {
+                    // Double-click: show window
+                    ShowMainWindow();
+                }
+                else if (eventId == WM_RBUTTONUP)
+                {
+                    // Right-click: show context menu
+                    ShowTrayContextMenu();
+                }
+
+                return IntPtr.Zero;
+            }
+
+            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        }
+
+        private void ShowTrayContextMenu()
+        {
+            IntPtr hMenu = CreatePopupMenu();
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_OPEN, "Mở ứng dụng");
+            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
+            AppendMenu(hMenu, MF_STRING, ID_TRAY_EXIT, "Thoát");
+
+            // Required to dismiss menu when clicking elsewhere
+            SetForegroundWindow(_hwnd);
+
+            GetCursorPos(out POINT pt);
+            int cmd = TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, pt.X, pt.Y, 0, _hwnd, IntPtr.Zero);
+            DestroyMenu(hMenu);
+
+            if (cmd == (int)ID_TRAY_OPEN)
+            {
+                ShowMainWindow();
+            }
+            else if (cmd == (int)ID_TRAY_EXIT)
+            {
+                ExitApplication();
+            }
+        }
+
+        private void ShowMainWindow()
+        {
+            this.AppWindow.Show();
+            this.Activate();
+        }
+
+        private void ExitApplication()
+        {
+            // Clean up tray icon
+            Shell_NotifyIcon(NIM_DELETE, ref _nid);
+
+            // Remove WndProc subclass
+            if (_wndProc != null)
+            {
+                RemoveWindowSubclass(_hwnd, _wndProc, 1);
+            }
+
+            // Force exit
+            System.Environment.Exit(0);
+        }
 
         private void AppWindow_Closing(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowClosingEventArgs args)
         {
@@ -114,7 +237,7 @@ namespace SmartFanCooling
             }
             else
             {
-                Shell_NotifyIcon(NIM_DELETE, ref _nid);
+                ExitApplication();
             }
         }
 
@@ -154,6 +277,14 @@ namespace SmartFanCooling
             if (e.ClickedItem is RunningAppInfo app)
             {
                 ViewModel.SelectRunningApp(app);
+            }
+        }
+
+        private void BleDeviceBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is BleDeviceItem device)
+            {
+                ViewModel.ConnectBleDevice(device);
             }
         }
 

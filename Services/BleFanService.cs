@@ -1,8 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
+using SmartFanCooling.Models;
 
 namespace SmartFanCooling.Services
 {
@@ -13,8 +16,60 @@ namespace SmartFanCooling.Services
     {
         private BluetoothLEDevice? _bluetoothLeDevice;
         private GattCharacteristic? _controlCharacteristic;
+        private BluetoothLEAdvertisementWatcher? _watcher;
 
         public bool IsConnected => _bluetoothLeDevice != null && _bluetoothLeDevice.ConnectionStatus == BluetoothConnectionStatus.Connected;
+
+        public event Action<BleDeviceItem>? OnBleDeviceDiscovered;
+
+        public void StartContinuousScan()
+        {
+            StopScan();
+            _watcher = new BluetoothLEAdvertisementWatcher
+            {
+                ScanningMode = BluetoothLEScanningMode.Active
+            };
+
+            _watcher.Received += Watcher_Received;
+            _watcher.Start();
+        }
+
+        private void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
+        {
+            string name = args.Advertisement.LocalName;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = $"Thiết bị BLE ({args.BluetoothAddress:X})";
+            }
+
+            byte[] bytes = BitConverter.GetBytes(args.BluetoothAddress);
+            Array.Reverse(bytes);
+            string mac = string.Join(":", bytes.TakeLast(6).Select(b => b.ToString("X2")));
+
+            var item = new BleDeviceItem
+            {
+                Name = name,
+                Address = args.BluetoothAddress,
+                MacAddress = mac,
+                Rssi = args.RawSignalStrengthInDBm
+            };
+
+            OnBleDeviceDiscovered?.Invoke(item);
+        }
+
+        public void StopScan()
+        {
+            if (_watcher != null)
+            {
+                try
+                {
+                    _watcher.Received -= Watcher_Received;
+                    _watcher.Stop();
+                }
+                catch { }
+                _watcher = null;
+            }
+        }
 
         public async Task<bool> ConnectAsync(ulong bluetoothAddress)
         {

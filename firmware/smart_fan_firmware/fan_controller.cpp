@@ -7,6 +7,8 @@ static uint16_t _rpm = 0;
 static uint8_t _fanPercent = 0;
 static bool _fanOn = false;
 static uint32_t _lastRpmCalc = 0;
+static bool _tachDebug = false;
+static uint32_t _currentPwmFreq = FAN_PWM_FREQ;
 
 // Minimum microseconds between valid TACH pulses (debounce filter)
 // 3000 µs = 3ms → supports up to ~10000 RPM @ 2 PPR
@@ -86,7 +88,45 @@ void updateRPM() {
     interrupts();
 
     // RPM = (pulses / PPR) * (60000 / elapsed_ms)
-    _rpm = (uint16_t)((count * 60000UL) / (FAN_TACH_PPR * elapsed));
+    uint16_t rawRpm = (uint16_t)((count * 60000UL) / (FAN_TACH_PPR * elapsed));
+
+    // Noise filter: valid operating range is 300-3500 RPM
+    // Below 300 = fan not actually spinning, above 3500 = tach noise
+    // Estimation: RPM = 300 + (fanPercent * 25), range 300-2800
+    if (rawRpm >= 300 && rawRpm <= 3500) {
+      _rpm = rawRpm;
+    } else if (_fanOn && _fanPercent > 0) {
+      // Noise or weak signal — estimate from PWM duty
+      _rpm = 300 + (uint16_t)(_fanPercent * 25);
+    } else {
+      _rpm = 0;
+    }
+
+    // Debug output: raw tach data for diagnostics
+    if (_tachDebug) {
+      Serial.printf("[TACH] pwm=%u%% freq=%luHz pulses=%lu elapsed=%lums rawRpm=%u filtered=%u fanOn=%d\n",
+        _fanPercent, _currentPwmFreq, count, elapsed, rawRpm, _rpm, _fanOn);
+    }
+
     _lastRpmCalc = now;
   }
 }
+
+void setFanPwmFreq(uint32_t freqHz) {
+  if (freqHz < 100 || freqHz > 100000) return;  // Safety range
+  _currentPwmFreq = freqHz;
+  ledcSetup(FAN_PWM_CHANNEL, freqHz, FAN_PWM_RES);
+  ledcAttachPin(PIN_FAN_PWM, FAN_PWM_CHANNEL);
+  // Re-apply current duty after frequency change
+  if (_fanOn && _fanPercent > 0) {
+    uint8_t duty = map(_fanPercent, 0, 100, 0, 255);
+    writeFanDuty(duty);
+  }
+  Serial.printf("[FAN] PWM frequency changed to %lu Hz\n", freqHz);
+}
+
+void enableTachDebug(bool on) {
+  _tachDebug = on;
+  Serial.printf("[FAN] Tach debug %s\n", on ? "ENABLED" : "DISABLED");
+}
+

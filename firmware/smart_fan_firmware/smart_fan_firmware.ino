@@ -125,8 +125,11 @@ void loop() {
     float gpuT = getUSBGpuTemp() > 0 ? getUSBGpuTemp() :
                  getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
 
+    uint16_t cpuFan = getUSBCpuFanRpm();
+    uint16_t gpuFan = getUSBGpuFanRpm();
+
     updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn());
-    updateSecondaryDisplay(cpuT, gpuT,
+    updateSecondaryDisplay(getFanRPM(), getFanPercent(), cpuT, gpuT, cpuFan, gpuFan,
                            isBLEConnected(), isWiFiConnected(),
                            isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str());
     lastDisplayUpdate = now;

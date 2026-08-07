@@ -10,6 +10,8 @@ static bool _usbConnected = false;
 static uint32_t _lastPing = 0;
 static float _cpuTemp = 0;
 static float _gpuTemp = 0;
+static uint16_t _cpuFanRpm = 0;
+static uint16_t _gpuFanRpm = 0;
 static String _rxBuffer = "";
 
 // USB connection timeout — if no ping received within this period, consider disconnected
@@ -66,7 +68,9 @@ static void handleUSBCommand(const char* payload) {
   else if (strcmp(cmd, "temp") == 0) {
     _cpuTemp = doc["cpu"] | 0.0f;
     _gpuTemp = doc["gpu"] | 0.0f;
-    Serial.printf("USB: Temps CPU=%.1f GPU=%.1f\n", _cpuTemp, _gpuTemp);
+    _cpuFanRpm = doc["cpu_fan"] | 0;
+    _gpuFanRpm = doc["gpu_fan"] | 0;
+    Serial.printf("USB: Temps CPU=%.1f GPU=%.1f CPU_FAN=%u GPU_FAN=%u\n", _cpuTemp, _gpuTemp, _cpuFanRpm, _gpuFanRpm);
   }
   else if (strcmp(cmd, "wifi_config") == 0) {
     const char* ssid = doc["ssid"];
@@ -107,6 +111,16 @@ static void handleUSBCommand(const char* payload) {
       "{\"cmd\":\"pin_test\",\"enc_a\":%d,\"enc_b\":%d,\"enc2_count\":%lld,\"btn_psh\":%d,\"btn_con\":%d,\"btn_bak\":%d}",
       encA, encB, enc2Count, btnPsh, btnCon, btnBak);
     Serial.println(resp);
+  }
+  else if (strcmp(cmd, "debug_tach") == 0) {
+    bool on = doc["value"] | 0;
+    enableTachDebug(on);
+  }
+  else if (strcmp(cmd, "set_pwm_freq") == 0) {
+    uint32_t freq = doc["value"] | 0;
+    if (freq > 0) {
+      setFanPwmFreq(freq);
+    }
   }
 }
 
@@ -155,6 +169,14 @@ float getUSBCpuTemp() {
 
 float getUSBGpuTemp() {
   return _gpuTemp;
+}
+
+uint16_t getUSBCpuFanRpm() {
+  return _cpuFanRpm;
+}
+
+uint16_t getUSBGpuFanRpm() {
+  return _gpuFanRpm;
 }
 
 void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn,

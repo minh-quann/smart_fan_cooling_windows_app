@@ -121,60 +121,52 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
   oled1.display();
 }
 
-void updateSecondaryDisplay(float cpuTemp, float gpuTemp,
+void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
+                            float cpuTemp, float gpuTemp,
+                            uint16_t cpuFanRpm, uint16_t gpuFanRpm,
                             bool bleConnected, bool wifiConnected, const char* wifiIP) {
   oled2.clearDisplay();
 
-  // ---- Yellow zone (Y 0-15): Title ----
-  oled2.setTextSize(1);
-  oled2.setCursor(16, 4);
-  oled2.print("SYSTEM MONITOR");
+  // ---- Yellow zone (Y 0-15): Smart Fan RPM (Large Text Size 2) ----
+  oled2.setTextSize(2);
+  oled2.setTextColor(SSD1306_WHITE);
+  oled2.setCursor(0, 0);
+  oled2.printf("%u RPM", smartFanRpm);
 
   // ---- Blue zone (Y 16-63): Content ----
+  oled2.setTextSize(1);
 
-  // CPU & GPU temps (Y=18)
-  oled2.setCursor(0, 18);
-  oled2.print("CPU:");
+  // CPU Fan RPM + Temp (Y=20)
+  oled2.setCursor(0, 20);
+  oled2.printf("CPU: %u", cpuFanRpm);
+  oled2.print(" | ");
   if (cpuTemp > 0) {
-    oled2.print(cpuTemp, 0);
-    oled2.print("C");
+    oled2.printf("%.0fC", cpuTemp);
   } else {
-    oled2.print("N/A");
+    oled2.print("--C");
   }
-  oled2.setCursor(68, 18);
-  oled2.print("GPU:");
+
+  // GPU Fan RPM + Temp (Y=36)
+  oled2.setCursor(0, 36);
+  oled2.printf("GPU: %u", gpuFanRpm);
+  oled2.print(" | ");
   if (gpuTemp > 0) {
-    oled2.print(gpuTemp, 0);
-    oled2.print("C");
+    oled2.printf("%.0fC", gpuTemp);
   } else {
-    oled2.print("N/A");
+    oled2.print("--C");
   }
 
-  // Divider
-  oled2.drawLine(0, 28, 127, 28, SSD1306_WHITE);
-
-  // Connection status (Y=32)
-  oled2.setCursor(0, 32);
-  oled2.print("BLE:");
-  oled2.print(bleConnected ? "OK" : "--");
-  oled2.setCursor(68, 32);
-  oled2.print("WS:");
-  oled2.print(wifiConnected ? "OK" : "--");
-
-  // Divider
-  oled2.drawLine(0, 42, 127, 42, SSD1306_WHITE);
-
-  // IP + port (Y=46)
-  oled2.setCursor(0, 46);
-  oled2.print(wifiIP);
-  oled2.setCursor(98, 46);
-  oled2.print(":");
-  oled2.print(WS_PORT);
-
-  // mDNS name (Y=56)
-  oled2.setCursor(0, 56);
-  oled2.print(MDNS_NAME);
-  oled2.print(".local");
+  // PWM & Transport Status (Y=52)
+  oled2.setCursor(0, 52);
+  oled2.printf("PWM: %u%%", fanPercent);
+  oled2.setCursor(75, 52);
+  if (wifiConnected) {
+    oled2.print("WiFi");
+  } else if (bleConnected) {
+    oled2.print("BLE");
+  } else {
+    oled2.print("USB");
+  }
 
   oled2.display();
 }

@@ -339,17 +339,17 @@
       <div class="brand-icon"><i class="fa-solid fa-plug-circle-bolt"></i></div>
       <div class="brand-text">
         <h1>LLANO SMART FAN - DUAL POWER MODE (USB Laptop + 12V Adapter)</h1>
-        <p>ESP32 nuôi bằng USB Laptop — Quạt & LED nuôi bằng Adapter 12V riêng (34 Dây)</p>
+        <p>ESP32 nuôi bằng USB Laptop — Quạt & LED nuôi bằng Adapter 12V riêng (30 Dây)</p>
       </div>
     </div>
 
     <!-- FILTER BAR -->
     <div class="filter-bar">
       <div class="filter-chip active" data-filter="sd1" onclick="filterWires('sd1')">
-        <i class="fa-solid fa-1"></i> Sơ Đồ 1 (Có LED - 34 Dây)
+        <i class="fa-solid fa-1"></i> Sơ Đồ 1 (Có LED - 30 Dây)
       </div>
       <div class="filter-chip" data-filter="sd2" onclick="filterWires('sd2')">
-        <i class="fa-solid fa-2"></i> Sơ Đồ 2 (Bỏ LED - 25 Dây)
+        <i class="fa-solid fa-2"></i> Sơ Đồ 2 (Bỏ LED - 22 Dây)
       </div>
       <div class="filter-chip" data-filter="usb" onclick="filterWires('usb')">
         <div class="dot" style="background: var(--color-usb);"></div> USB 5V
@@ -513,10 +513,10 @@
               <div class="pin-box" data-pin="esp_g15" onclick="selectPin('esp_g15')"><div class="pin-name"><span>15</span><span class="terminal-dot" style="background:#8b5cf6;"></span></div><div class="pin-target">➔ Enc2 Kênh A (Tín hiệu)</div><div class="pin-wire-info">Dây 32</div></div>
               <div class="pin-box" data-pin="esp_g7" onclick="selectPin('esp_g7')"><div class="pin-name"><span>7</span><span class="terminal-dot" style="background:#06b6d4;"></span></div><div class="pin-target">➔ LED DIN</div><div class="pin-wire-info">Dây 18</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g6"><div class="pin-name"><span>6</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
-              <div class="pin-box" data-pin="esp_g5" onclick="selectPin('esp_g5')"><div class="pin-name"><span>5</span><span class="terminal-dot" style="background:#a855f7;"></span></div><div class="pin-target">➔ RPM Opto</div><div class="pin-wire-info">Dây 14</div></div>
+              <div class="pin-box" data-pin="esp_g5" onclick="selectPin('esp_g5')"><div class="pin-name"><span>5</span><span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target">➔ TACH Quạt</div><div class="pin-wire-info">Dây 11 (Pull-up 10kΩ lên 3.3V)</div></div>
               <div class="pin-box" data-pin="esp_g4" onclick="selectPin('esp_g4')"><div class="pin-name"><span>4</span><span class="terminal-dot" style="background:#22c55e;"></span></div><div class="pin-target">➔ PWM</div><div class="pin-wire-info">Dây 7</div></div>
               <div class="pin-box pin-unused" data-pin="esp_rst"><div class="pin-name"><span>RST</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Reset</div></div>
-              <div class="pin-box" data-pin="esp_3v3_out" onclick="selectPin('esp_3v3_out')"><div class="pin-name"><span>3V3 (Vỏ Quạt)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ 3.3V Vỏ Quạt</div><div class="pin-wire-info">Dây 13,28</div></div>
+              <div class="pin-box" data-pin="esp_3v3_out" onclick="selectPin('esp_3v3_out')"><div class="pin-name"><span>3V3 (Vỏ Quạt)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ 3.3V Vỏ Quạt</div><div class="pin-wire-info">Dây 28</div></div>
               <div class="pin-box" data-pin="esp_3v3_b" onclick="selectPin('esp_3v3_b')"><div class="pin-name"><span>3V3 (Đế)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ Màn 1.3" VCC</div><div class="pin-wire-info">Dây 19</div></div>
             </div>
 
@@ -533,7 +533,7 @@
             <!-- BOTTOM ROW -->
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">🔵 DÃY CỌC DƯỚI (BOTTOM TERMINAL ROW):</p>
             <div class="pins-grid-44">
-              <div class="pin-box" data-pin="esp_gnd2" onclick="selectPin('esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 3,5,6,8,12,15,17,29,34</div></div>
+              <div class="pin-box" data-pin="esp_gnd2" onclick="selectPin('esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 3,5,6,8,17,29,34</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g19"><div class="pin-name"><span>19</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g20"><div class="pin-name"><span>20</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused" data-pin="esp_g21"><div class="pin-name"><span>21</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
@@ -558,7 +558,7 @@
           </div>
         </div>
 
-        <!-- ROW 3: MOSFET, FAN, OPTO -->
+        <!-- ROW 3: MOSFET, FAN -->
         <div class="module-row" id="row3">
           <div class="module-card card-drive" style="flex: 1.2;">
             <div class="module-header">
@@ -581,22 +581,28 @@
             <div class="pins-grid">
               <div class="pin-box" data-pin="fan_red" onclick="selectPin('fan_red')"><div class="pin-name"><span>🔴 Dây Đỏ</span> <span class="terminal-dot" style="background:#ef4444;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ MOSFET OUT+</div><div class="pin-wire-info">Dây 9</div></div>
               <div class="pin-box" data-pin="fan_black" onclick="selectPin('fan_black')"><div class="pin-name"><span>⚫ Dây Đen</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ MOSFET OUT-</div><div class="pin-wire-info">Dây 10</div></div>
-              <div class="pin-box" data-pin="fan_blue" onclick="selectPin('fan_blue')"><div class="pin-name"><span>🔵 Dây Xanh</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối đến ➔ Opto IN+</div><div class="pin-wire-info">Dây 11</div></div>
+              <div class="pin-box" data-pin="fan_blue" onclick="selectPin('fan_blue')"><div class="pin-name"><span>🔵 Dây Xanh</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối trực tiếp ➔ ESP32 GPIO 5 (Pull-up 10kΩ lên 3.3V)</div><div class="pin-wire-info">Dây 11</div></div>
             </div>
           </div>
 
-          <div class="module-card card-drive" style="flex: 1.1;">
+          <div class="module-card" style="flex: 0.6; border-color: rgba(234, 179, 8, 0.5); background: #1a1600;">
             <div class="module-header">
-              <div class="module-title"><i class="fa-solid fa-microchip"></i> 6. Module Opto PC817 <span style="font-size:10px; background:rgba(16,185,129,0.25); border:1px solid #10b981; color:#34d399; padding:2px 8px; border-radius:12px; margin-left:6px;">📦 Bỏ trong vỏ quạt</span></div>
+              <div class="module-title"><i class="fa-solid fa-right-left"></i> 6. Điện Trở Pull-up 10kΩ <span style="font-size:10px; background:rgba(234,179,8,0.25); border:1px solid #eab308; color:#fde68a; padding:2px 8px; border-radius:12px; margin-left:6px;">⚡ Hàn trên Bo Đế</span></div>
             </div>
             <div class="pins-grid">
-              <div class="pin-box" data-pin="opto_inp" onclick="selectPin('opto_inp')"><div class="pin-name"><span>🔵 IN+</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ Quạt Xanh</div><div class="pin-wire-info">Dây 11</div></div>
-              <div class="pin-box" data-pin="opto_inn" onclick="selectPin('opto_inn')"><div class="pin-name"><span>⚫ IN-</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND</div><div class="pin-wire-info">Dây 12</div></div>
-              <div class="pin-box" data-pin="opto_vcc" onclick="selectPin('opto_vcc')"><div class="pin-name"><span>🟡 VCC</span> <span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận ➔ ESP32 3V3</div><div class="pin-wire-info">Dây 13</div></div>
-              <div class="pin-box" data-pin="opto_out" onclick="selectPin('opto_out')"><div class="pin-name"><span>🟣 OUT</span> <span class="terminal-dot" style="background:#a855f7;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GPIO 5</div><div class="pin-wire-info">Dây 14</div></div>
-              <div class="pin-box" data-pin="opto_gnd" onclick="selectPin('opto_gnd')"><div class="pin-name"><span>⚫ GND</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND</div><div class="pin-wire-info">Dây 15</div></div>
+              <div class="pin-box" data-pin="res_3v3" onclick="selectPin('res_3v3')" style="border-color: rgba(234,179,8,0.4);">
+                <div class="pin-name"><span>🟡 Chân 1</span> <span class="terminal-dot" style="background:#eab308;"></span></div>
+                <div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Hàn vào ➔ Cọc 3V3 trên ESP32</div>
+                <div class="pin-wire-info">Pull-up: 3.3V → 10kΩ → GPIO 5</div>
+              </div>
+              <div class="pin-box" data-pin="res_gpio5" onclick="selectPin('res_gpio5')" style="border-color: rgba(59,130,246,0.4);">
+                <div class="pin-name"><span>🔵 Chân 2</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div>
+                <div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Hàn vào ➔ Cọc GPIO 5 (cùng cọc dây TACH)</div>
+                <div class="pin-wire-info">Chung cọc với dây xanh TACH quạt</div>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- ROW 4: DISPLAYS & LED -->
@@ -664,8 +670,8 @@
         <div id="diagram2Section" class="diagram-section" style="display: none;">
           <!-- ==================== SƠ ĐỒ 2: KHÔNG LED & KHÔNG MẠCH HẠ ÁP XY3606 ==================== -->
           <div class="diagram-divider" id="section2">
-            <h2><i class="fa-solid fa-scissors"></i> SƠ ĐỒ 2: BIẾN THỂ KHÔNG LED — LẮP MODULE 4, 6, 8, 10 TRONG VỎ QUẠT <span class="badge-no-led">TỐI GIẢN (27 DÂY)</span></h2>
-            <p>⚡ <strong>Đặc điểm:</strong> ESP32 lấy nguồn 5V từ USB Laptop. Adapter 12V cắm thẳng nuôi Quạt & MOSFET. Không có dải LED RGB nên <strong>LOẠI BỎ HOÀN TOÀN mạch hạ áp XY3606</strong> và module LED. Các module <strong>4 (MOSFET), 6 (Opto), 8 (OLED 0.96"), 10 (Con Lăn Chuột)</strong> được lắp gọn bên trong/trên thân vỏ quạt.</p>
+            <h2><i class="fa-solid fa-scissors"></i> SƠ ĐỒ 2: BIẾN THỂ KHÔNG LED — LẮP MODULE 4, 8, 10 TRONG VỎ QUẠT <span class="badge-no-led">TỐI GIẢN (22 DÂY)</span></h2>
+            <p>⚡ <strong>Đặc điểm:</strong> ESP32 lấy nguồn 5V từ USB Laptop. Adapter 12V cắm thẳng nuôi Quạt & MOSFET. Không có dải LED RGB nên <strong>LOẠI BỎ HOÀN TOÀN mạch hạ áp XY3606</strong> và module LED. Các module <strong>4 (MOSFET), 8 (OLED 0.96"), 10 (Con Lăn Chuột)</strong> được lắp gọn bên trong/trên thân vỏ quạt. Dây TACH quạt nối trực tiếp vào GPIO 5 (pull-up 10kΩ lên 3.3V).</p>
           </div>
 
         <!-- DIAGRAM 2 - ROW 1: POWER SOURCES -->
@@ -728,10 +734,10 @@
               <div class="pin-box" data-pin="d2_esp_g15" onclick="selectPin('d2_esp_g15')"><div class="pin-name"><span>15</span><span class="terminal-dot" style="background:#8b5cf6;"></span></div><div class="pin-target">➔ Enc2 Chân 2</div><div class="pin-wire-info">Dây 225</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>7</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Bỏ (tín hiệu LED)</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>6</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
-              <div class="pin-box" data-pin="d2_esp_g5" onclick="selectPin('d2_esp_g5')"><div class="pin-name"><span>5</span><span class="terminal-dot" style="background:#a855f7;"></span></div><div class="pin-target">➔ RPM Opto</div><div class="pin-wire-info">Dây 211</div></div>
+              <div class="pin-box" data-pin="d2_esp_g5" onclick="selectPin('d2_esp_g5')"><div class="pin-name"><span>5</span><span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target">➔ TACH Quạt (Trực tiếp)</div><div class="pin-wire-info">Dây 208 (Pull-up 10kΩ lên 3.3V)</div></div>
               <div class="pin-box" data-pin="d2_esp_g4" onclick="selectPin('d2_esp_g4')"><div class="pin-name"><span>4</span><span class="terminal-dot" style="background:#22c55e;"></span></div><div class="pin-target">➔ PWM MOSFET</div><div class="pin-wire-info">Dây 204</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>RST</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Reset</div></div>
-              <div class="pin-box" data-pin="d2_esp_3v3_out" onclick="selectPin('d2_esp_3v3_out')"><div class="pin-name"><span>3V3 (Quạt)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ 3.3V Vỏ Quạt</div><div class="pin-wire-info">Dây 210,220</div></div>
+              <div class="pin-box" data-pin="d2_esp_3v3_out" onclick="selectPin('d2_esp_3v3_out')"><div class="pin-name"><span>3V3 (Quạt)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ 3.3V Vỏ Quạt</div><div class="pin-wire-info">Dây 220</div></div>
               <div class="pin-box" data-pin="d2_esp_3v3_b" onclick="selectPin('d2_esp_3v3_b')"><div class="pin-name"><span>3V3 (Đế)</span><span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target">➔ Màn 1.3" VCC</div><div class="pin-wire-info">Dây 213</div></div>
             </div>
 
@@ -748,7 +754,7 @@
             <!-- BOTTOM ROW -->
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; margin-bottom: 4px;">🔵 DÃY CỌC DƯỚI (BOTTOM TERMINAL ROW):</p>
             <div class="pins-grid-44">
-              <div class="pin-box" data-pin="d2_esp_gnd2" onclick="selectPin('d2_esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 202,203,205,209,212,221,224</div></div>
+              <div class="pin-box" data-pin="d2_esp_gnd2" onclick="selectPin('d2_esp_gnd2')"><div class="pin-name"><span>GND</span><span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target">➔ GND Chung (All)</div><div class="pin-wire-info">Dây 202,203,205,221,224</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>19</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>20</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
               <div class="pin-box pin-unused"><div class="pin-name"><span>21</span><span class="terminal-dot" style="background:#475569;"></span></div><div class="pin-target">Dự phòng</div></div>
@@ -773,7 +779,7 @@
           </div>
         </div>
 
-        <!-- DIAGRAM 2 - ROW 3: MOSFET, FAN, OPTO -->
+        <!-- DIAGRAM 2 - ROW 3: MOSFET, FAN -->
         <div class="module-row" id="d2_row3">
           <div class="module-card card-drive" style="flex: 1.2;">
             <div class="module-header">
@@ -796,22 +802,28 @@
             <div class="pins-grid">
               <div class="pin-box" data-pin="d2_fan_red" onclick="selectPin('d2_fan_red')"><div class="pin-name"><span>🔴 Dây Đỏ</span> <span class="terminal-dot" style="background:#ef4444;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ MOSFET OUT+</div><div class="pin-wire-info">Dây 206</div></div>
               <div class="pin-box" data-pin="d2_fan_black" onclick="selectPin('d2_fan_black')"><div class="pin-name"><span>⚫ Dây Đen</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ MOSFET OUT-</div><div class="pin-wire-info">Dây 207</div></div>
-              <div class="pin-box" data-pin="d2_fan_blue" onclick="selectPin('d2_fan_blue')"><div class="pin-name"><span>🔵 Dây Xanh</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối đến ➔ Opto IN+</div><div class="pin-wire-info">Dây 208</div></div>
+              <div class="pin-box" data-pin="d2_fan_blue" onclick="selectPin('d2_fan_blue')"><div class="pin-name"><span>🔵 Dây Xanh</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối trực tiếp ➔ ESP32 GPIO 5 (Pull-up 10kΩ lên 3.3V)</div><div class="pin-wire-info">Dây 208</div></div>
             </div>
           </div>
 
-          <div class="module-card card-drive" style="flex: 1.1;">
+          <div class="module-card" style="flex: 0.6; border-color: rgba(234, 179, 8, 0.5); background: #1a1600;">
             <div class="module-header">
-              <div class="module-title"><i class="fa-solid fa-microchip"></i> 6. Opto PC817 <span style="font-size:10px; background:rgba(16,185,129,0.25); border:1px solid #10b981; color:#34d399; padding:2px 8px; border-radius:12px; margin-left:6px;">📦 Bỏ trong vỏ quạt</span></div>
+              <div class="module-title"><i class="fa-solid fa-right-left"></i> 6. Điện Trở Pull-up 10kΩ <span style="font-size:10px; background:rgba(234,179,8,0.25); border:1px solid #eab308; color:#fde68a; padding:2px 8px; border-radius:12px; margin-left:6px;">⚡ Hàn trên Bo Đế</span></div>
             </div>
             <div class="pins-grid">
-              <div class="pin-box" data-pin="d2_opto_inp" onclick="selectPin('d2_opto_inp')"><div class="pin-name"><span>🔵 IN+</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận từ ➔ Quạt Xanh</div><div class="pin-wire-info">Dây 208</div></div>
-              <div class="pin-box" data-pin="d2_opto_inn" onclick="selectPin('d2_opto_inn')"><div class="pin-name"><span>⚫ IN-</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND</div><div class="pin-wire-info">Dây 209</div></div>
-              <div class="pin-box" data-pin="d2_opto_vcc" onclick="selectPin('d2_opto_vcc')"><div class="pin-name"><span>🟡 VCC</span> <span class="terminal-dot" style="background:#eab308;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nhận ➔ ESP32 3V3</div><div class="pin-wire-info">Dây 210</div></div>
-              <div class="pin-box" data-pin="d2_opto_out" onclick="selectPin('d2_opto_out')"><div class="pin-name"><span>🟣 OUT</span> <span class="terminal-dot" style="background:#a855f7;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GPIO 5</div><div class="pin-wire-info">Dây 211</div></div>
-              <div class="pin-box" data-pin="d2_opto_gnd" onclick="selectPin('d2_opto_gnd')"><div class="pin-name"><span>⚫ GND</span> <span class="terminal-dot" style="background:#64748b;"></span></div><div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Nối ➔ ESP32 GND</div><div class="pin-wire-info">Dây 212</div></div>
+              <div class="pin-box" data-pin="d2_res_3v3" onclick="selectPin('d2_res_3v3')" style="border-color: rgba(234,179,8,0.4);">
+                <div class="pin-name"><span>🟡 Chân 1</span> <span class="terminal-dot" style="background:#eab308;"></span></div>
+                <div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Hàn vào ➔ Cọc 3V3 trên ESP32</div>
+                <div class="pin-wire-info">Pull-up: 3.3V → 10kΩ → GPIO 5</div>
+              </div>
+              <div class="pin-box" data-pin="d2_res_gpio5" onclick="selectPin('d2_res_gpio5')" style="border-color: rgba(59,130,246,0.4);">
+                <div class="pin-name"><span>🔵 Chân 2</span> <span class="terminal-dot" style="background:#3b82f6;"></span></div>
+                <div class="pin-target"><i class="fa-solid fa-arrow-right"></i> Hàn vào ➔ Cọc GPIO 5 (cùng cọc dây TACH)</div>
+                <div class="pin-wire-info">Chung cọc với dây xanh TACH quạt</div>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- DIAGRAM 2 - ROW 4: DISPLAYS -->
@@ -875,24 +887,24 @@
     <div class="sidebar">
       <div class="sidebar-head">
         <div class="sidebar-title-row">
-          <h3 id="sidebarTitle">Bảng Tra Cứu Sơ Đồ 1 (Có LED - 34 Dây)</h3>
+          <h3 id="sidebarTitle">Bảng Tra Cứu Sơ Đồ 1 (Có LED - 30 Dây)</h3>
           <button class="btn-reset-all" onclick="resetAllCheckmarks()">Xóa tất cả tích</button>
         </div>
 
         <!-- TAB CHỌN SƠ ĐỒ TRỰC TIẾP TRONG SIDEBAR -->
         <div class="sidebar-diagram-tabs">
           <button class="sdb-tab active" data-sdb-diagram="sd1" onclick="filterWires('sd1')" title="Sơ Đồ 1 (Có LED)">
-            <i class="fa-solid fa-1"></i> Sơ Đồ 1 (34 Dây)
+            <i class="fa-solid fa-1"></i> Sơ Đồ 1 (30 Dây)
           </button>
           <button class="sdb-tab" data-sdb-diagram="sd2" onclick="filterWires('sd2')" title="Sơ Đồ 2 (Không LED)">
-            <i class="fa-solid fa-2"></i> Sơ Đồ 2 (25 Dây)
+            <i class="fa-solid fa-2"></i> Sơ Đồ 2 (22 Dây)
           </button>
         </div>
 
         <div class="progress-box">
           <div class="progress-text">
-            <span id="progressLabel">Tiến Độ Sơ Đồ 1 (34 Dây):</span>
-            <span id="progressPercent">0 / 34 Dây (0%)</span>
+            <span id="progressLabel">Tiến Độ Sơ Đồ 1 (30 Dây):</span>
+            <span id="progressPercent">0 / 30 Dây (0%)</span>
           </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBarFill"></div>
@@ -920,11 +932,9 @@
       { id: 8, diagram: 1, wire: "Dây 8: GND PWM", fromPin: "esp_gnd2", toPin: "mos_gnd_trig", type: "gnd", desc: "Tiếp địa tín hiệu kích MOSFET" },
       { id: 9, diagram: 1, wire: "Dây 9: +12V Quạt", fromPin: "mos_vout_p", toPin: "fan_red", type: "12v", desc: "Nguồn +12V cấp cho quạt" },
       { id: 10, diagram: 1, wire: "Dây 10: GND Quạt", fromPin: "mos_vout_n", toPin: "fan_black", type: "gnd", desc: "Chân mát cắt bởi MOSFET" },
-      { id: 11, diagram: 1, wire: "Dây 11: Xung TACH 12V", fromPin: "fan_blue", toPin: "opto_inp", type: "pwm", desc: "Xung phản hồi tốc độ quạt" },
-      { id: 12, diagram: 1, wire: "Dây 12: GND Opto In", fromPin: "esp_gnd2", toPin: "opto_inn", type: "gnd", desc: "Tiếp địa đầu vào Opto" },
-      { id: 13, diagram: 1, wire: "Dây 13: 3.3V Opto VCC", fromPin: "esp_3v3_out", toPin: "opto_vcc", type: "3v3", desc: "Nguồn 3.3V từ ESP32 nuôi Opto" },
-      { id: 14, diagram: 1, wire: "Dây 14: Xung RPM 3.3V", fromPin: "opto_out", toPin: "esp_g5", type: "pwm", desc: "Xung đếm vòng quay RPM" },
-      { id: 15, diagram: 1, wire: "Dây 15: GND Opto Out", fromPin: "esp_gnd2", toPin: "opto_gnd", type: "gnd", desc: "Tiếp địa đầu ra Opto" },
+      { id: 11, diagram: 1, wire: "Dây 11: TACH Quạt → GPIO 5 (Trực tiếp)", fromPin: "fan_blue", toPin: "esp_g5", type: "pwm", desc: "Dây TACH trực tiếp từ quạt (Pull-up 10kΩ lên 3.3V)" },
+      { id: 1101, diagram: 1, wire: "Pull-up 10kΩ: 3V3 → Điện trở (Chân 1)", fromPin: "esp_3v3_out", toPin: "res_3v3", type: "3v3", desc: "Chân 1 điện trở 10kΩ hàn vào cọc 3V3 trên ESP32" },
+      { id: 1102, diagram: 1, wire: "Pull-up 10kΩ: Điện trở (Chân 2) → GPIO 5", fromPin: "res_gpio5", toPin: "esp_g5", type: "3v3", desc: "Chân 2 điện trở 10kΩ hàn vào cọc GPIO 5 (chung cọc dây TACH)" },
       { id: 16, diagram: 1, wire: "Dây 16*: +5V LED từ XY3606 (KHÔNG qua ESP32)", fromPin: "xy_out_p", toPin: "led_vcc", type: "5v", desc: "⚠️ KHÁC BẢN GỐC: LED lấy 5V trực tiếp từ XY3606 OUT+" },
       { id: 17, diagram: 1, wire: "Dây 17: GND LED", fromPin: "esp_gnd2", toPin: "led_gnd", type: "gnd", desc: "Tiếp địa LED RGB WS2812B nối vào cọc GND chung ở dãy cọc dưới bo đế ESP32" },
       { id: 18, diagram: 1, wire: "Dây 18: DIN Data LED", fromPin: "esp_g7", toPin: "led_din", type: "pwm", desc: "Tín hiệu điều khiển FastLED từ ESP32" },
@@ -954,11 +964,9 @@
       { id: 205, diagram: 2, wire: "[SĐ2] Dây 205: GND PWM", fromPin: "d2_esp_gnd2", toPin: "d2_mos_gnd_trig", type: "gnd", desc: "Tiếp địa tín hiệu kích MOSFET" },
       { id: 206, diagram: 2, wire: "[SĐ2] Dây 206: +12V Quạt", fromPin: "d2_mos_vout_p", toPin: "d2_fan_red", type: "12v", desc: "Nguồn +12V cấp cho quạt" },
       { id: 207, diagram: 2, wire: "[SĐ2] Dây 207: GND Quạt", fromPin: "d2_mos_vout_n", toPin: "d2_fan_black", type: "gnd", desc: "Chân mát quạt đóng cắt bởi MOSFET" },
-      { id: 208, diagram: 2, wire: "[SĐ2] Dây 208: Xung TACH 12V", fromPin: "d2_fan_blue", toPin: "d2_opto_inp", type: "pwm", desc: "Xung phản hồi tốc độ quạt" },
-      { id: 209, diagram: 2, wire: "[SĐ2] Dây 209: GND Opto In", fromPin: "d2_esp_gnd2", toPin: "d2_opto_inn", type: "gnd", desc: "Tiếp địa đầu vào Opto" },
-      { id: 210, diagram: 2, wire: "[SĐ2] Dây 210: 3.3V Opto VCC", fromPin: "d2_esp_3v3_out", toPin: "d2_opto_vcc", type: "3v3", desc: "Nguồn 3.3V từ ESP32 nuôi Opto" },
-      { id: 211, diagram: 2, wire: "[SĐ2] Dây 211: Xung RPM 3.3V", fromPin: "d2_opto_out", toPin: "d2_esp_g5", type: "pwm", desc: "Xung đếm vòng quay RPM về GPIO 5" },
-      { id: 212, diagram: 2, wire: "[SĐ2] Dây 212: GND Opto Out", fromPin: "d2_esp_gnd2", toPin: "d2_opto_gnd", type: "gnd", desc: "Tiếp địa đầu ra Opto" },
+      { id: 208, diagram: 2, wire: "[SĐ2] Dây 208: TACH Quạt → GPIO 5 (Trực tiếp)", fromPin: "d2_fan_blue", toPin: "d2_esp_g5", type: "pwm", desc: "Dây TACH trực tiếp từ quạt (Pull-up 10kΩ lên 3.3V)" },
+      { id: 2081, diagram: 2, wire: "[SĐ2] Pull-up 10kΩ: 3V3 → Điện trở (Chân 1)", fromPin: "d2_esp_3v3_out", toPin: "d2_res_3v3", type: "3v3", desc: "Chân 1 điện trở 10kΩ hàn vào cọc 3V3 trên ESP32" },
+      { id: 2082, diagram: 2, wire: "[SĐ2] Pull-up 10kΩ: Điện trở (Chân 2) → GPIO 5", fromPin: "d2_res_gpio5", toPin: "d2_esp_g5", type: "3v3", desc: "Chân 2 điện trở 10kΩ hàn vào cọc GPIO 5 (chung cọc dây TACH)" },
       { id: 213, diagram: 2, wire: "[SĐ2] Dây 213: 3.3V Màn 1.3\" (Cọc 3V3 thứ 2 ngoài đế)", fromPin: "d2_esp_3v3_b", toPin: "d2_o1_vcc", type: "3v3", desc: "Nguồn 3.3V từ cọc 3V3 thứ 2 của ESP32 nuôi Màn 1.3\" ngoài hộp đế" },
       { id: 214, diagram: 2, wire: "[SĐ2] Dây 214: GND Màn 1.3\"", fromPin: "d2_esp_gnd4", toPin: "d2_o1_gnd", type: "gnd", desc: "Tiếp địa Màn 1.3\" ngoài hộp đế" },
       { id: 215, diagram: 2, wire: "[SĐ2] Dây 215: SDA Màn 1.3\"", fromPin: "d2_esp_g8", toPin: "d2_o1_sda", type: "i2c", desc: "I2C1 Data vào GPIO 8" },
@@ -1206,8 +1214,8 @@
       // Update Sidebar Title
       const titleEl = document.getElementById('sidebarTitle');
       if (titleEl) {
-        if (currentDiagram === 1) titleEl.innerText = "Bảng Tra Cứu Sơ Đồ 1 (Có LED - 34 Dây)";
-        else titleEl.innerText = "Bảng Tra Cứu Sơ Đồ 2 (Bỏ LED - 25 Dây)";
+        if (currentDiagram === 1) titleEl.innerText = "Bảng Tra Cứu Sơ Đồ 1 (Có LED - 30 Dây)";
+        else titleEl.innerText = "Bảng Tra Cứu Sơ Đồ 2 (Bỏ LED - 22 Dây)";
       }
 
       updateProgressUI();

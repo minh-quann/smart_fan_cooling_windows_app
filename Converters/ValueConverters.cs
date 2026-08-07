@@ -152,4 +152,25 @@ namespace SmartFanCooling.Converters
             return false;
         }
     }
+
+    /// <summary>
+    /// Converts string matching parameter to Visibility (Visible if matches, Collapsed otherwise).
+    /// </summary>
+    public class StringMatchToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is string strVal && parameter is string targetStr)
+            {
+                bool matches = string.Equals(strVal, targetStr, StringComparison.OrdinalIgnoreCase);
+                return matches ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+            }
+            return Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

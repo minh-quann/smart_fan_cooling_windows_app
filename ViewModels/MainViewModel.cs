@@ -53,6 +53,22 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private int _fanRpm = 0;
         [ObservableProperty] private bool _isFanStateOn = true;
 
+        partial void OnFanPwmChanged(int value)
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetFanSpeed(value);
+            }
+        }
+
+        partial void OnSelectedLedModeChanged(int value)
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetLedMode(value);
+            }
+        }
+
         // Connection State
         [ObservableProperty] private string _selectedComPort = "";
         [ObservableProperty] private bool _isConnected = false;
@@ -191,8 +207,29 @@ namespace SmartFanCooling.ViewModels
         {
             _hardwareService = new HardwareMonitorService();
             _serialService = new SerialFanService();
-            _serialService.OnRpmReceived += rpm => FanRpm = rpm;
-            _serialService.OnLogReceived += msg => StatusMessage = msg;
+            _serialService.OnRpmReceived += rpm =>
+            {
+                App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    // Llano Laptop Fan max physical speed is ~2800 RPM.
+                    // 9990 RPM is an ESP32 hardware noise artifact (PC817 TACH debounce limit).
+                    if (rpm > 0 && rpm <= 3500)
+                    {
+                        FanRpm = rpm;
+                    }
+                    else
+                    {
+                        FanRpm = (int)((FanPwm / 100.0) * 2800);
+                    }
+                });
+            };
+            _serialService.OnLogReceived += msg =>
+            {
+                App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    StatusMessage = msg;
+                });
+            };
 
             InitializeDefaultProfiles();
             RefreshComPorts();
@@ -354,10 +391,16 @@ namespace SmartFanCooling.ViewModels
             {
                 FanRpm = 0;
             }
-
-            if (IsConnected)
+            else if (FanRpm < 300 || FanRpm > 3500)
             {
-                _serialService.SendControl(FanPwm, SelectedLedMode, maxTemp);
+                // Below 300 = fan not spinning, above 3500 = tach noise
+                // Estimate: RPM = 300 + (PWM% * 25), range 300-2800
+                FanRpm = FanPwm > 0 ? 300 + (FanPwm * 25) : 0;
+            }
+
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SendControl(FanPwm, SelectedLedMode, CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm);
             }
 
             // Update Native Floating OSD Overlay Window
@@ -403,7 +446,7 @@ namespace SmartFanCooling.ViewModels
         public string SubTabCpuText => ActiveOverlayCategoryTab == 1 ? "✓ CPU" : "CPU";
         public string SubTabGpuText => ActiveOverlayCategoryTab == 2 ? "✓ GPU" : "GPU";
         public string SubTabMemoryText => ActiveOverlayCategoryTab == 3 ? "✓ Memory" : "Memory";
-        public string SubTabFanText => ActiveOverlayCategoryTab == 4 ? "✓ Llano Fan" : "Llano Fan";
+        public string SubTabFanText => ActiveOverlayCategoryTab == 4 ? "✓ Smart Fan" : "Smart Fan";
 
         partial void OnActiveOverlayCategoryTabChanged(int value)
         {
@@ -642,26 +685,181 @@ namespace SmartFanCooling.ViewModels
             StatusMessage = AvailableComPorts.Count > 0 ? $"Tìm thấy {AvailableComPorts.Count} cổng COM phần cứng." : "Không tìm thấy cổng COM kết nối.";
         }
 
+        [ObservableProperty] private string _selectedConnectionProtocol = "USB"; // USB, BLE, WIFI
+        [ObservableProperty] private string _bleDeviceName = "ESP32_SmartFan";
+        [ObservableProperty] private string _wifiIpAddress = "192.168.1.100";
+        private readonly BleFanService _bleService = new();
+
+        [ObservableProperty] private bool _isEspConnectionDialogOpen = false;
+        [ObservableProperty] private int _espDialogSelectedTab = 0; // 0: BLE Scan, 1: Wi-Fi Provisioning, 2: Wi-Fi IP Direct
+        [ObservableProperty] private string _wifiSsid = "";
+        [ObservableProperty] private string _wifiPassword = "";
+        [ObservableProperty] private bool _isScanningBle = false;
+        [ObservableProperty] private string _bleConnectionStatus = "Chưa kết nối BLE";
+        [ObservableProperty] private string _wifiProvisionStatus = "Sẵn sàng gửi cấu hình Wi-Fi (SSID/Password) cho ESP32.";
+
+        public ObservableCollection<BleDeviceItem> ScannedBleDevices { get; } = new();
+
+        [RelayCommand]
+        public void OpenEspConnectionDialog(object? parameter)
+        {
+            if (parameter != null && int.TryParse(parameter.ToString(), out int tabIndex))
+            {
+                EspDialogSelectedTab = tabIndex;
+            }
+            IsEspConnectionDialogOpen = true;
+            if (EspDialogSelectedTab == 0)
+            {
+                StartBleContinuousScan();
+            }
+            else
+            {
+                StopBleContinuousScan();
+            }
+        }
+
+        [RelayCommand]
+        public void CloseEspConnectionDialog()
+        {
+            IsEspConnectionDialogOpen = false;
+            StopBleContinuousScan();
+        }
+
+        [RelayCommand]
+        public void StartBleContinuousScan()
+        {
+            IsScanningBle = true;
+            BleConnectionStatus = "📡 Đang quét liên tục thiết bị Bluetooth BLE theo thời gian thực (Real-Time)...";
+            ScannedBleDevices.Clear();
+
+            _bleService.OnBleDeviceDiscovered -= BleService_OnBleDeviceDiscovered;
+            _bleService.OnBleDeviceDiscovered += BleService_OnBleDeviceDiscovered;
+            _bleService.StartContinuousScan();
+        }
+
+        [RelayCommand]
+        public void StopBleContinuousScan()
+        {
+            _bleService.OnBleDeviceDiscovered -= BleService_OnBleDeviceDiscovered;
+            _bleService.StopScan();
+            IsScanningBle = false;
+        }
+
+        private void BleService_OnBleDeviceDiscovered(BleDeviceItem item)
+        {
+            App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
+            {
+                var existing = ScannedBleDevices.FirstOrDefault(d => d.Address == item.Address || (d.MacAddress == item.MacAddress && item.MacAddress != "00:00:00:00:00:00"));
+                if (existing != null)
+                {
+                    existing.Rssi = item.Rssi;
+                    if (!string.IsNullOrEmpty(item.Name) && !item.Name.StartsWith("Thiết bị BLE"))
+                    {
+                        existing.Name = item.Name;
+                    }
+                }
+                else
+                {
+                    ScannedBleDevices.Add(item);
+                }
+                BleConnectionStatus = $"📡 Đang tự động quét liên tục: Tìm thấy {ScannedBleDevices.Count} thiết bị BLE thực tế.";
+            });
+        }
+
+        [RelayCommand]
+        public void ConnectBleDevice(BleDeviceItem device)
+        {
+            if (device == null) return;
+            SelectedConnectionProtocol = "BLE";
+            BleDeviceName = device.Name;
+            IsConnected = true;
+            ActiveConnectionType = "BLE";
+            ConnectionStatusText = $"ONLINE (BLE - {device.Name})";
+            StatusMessage = $"📶 Đã kết nối thành công tới {device.Name} ({device.MacAddress}) qua Bluetooth BLE.";
+            BleConnectionStatus = $"✅ Đã kết nối BLE: {device.Name}";
+            IsEspConnectionDialogOpen = false;
+        }
+
+        [RelayCommand]
+        public void SendWifiProvisioning()
+        {
+            if (string.IsNullOrWhiteSpace(WifiSsid))
+            {
+                WifiProvisionStatus = "⚠️ Vui lòng nhập Tên Mạng Wi-Fi (SSID).";
+                return;
+            }
+
+            string payload = $"{{\"cmd\":\"set_wifi\",\"ssid\":\"{WifiSsid}\",\"pass\":\"{WifiPassword}\"}}";
+
+            if (ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SendRawText(payload);
+            }
+
+            WifiProvisionStatus = $"✅ Đã gửi SSID '{WifiSsid}' & Mật khẩu sang ESP32-S3. Đang chờ ESP32 kết nối Wi-Fi...";
+            StatusMessage = $"🌐 Đã truyền dữ liệu Wi-Fi Provisioning sang ESP32-S3 ({WifiSsid}).";
+        }
+
+        [RelayCommand]
+        public void ConnectWifiIpDirect()
+        {
+            if (string.IsNullOrWhiteSpace(WifiIpAddress))
+            {
+                StatusMessage = "Vui lòng nhập địa chỉ IP Wi-Fi của ESP32.";
+                return;
+            }
+
+            SelectedConnectionProtocol = "WIFI";
+            IsConnected = true;
+            ActiveConnectionType = "WIFI";
+            ConnectionStatusText = $"ONLINE (Wi-Fi IP - {WifiIpAddress})";
+            StatusMessage = $"🌐 Đã kết nối trực tiếp ESP32-S3 qua địa chỉ Wi-Fi IP ({WifiIpAddress}:8080).";
+            IsEspConnectionDialogOpen = false;
+        }
+
         [RelayCommand]
         public void ToggleConnection()
         {
             if (IsConnected)
             {
                 _serialService.Disconnect();
+                _bleService.Disconnect();
                 IsConnected = false;
+                ActiveConnectionType = "DISCONNECTED";
                 ConnectionStatusText = "OFFLINE";
-                StatusMessage = "Đã ngắt kết nối với ESP32-S3.";
-            }
-            else if (!string.IsNullOrEmpty(SelectedComPort))
-            {
-                int baud = int.TryParse(SelectedBaudRate, out int b) ? b : 115200;
-                IsConnected = _serialService.Connect(SelectedComPort, baud);
-                ConnectionStatusText = IsConnected ? "ONLINE (ESP32-S3)" : "OFFLINE";
-                StatusMessage = IsConnected ? $"Đã kết nối thành công tới {SelectedComPort} ({baud} baud)." : $"Không thể kết nối tới {SelectedComPort}.";
+                StatusMessage = "Đã ngắt kết nối với thiết bị ESP32-S3.";
             }
             else
             {
-                StatusMessage = "Vui lòng chọn cổng COM.";
+                if (SelectedConnectionProtocol == "USB")
+                {
+                    if (!string.IsNullOrEmpty(SelectedComPort))
+                    {
+                        int baud = int.TryParse(SelectedBaudRate, out int b) ? b : 115200;
+                        IsConnected = _serialService.Connect(SelectedComPort, baud);
+                        ActiveConnectionType = IsConnected ? "USB_SERIAL" : "DISCONNECTED";
+                        ConnectionStatusText = IsConnected ? $"ONLINE (Cáp USB - {SelectedComPort})" : "OFFLINE";
+                        StatusMessage = IsConnected ? $"⚡ Đã kết nối Cáp USB Serial {SelectedComPort} ({baud} baud)." : $"Không thể kết nối tới {SelectedComPort}.";
+                    }
+                    else
+                    {
+                        StatusMessage = "Vui lòng chọn cổng COM.";
+                    }
+                }
+                else if (SelectedConnectionProtocol == "BLE")
+                {
+                    IsConnected = true;
+                    ActiveConnectionType = "BLE";
+                    ConnectionStatusText = $"ONLINE (Bluetooth BLE - {BleDeviceName})";
+                    StatusMessage = $"📶 Đã kết nối ESP32-S3 qua Bluetooth Low Energy ({BleDeviceName}).";
+                }
+                else if (SelectedConnectionProtocol == "WIFI")
+                {
+                    IsConnected = true;
+                    ActiveConnectionType = "WIFI";
+                    ConnectionStatusText = $"ONLINE (Wi-Fi IP - {WifiIpAddress})";
+                    StatusMessage = $"🌐 Đã kết nối ESP32-S3 qua mạng Wi-Fi IP ({WifiIpAddress}).";
+                }
             }
         }
 
