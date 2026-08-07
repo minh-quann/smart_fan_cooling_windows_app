@@ -1,0 +1,119 @@
+<Window
+    x:Class="SmartFanCooling.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Llano Smart Fan Cooling System - WinUI 3 Native">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header Title Bar -->
+        <Border Grid.Row="0" Padding="20,14" Background="{ThemeResource LayerOnAccentFillColorDefaultBrush}">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <FontIcon Glyph="&#xE9CA;" FontSize="24" Foreground="{ThemeResource SystemAccentColor}"/>
+                    <TextBlock Text="LLANO SMART FAN COOLING" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Connection Panel -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <ComboBox ItemsSource="{Binding AvailableComPorts}" SelectedItem="{Binding SelectedComPort, Mode=TwoWay}" Width="120"/>
+                    <Button Command="{Binding RefreshComPortsCommand}" ToolTipService.ToolTip="Refresh Ports">
+                        <FontIcon Glyph="&#xE72C;" FontSize="14"/>
+                    </Button>
+                    <Button Content="{Binding IsConnected, Converter={StaticResource ConnectTextConverter}}" 
+                            Command="{Binding ToggleConnectionCommand}"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Dashboard View -->
+        <ScrollViewer Grid.Row="1" Padding="24">
+            <StackPanel Spacing="20">
+                
+                <!-- Telemetry Cards -->
+                <Grid ColumnDefinitions="*, *, *">
+                    <!-- CPU Temp Card -->
+                    <Border Grid.Column="0" Margin="0,0,8,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9E9;" Foreground="#FF5722"/>
+                                <TextBlock Text="CPU Temperature" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding CpuTemp, StringFormat='{}{0:F1} °C'}" FontSize="32" FontWeight="Bold" Foreground="#FF5722"/>
+                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding CpuPowerW, StringFormat='{}Power: {0:F1} W'}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding CpuMaxClockGHz, StringFormat='{}Clock: {0:F2} GHz'}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- GPU Temp Card -->
+                    <Border Grid.Column="1" Margin="4,0,4,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE7F8;" Foreground="#FF9800"/>
+                                <TextBlock Text="GPU Temperature" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding GpuTemp, StringFormat='{}{0:F1} °C'}" FontSize="32" FontWeight="Bold" Foreground="#FF9800"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Fan RPM Card -->
+                    <Border Grid.Column="2" Margin="8,0,0,0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9CA;" Foreground="#00BCD4"/>
+                                <TextBlock Text="Fan Speed (RPM)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding FanRpm, StringFormat='{}{0} RPM'}" FontSize="32" FontWeight="Bold" Foreground="#00BCD4"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Fan Controls & Auto Curve -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Text="Fan Speed Control (PWM %)" FontSize="16" FontWeight="SemiBold"/>
+                            <ToggleSwitch Grid.Column="1" Header="Auto Fan Curve" IsOn="{Binding IsAutoMode, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <Slider Minimum="0" Maximum="100" Value="{Binding FanPwm, Mode=TwoWay}" IsEnabled="{Binding IsAutoMode, Converter={StaticResource InverseBoolConverter}}"/>
+                        
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <TextBlock Text="Current Output PWM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding FanPwm, StringFormat='{}{0} %'}" FontWeight="Bold" FontSize="18"/>
+                        </Grid>
+
+                        <!-- Presets -->
+                        <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                            <RadioButton Content="Quiet" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Quiet'}"/>
+                            <RadioButton Content="Balanced" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Balanced'}"/>
+                            <RadioButton Content="Turbo" IsChecked="{Binding SelectedFanCurve, Converter={StaticResource StringMatchConverter}, ConverterParameter='Turbo'}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- RGB Lighting Effects -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="RGB Lighting Effect" FontSize="16" FontWeight="SemiBold"/>
+                        <ComboBox SelectedIndex="{Binding SelectedLedMode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="0. Off (Tắt LED)"/>
+                            <ComboBoxItem Content="1. Static (Màu Cố Định)"/>
+                            <ComboBoxItem Content="2. Breathing (Nhịp Thở)"/>
+                            <ComboBoxItem Content="3. Rainbow (Cầu Vồng)"/>
+                            <ComboBoxItem Content="4. Speed Pulse (Theo Tốc Độ Quạt)"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Padding="16,8" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        </Border>
+    </Grid>
+</Window>
