@@ -76,6 +76,49 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private int _curveP80 = 90;
         [ObservableProperty] private int _curveP90 = 100;
 
+        public string FanCurveLinePoints => $"{30},{190 - (CurveP30 * 1.8)} {100},{190 - (CurveP40 * 1.8)} {170},{190 - (CurveP50 * 1.8)} {240},{190 - (CurveP60 * 1.8)} {310},{190 - (CurveP70 * 1.8)} {380},{190 - (CurveP80 * 1.8)} {450},{190 - (CurveP90 * 1.8)}";
+        public string FanCurveFillPoints => $"30,190 {FanCurveLinePoints} 450,190";
+
+        public double Node30_Y => 190 - (CurveP30 * 1.8) - 5;
+        public double Node40_Y => 190 - (CurveP40 * 1.8) - 5;
+        public double Node50_Y => 190 - (CurveP50 * 1.8) - 5;
+        public double Node60_Y => 190 - (CurveP60 * 1.8) - 5;
+        public double Node70_Y => 190 - (CurveP70 * 1.8) - 5;
+        public double Node80_Y => 190 - (CurveP80 * 1.8) - 5;
+        public double Node90_Y => 190 - (CurveP90 * 1.8) - 5;
+
+        private void NotifyFanCurveChanged()
+        {
+            if (ActiveProfile != null && ActiveProfile.CurvePoints != null)
+            {
+                ActiveProfile.CurvePoints[30] = CurveP30;
+                ActiveProfile.CurvePoints[40] = CurveP40;
+                ActiveProfile.CurvePoints[50] = CurveP50;
+                ActiveProfile.CurvePoints[60] = CurveP60;
+                ActiveProfile.CurvePoints[70] = CurveP70;
+                ActiveProfile.CurvePoints[80] = CurveP80;
+                ActiveProfile.CurvePoints[90] = CurveP90;
+            }
+
+            OnPropertyChanged(nameof(FanCurveLinePoints));
+            OnPropertyChanged(nameof(FanCurveFillPoints));
+            OnPropertyChanged(nameof(Node30_Y));
+            OnPropertyChanged(nameof(Node40_Y));
+            OnPropertyChanged(nameof(Node50_Y));
+            OnPropertyChanged(nameof(Node60_Y));
+            OnPropertyChanged(nameof(Node70_Y));
+            OnPropertyChanged(nameof(Node80_Y));
+            OnPropertyChanged(nameof(Node90_Y));
+        }
+
+        partial void OnCurveP30Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP40Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP50Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP60Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP70Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP80Changed(int value) => NotifyFanCurveChanged();
+        partial void OnCurveP90Changed(int value) => NotifyFanCurveChanged();
+
         [ObservableProperty] private bool _isAutoMode = false;
         [ObservableProperty] private string _selectedFanCurve = "Balanced";
 
@@ -106,13 +149,13 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private double _overlayBackgroundOpacity = 0.75;
         [ObservableProperty] private string _overlayStyle = "horizontal";
         [ObservableProperty] private string _overlayFontSizeScale = "2K";
-        [ObservableProperty] private string _overlayPositionPreset = "top_left";
+        [ObservableProperty] private string _overlayPositionPreset = "top_center";
         [ObservableProperty] private int _activeOverlayCategoryTab = 0;
         [ObservableProperty] private string _selectedDisplayMode = "always"; 
 
         // Individual HUD Metric Toggles
         [ObservableProperty] private bool _showFps = true;
-        [ObservableProperty] private bool _showTime = true;
+        [ObservableProperty] private bool _showTime = false;
         [ObservableProperty] private bool _showCpuTemp = true;
         [ObservableProperty] private bool _showCpuUsage = true;
         [ObservableProperty] private bool _showCpuClock = true;
@@ -130,13 +173,19 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private bool _showSmartFanPwm = true;
         [ObservableProperty] private bool _showRamUsage = true;
 
-        private OsdOverlayWindow? _osdWindow;
+        [ObservableProperty] private string _cpuClockUnit = "GHz";
+        [ObservableProperty] private string _gpuClockUnit = "MHz";
+
+        private NativeOsdOverlay? _osdWindow;
 
         // System Settings
         [ObservableProperty] private bool _startWithWindows = false;
         [ObservableProperty] private bool _minimizeToTray = true;
         [ObservableProperty] private int _refreshIntervalMs = 1000;
         [ObservableProperty] private string _selectedBaudRate = "115200";
+
+        [ObservableProperty] private bool _isAutoConnectEnabled = true;
+        [ObservableProperty] private string _activeConnectionType = "DISCONNECTED";
 
         public MainViewModel()
         {
@@ -147,10 +196,66 @@ namespace SmartFanCooling.ViewModels
 
             InitializeDefaultProfiles();
             RefreshComPorts();
+            CheckAndAutoConnectDevices();
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += Timer_Tick;
             _timer.Start();
+        }
+
+        private void CheckAndAutoConnectDevices()
+        {
+            if (!IsAutoConnectEnabled) return;
+
+            var ports = _serialService.GetAvailablePorts();
+            bool isUsbCablePluggedIn = ports.Length > 0;
+
+            // 1. USB CABLE HIGHEST PRIORITY (Ưu tiên cắm dây USB Serial)
+            if (isUsbCablePluggedIn)
+            {
+                string targetPort = ports[0];
+                if (AvailableComPorts.Count == 0 || !AvailableComPorts.Contains(targetPort))
+                {
+                    AvailableComPorts.Clear();
+                    foreach (var p in ports) AvailableComPorts.Add(p);
+                }
+
+                if (!IsConnected || ActiveConnectionType != "USB_SERIAL" || SelectedComPort != targetPort)
+                {
+                    if (IsConnected && ActiveConnectionType != "USB_SERIAL")
+                    {
+                        _serialService.Disconnect();
+                    }
+
+                    SelectedComPort = targetPort;
+                    int baud = int.TryParse(SelectedBaudRate, out int b) ? b : 115200;
+                    bool connected = _serialService.Connect(targetPort, baud);
+                    if (connected)
+                    {
+                        IsConnected = true;
+                        ActiveConnectionType = "USB_SERIAL";
+                        ConnectionStatusText = $"ONLINE (Cáp USB - {targetPort})";
+                        StatusMessage = $"⚡ [Ưu Tiên Cáp USB] Đã tự động kết nối ESP32-S3 qua dây cáp USB ({targetPort}) [Ưu tiên hàng đầu].";
+                    }
+                }
+            }
+            else
+            {
+                // 2. USB Cable Unplugged: Safely reset state
+                if (ActiveConnectionType == "USB_SERIAL" && IsConnected)
+                {
+                    _serialService.Disconnect();
+                    IsConnected = false;
+                    ActiveConnectionType = "DISCONNECTED";
+                    ConnectionStatusText = "OFFLINE";
+                    StatusMessage = "⚠️ Đã rút dây cáp USB Serial. Đang quét kết nối BLE / Wi-Fi...";
+                }
+
+                if (AvailableComPorts.Count > 0)
+                {
+                    AvailableComPorts.Clear();
+                }
+            }
         }
 
         private void InitializeDefaultProfiles()
@@ -242,6 +347,8 @@ namespace SmartFanCooling.ViewModels
                 FanPwm = CalculatePwmFromCurve(maxTemp);
             }
 
+            CheckAndAutoConnectDevices();
+
             // When offline, Llano Hub RPM is strictly 0!
             if (!IsConnected)
             {
@@ -258,8 +365,7 @@ namespace SmartFanCooling.ViewModels
             {
                 if (_osdWindow == null)
                 {
-                    _osdWindow = new OsdOverlayWindow();
-                    _osdWindow.Activate();
+                    _osdWindow = new NativeOsdOverlay();
                     _osdWindow.SetPresetPosition(OverlayPositionPreset);
                     _osdWindow.SetClickThrough(IsOverlayLocked);
                 }
@@ -267,13 +373,57 @@ namespace SmartFanCooling.ViewModels
             }
             else if (_osdWindow != null)
             {
-                _osdWindow.Close();
+                _osdWindow.Dispose();
                 _osdWindow = null;
             }
         }
 
         public string OverlayBackgroundOpacityPercentText => $"{Math.Round(OverlayBackgroundOpacity * 100):F0}%";
+        public string OverlayLockStatusText => IsOverlayLocked
+            ? "🔒 HUD ĐANG KHÓA (XUYÊN CHUỘT) - BẤM VÀO ĐÂY ĐỂ MỞ KHÓA KÉO DI CHUYỂN HUD (Phím Ctrl + Shift + O)"
+            : "🔓 HUD ĐANG MỞ KHÓA - NHẤP GIỮ CHUỘT TRÁI ĐỂ KÉO RÊ ĐẾN VỊ TRÍ BẤT KỲ (Bấm vào đây để khóa lại)";
 
+        partial void OnIsOverlayLockedChanged(bool value)
+        {
+            OnPropertyChanged(nameof(OverlayLockStatusText));
+            if (_osdWindow != null)
+            {
+                _osdWindow.SetClickThrough(value);
+            }
+        }
+
+        public string PresetTopLeftText => OverlayPositionPreset == "top_left" ? "✓ Góc Trên Trái" : "Góc Trên Trái";
+        public string PresetTopCenterText => OverlayPositionPreset == "top_center" ? "✓ Giữa Trên" : "Giữa Trên";
+        public string PresetTopRightText => OverlayPositionPreset == "top_right" ? "✓ Góc Trên Phải" : "Góc Trên Phải";
+        public string PresetBottomLeftText => OverlayPositionPreset == "bottom_left" ? "✓ Góc Dưới Trái" : "Góc Dưới Trái";
+        public string PresetBottomCenterText => OverlayPositionPreset == "bottom_center" ? "✓ Giữa Dưới" : "Giữa Dưới";
+        public string PresetBottomRightText => OverlayPositionPreset == "bottom_right" ? "✓ Góc Dưới Phải" : "Góc Dưới Phải";
+
+        public string SubTabBasicText => ActiveOverlayCategoryTab == 0 ? "✓ Basic" : "Basic";
+        public string SubTabCpuText => ActiveOverlayCategoryTab == 1 ? "✓ CPU" : "CPU";
+        public string SubTabGpuText => ActiveOverlayCategoryTab == 2 ? "✓ GPU" : "GPU";
+        public string SubTabMemoryText => ActiveOverlayCategoryTab == 3 ? "✓ Memory" : "Memory";
+        public string SubTabFanText => ActiveOverlayCategoryTab == 4 ? "✓ Llano Fan" : "Llano Fan";
+
+        partial void OnActiveOverlayCategoryTabChanged(int value)
+        {
+            OnPropertyChanged(nameof(SubTabBasicText));
+            OnPropertyChanged(nameof(SubTabCpuText));
+            OnPropertyChanged(nameof(SubTabGpuText));
+            OnPropertyChanged(nameof(SubTabMemoryText));
+            OnPropertyChanged(nameof(SubTabFanText));
+        }
+
+        partial void OnOverlayPositionPresetChanged(string value)
+        {
+            OnPropertyChanged(nameof(PresetTopLeftText));
+            OnPropertyChanged(nameof(PresetTopCenterText));
+            OnPropertyChanged(nameof(PresetTopRightText));
+            OnPropertyChanged(nameof(PresetBottomLeftText));
+            OnPropertyChanged(nameof(PresetBottomCenterText));
+            OnPropertyChanged(nameof(PresetBottomRightText));
+            UpdateOsdOverlayNow();
+        }
         partial void OnOverlayBackgroundOpacityChanged(double value)
         {
             OnPropertyChanged(nameof(OverlayBackgroundOpacityPercentText));
@@ -297,6 +447,8 @@ namespace SmartFanCooling.ViewModels
         partial void OnShowSmartFanRpmChanged(bool value) => UpdateOsdOverlayNow();
         partial void OnShowSmartFanPwmChanged(bool value) => UpdateOsdOverlayNow();
         partial void OnShowRamUsageChanged(bool value) => UpdateOsdOverlayNow();
+        partial void OnCpuClockUnitChanged(string value) => UpdateOsdOverlayNow();
+        partial void OnGpuClockUnitChanged(string value) => UpdateOsdOverlayNow();
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -359,22 +511,26 @@ namespace SmartFanCooling.ViewModels
 
                 if (_osdWindow == null)
                 {
-                    _osdWindow = new OsdOverlayWindow();
-                    _osdWindow.Activate();
+                    _osdWindow = new NativeOsdOverlay();
                     _osdWindow.SetPresetPosition(OverlayPositionPreset);
                     _osdWindow.SetClickThrough(IsOverlayLocked);
                 }
 
                 _osdWindow.ShowWindow();
                 _osdWindow.UpdateTelemetry(
-                    ShowFps,
+                    ShowFps, IsGameOr3DAppActive(),
                     ShowTime, DateTime.Now.ToString("HH:mm:ss"),
-                    ShowCpuTemp || ShowCpuUsage || ShowCpuClock || ShowCpuPower || ShowHardwareCpuFanRpm, CpuUsage, CpuTemp, CpuPowerW, CpuMaxClockGHz, ShowCpuClock, CpuFanRpm, ShowHardwareCpuFanRpm,
-                    ShowGpuTemp || ShowGpuUsage || ShowGpuClock || ShowGpuPower || ShowGpuVram || ShowHardwareGpuFanRpm, GpuUsage, GpuTemp, GpuPowerW, GpuClockMHz, ShowGpuClock, GpuVramUsedGB, ShowGpuVram, GpuFanRpm, ShowHardwareGpuFanRpm,
+                    ShowCpuTemp || ShowCpuUsage || ShowCpuClock || ShowCpuPower || ShowHardwareCpuFanRpm, CpuUsage, CpuTemp, CpuPowerW, CpuMaxClockGHz, ShowCpuClock, CpuClockUnit, CpuFanRpm, ShowHardwareCpuFanRpm,
+                    ShowGpuTemp || ShowGpuUsage || ShowGpuClock || ShowGpuPower || ShowGpuVram || ShowHardwareGpuFanRpm, GpuUsage, GpuTemp, GpuPowerW, GpuClockMHz, ShowGpuClock, GpuClockUnit, GpuVramUsedGB, ShowGpuVram, GpuFanRpm, ShowHardwareGpuFanRpm,
                     ShowSmartFanRpm || ShowSmartFanPwm, FanPwm, FanRpm,
                     ShowRamUsage, RamUsagePercent,
                     OverlayBackgroundOpacity, OverlayFontSizeScale
                 );
+            }
+            else if (_osdWindow != null)
+            {
+                _osdWindow.Dispose();
+                _osdWindow = null;
             }
         }
 
@@ -407,6 +563,54 @@ namespace SmartFanCooling.ViewModels
                 SelectedFanCurve = ActiveProfile.Name;
                 LoadCurveFromProfile(ActiveProfile);
                 StatusMessage = $"Đã kích hoạt Profile: {ActiveProfile.Name}";
+            }
+        }
+
+        [RelayCommand]
+        public void AddNewProfile()
+        {
+            int nextNum = Profiles.Count + 1;
+            var newProfile = new FanProfile
+            {
+                Name = $"Custom {nextNum}",
+                Description = "Đường cong tùy chỉnh cá nhân",
+                ColorHex = "#9C27B0",
+                IconGlyph = "\uE9CA",
+                MaxFanPwm = 100,
+                CurvePoints = new Dictionary<int, int>
+                {
+                    { 30, CurveP30 },
+                    { 40, CurveP40 },
+                    { 50, CurveP50 },
+                    { 60, CurveP60 },
+                    { 70, CurveP70 },
+                    { 80, CurveP80 },
+                    { 90, CurveP90 }
+                }
+            };
+
+            Profiles.Add(newProfile);
+            ActiveProfile = newProfile;
+            LoadCurveFromProfile(newProfile);
+            StatusMessage = $"Đã tạo Profile mới: {newProfile.Name}";
+        }
+
+        [RelayCommand]
+        public void DeleteActiveProfile()
+        {
+            if (Profiles.Count <= 1)
+            {
+                StatusMessage = "⚠️ Không thể xóa! Hệ thống phải duy trì ít nhất 1 Profile.";
+                return;
+            }
+
+            if (ActiveProfile != null && Profiles.Contains(ActiveProfile))
+            {
+                string deletedName = ActiveProfile.Name;
+                Profiles.Remove(ActiveProfile);
+                ActiveProfile = Profiles[0];
+                LoadCurveFromProfile(ActiveProfile);
+                StatusMessage = $"Đã xóa Profile: {deletedName}";
             }
         }
 
@@ -471,6 +675,108 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private string _newAppName = "";
         [ObservableProperty] private string _newExePath = "";
         [ObservableProperty] private string _selectedMappingProfileName = "Turbo";
+
+        [ObservableProperty] private bool _isAppPickerOpen = false;
+        [ObservableProperty] private string _appPickerSearchText = "";
+        public ObservableCollection<RunningAppInfo> RunningApps { get; } = new();
+        public ObservableCollection<RunningAppInfo> FilteredRunningApps { get; } = new();
+
+        [RelayCommand]
+        public void OpenAppPicker()
+        {
+            RefreshRunningApps();
+            IsAppPickerOpen = true;
+        }
+
+        [RelayCommand]
+        public void CloseAppPicker()
+        {
+            IsAppPickerOpen = false;
+        }
+
+        [RelayCommand]
+        public void RefreshRunningApps()
+        {
+            RunningApps.Clear();
+            var apps = GetSystemRunningApps();
+            foreach (var app in apps)
+            {
+                RunningApps.Add(app);
+            }
+            FilterRunningApps();
+        }
+
+        partial void OnAppPickerSearchTextChanged(string value)
+        {
+            FilterRunningApps();
+        }
+
+        private void FilterRunningApps()
+        {
+            FilteredRunningApps.Clear();
+            string q = (AppPickerSearchText ?? "").Trim().ToLower();
+            var matches = string.IsNullOrEmpty(q)
+                ? RunningApps
+                : RunningApps.Where(a => a.Name.ToLower().Contains(q) || a.ProcessName.ToLower().Contains(q) || a.ExecutablePath.ToLower().Contains(q));
+
+            foreach (var app in matches)
+            {
+                FilteredRunningApps.Add(app);
+            }
+        }
+
+        public void SelectRunningApp(RunningAppInfo app)
+        {
+            if (app == null) return;
+            NewAppName = app.Name;
+            NewExePath = string.IsNullOrEmpty(app.ExecutablePath) ? app.ProcessName : app.ExecutablePath;
+            IsAppPickerOpen = false;
+            StatusMessage = $"Đã chọn ứng dụng: {app.Name} ({app.ProcessName})";
+        }
+
+        private List<RunningAppInfo> GetSystemRunningApps()
+        {
+            var list = new List<RunningAppInfo>();
+            try
+            {
+                var processes = Process.GetProcesses();
+                int currentPid = Process.GetCurrentProcess().Id;
+
+                foreach (var proc in processes)
+                {
+                    try
+                    {
+                        if (proc.Id == currentPid) continue;
+                        if (string.IsNullOrWhiteSpace(proc.MainWindowTitle)) continue;
+
+                        string procName = proc.ProcessName;
+                        if (procName.Equals("explorer", StringComparison.OrdinalIgnoreCase) ||
+                            procName.Equals("SearchHost", StringComparison.OrdinalIgnoreCase) ||
+                            procName.Equals("ShellExperienceHost", StringComparison.OrdinalIgnoreCase) ||
+                            procName.Equals("cmd", StringComparison.OrdinalIgnoreCase) ||
+                            procName.Equals("powershell", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        string exePath = "";
+                        try { exePath = proc.MainModule?.FileName ?? ""; } catch { }
+
+                        list.Add(new RunningAppInfo
+                        {
+                            Name = proc.MainWindowTitle,
+                            ProcessName = procName + ".exe",
+                            ExecutablePath = string.IsNullOrEmpty(exePath) ? procName + ".exe" : exePath,
+                            MainWindowTitle = proc.MainWindowTitle
+                        });
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            return list.OrderBy(a => a.Name).ToList();
+        }
 
         [RelayCommand]
         public void AddAppMapping()
@@ -550,7 +856,7 @@ namespace SmartFanCooling.ViewModels
             OverlayBackgroundOpacity = 0.75;
             OverlayStyle = "horizontal";
             OverlayFontSizeScale = "2K";
-            OverlayPositionPreset = "top_left";
+            OverlayPositionPreset = "top_center";
             ShowTime = true;
             ShowCpuTemp = true;
             ShowCpuUsage = true;
@@ -561,7 +867,7 @@ namespace SmartFanCooling.ViewModels
             ShowSmartFanRpm = true;
             ShowSmartFanPwm = true;
             ShowRamUsage = true;
-            _osdWindow?.SetPresetPosition("top_left");
+            _osdWindow?.SetPresetPosition("top_center");
             _osdWindow?.SetClickThrough(true);
             StatusMessage = "Đã khôi phục mặc định cấu hình HUD Overlay.";
         }

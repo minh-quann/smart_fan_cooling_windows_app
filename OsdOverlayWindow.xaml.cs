@@ -22,14 +22,23 @@ namespace SmartFanCooling
         [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(int nIndex);
 
-        [DllImport("user32.dll")]
-        private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS pMarInset);
 
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
         [DllImport("dwmapi.dll")]
         private static extern int DwmGetCompositionTimingInfo(IntPtr hwnd, ref DWM_TIMING_INFO pTimingInfo);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MARGINS
+        {
+            public int cxLeftWidth;
+            public int cxRightWidth;
+            public int cyTopHeight;
+            public int cyBottomHeight;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct DWM_TIMING_INFO
@@ -48,7 +57,6 @@ namespace SmartFanCooling
         private const int WS_EX_TRANSPARENT = 0x00000020;
         private const int WS_EX_LAYERED = 0x00080000;
         private const int WS_EX_TOOLWINDOW = 0x00000080;
-        private const uint LWA_COLORKEY = 0x00000001;
 
         private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
         private const int DWMWA_BORDER_COLOR = 34;
@@ -63,7 +71,17 @@ namespace SmartFanCooling
             this.InitializeComponent();
             this.Title = "SmartFanCooling OSD Overlay";
 
+            // Crucial WinUI 3 call to strip DesktopWindowXamlSource opaque canvas
+            this.ExtendsContentIntoTitleBar = true;
+
             _hwnd = WindowNative.GetWindowHandle(this);
+
+            // Extend DWM Glass frame to completely eliminate window background and render 100% native transparency without colorkey artifacts
+            if (_hwnd != IntPtr.Zero)
+            {
+                MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+                DwmExtendFrameIntoClientArea(_hwnd, ref margins);
+            }
 
             // Configure AppWindow presenter for borderless overlay without titlebar caption buttons
             if (this.AppWindow != null)
@@ -147,12 +165,14 @@ namespace SmartFanCooling
             style &= ~(0x00C00000 | 0x00080000 | 0x00040000 | 0x00020000 | 0x00010000);
             SetWindowLong(_hwnd, GWL_STYLE, style);
 
-            // Remove DWM Windows 11 outline border
+            // Extend DWM Glass frame to eliminate window canvas background completely
+            if (_hwnd != IntPtr.Zero)
+            {
+                MARGINS margins = new MARGINS { cxLeftWidth = -1, cxRightWidth = -1, cyTopHeight = -1, cyBottomHeight = -1 };
+                DwmExtendFrameIntoClientArea(_hwnd, ref margins);
+            }
+
             DisableDwmWindowBorder();
-
-            // Set pure black RGB(0,0,0) as 100% transparent COLORKEY so canvas is completely invisible
-            SetLayeredWindowAttributes(_hwnd, 0x00000000, 0, LWA_COLORKEY);
-
             MakeTopMost();
         }
 
@@ -300,14 +320,10 @@ namespace SmartFanCooling
             {
                 ApplyFontSizeScale(style);
 
-                // BACKGROUND CONTAINER OPACITY: 0% = Invisible, 100% = Dark navy (#121622)
-                byte bgAlpha = (byte)Math.Clamp((int)(opacity * 255.0), 0, 255);
-                OverlayContainer.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(bgAlpha, 0x12, 0x16, 0x22));
+                // TRANSPARENCY SLIDER MAPPING: 100% (1.0) = Completely see-through transparent (0 Alpha), 0% (0.0) = Solid dark navy (220 Alpha)
+                byte bgAlpha = (byte)Math.Clamp((int)((1.0 - opacity) * 220.0), 0, 220);
+                OverlayContainer.Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(bgAlpha, 0x0E, 0x12, 0x1A));
 
-                // ColorKey cut-through pure black background canvas
-                SetLayeredWindowAttributes(_hwnd, 0x00000000, 0, LWA_COLORKEY);
-
-                // Remove DWM Windows 11 border line
                 DisableDwmWindowBorder();
 
                 // FPS Badge

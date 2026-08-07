@@ -122,4 +122,34 @@ namespace SmartFanCooling.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts bool to Visibility (Visible if true, Collapsed if false). Supports parameter "Inverse".
+    /// </summary>
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            bool isTrue = value is bool b && b;
+            if (parameter is string p && p.Equals("Inverse", StringComparison.OrdinalIgnoreCase))
+            {
+                isTrue = !isTrue;
+            }
+            return isTrue ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            if (value is Microsoft.UI.Xaml.Visibility vis)
+            {
+                bool isTrue = vis == Microsoft.UI.Xaml.Visibility.Visible;
+                if (parameter is string p && p.Equals("Inverse", StringComparison.OrdinalIgnoreCase))
+                {
+                    isTrue = !isTrue;
+                }
+                return isTrue;
+            }
+            return false;
+        }
+    }
 }
