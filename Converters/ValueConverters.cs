@@ -55,7 +55,7 @@ namespace SmartFanCooling.Converters
             {
                 return targetStr;
             }
-            return Binding.DoNothing;
+            return Microsoft.UI.Xaml.DependencyProperty.UnsetValue;
         }
     }
 
@@ -67,6 +67,34 @@ namespace SmartFanCooling.Converters
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             return value != null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Formats a float or double value according to parameter format string (e.g. "{0:F1} °C").
+    /// </summary>
+    public class FloatFormatConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is float fVal && parameter is string fmt)
+            {
+                return string.Format(fmt, fVal);
+            }
+            if (value is double dVal && parameter is string fmtDouble)
+            {
+                return string.Format(fmtDouble, dVal);
+            }
+            if (value is int iVal && parameter is string fmtInt)
+            {
+                return string.Format(fmtInt, iVal);
+            }
+            return value?.ToString() ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

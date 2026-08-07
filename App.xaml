@@ -14,6 +14,7 @@
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:StringMatchConverter x:Key="StringMatchConverter" />
             <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
+            <converters:FloatFormatConverter x:Key="FloatFormatConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

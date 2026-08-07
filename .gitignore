@@ -1,0 +1,25 @@
+## Visual Studio / .NET / WinUI 3 Standard .gitignore
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio & IDE temporary files
+.vs/
+*.user
+*.userosset
+*.suo
+*.userprefs
+*.sln.docstates
+
+# NuGet Packages cache
+*.nupkg
+packages/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini

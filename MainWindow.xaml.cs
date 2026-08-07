@@ -13,8 +13,12 @@ namespace SmartFanCooling
         public MainWindow()
         {
             this.InitializeComponent();
+            this.Title = "Llano Smart Fan Cooling System - WinUI 3 Native";
             ViewModel = new MainViewModel();
-            this.Content.DataContext = ViewModel;
+            if (this.Content is FrameworkElement rootElement)
+            {
+                rootElement.DataContext = ViewModel;
+            }
         }
     }
 }
