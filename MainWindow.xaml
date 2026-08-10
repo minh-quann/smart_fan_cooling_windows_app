@@ -11,6 +11,7 @@
     xmlns:hardware="using:SmartFanCooling.Views.Hardware"
     xmlns:oled="using:SmartFanCooling.Views.OledStudio"
     xmlns:osd="using:SmartFanCooling.Views.OsdHud"
+    xmlns:esp="using:SmartFanCooling.Views.EspManager"
     xmlns:settings="using:SmartFanCooling.Views.Settings"
     xmlns:dialogs="using:SmartFanCooling.Views.Dialogs">
 
@@ -61,6 +62,11 @@
                 <NavigationViewItem Content="HUD Overlay Game/App" Tag="6">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7F4;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Quản Lý Device ESP32" Tag="7">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE703;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
@@ -173,8 +179,11 @@
                         <!-- TAB 6: HUD OVERLAY GAME/APP -->
                         <osd:OsdHudView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=6}"/>
 
-                        <!-- TAB 7: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
-                        <settings:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}"/>
+                        <!-- TAB 7: QUẢN LÝ DEVICE ESP32 -->
+                        <esp:EspManagerView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}"/>
+
+                        <!-- TAB 8: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
+                        <settings:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=8}"/>
                     </Grid>
                 </ScrollViewer>
 

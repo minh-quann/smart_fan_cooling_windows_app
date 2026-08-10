@@ -16,6 +16,39 @@ static uint8_t _fanPercent = 0;
 static uint32_t _hueStep = 0;
 static Preferences _prefs;
 
+// Deferred NVS save — only write after 3s of stability to prevent WDT crash
+static bool _nvsDirty = false;
+static uint32_t _nvsLastChange = 0;
+static const uint32_t NVS_SAVE_DELAY_MS = 3000;
+
+// Crash protection — track consecutive rapid crashes
+static const uint32_t CRASH_WINDOW_MS = 8000;
+static const uint8_t MAX_CRASH_COUNT = 3;
+
+// Flush pending NVS writes (call from main loop)
+void flushLedPrefs() {
+  if (!_nvsDirty) return;
+  if (millis() - _nvsLastChange < NVS_SAVE_DELAY_MS) return;
+  
+  _prefs.begin("led_cfg", false);
+  _prefs.putUChar("led_mode", _mode);
+  _prefs.putUChar("led_r", _staticR);
+  _prefs.putUChar("led_g", _staticG);
+  _prefs.putUChar("led_b", _staticB);
+  _prefs.putUChar("led_spd", _speed);
+  _prefs.putUChar("led_bri", _brightness);
+  _prefs.putBool("led_dir", _reverse);
+  _prefs.putBool("led_on", _ledOn);
+  _prefs.end();
+  _nvsDirty = false;
+  Serial.printf("[LED] Prefs saved (mode=%d)\n", _mode);
+}
+
+static void markDirty() {
+  _nvsDirty = true;
+  _nvsLastChange = millis();
+}
+
 // Helper: scale a color by brightness (0-255) without touching _strip.setBrightness()
 static uint32_t scaleColor(uint8_t r, uint8_t g, uint8_t b, uint8_t bri) {
   return _strip.Color((r * bri) >> 8, (g * bri) >> 8, (b * bri) >> 8);
@@ -30,8 +63,27 @@ static uint32_t scaleColor32(uint32_t c, uint8_t bri) {
 
 void initLeds() {
   _prefs.begin("led_cfg", false);
-  _mode = _prefs.getUChar("led_mode", LED_RAINBOW);
-  if (_mode >= LED_MODE_COUNT) _mode = LED_RAINBOW;
+  
+  // Crash protection: increment boot counter, reset if stable
+  uint8_t crashCount = _prefs.getUChar("crash_cnt", 0);
+  uint32_t lastBoot = _prefs.getULong("last_boot", 0);
+  
+  // If last boot was recent (within CRASH_WINDOW_MS), increment crash counter
+  crashCount++;
+  _prefs.putUChar("crash_cnt", crashCount);
+  _prefs.putULong("last_boot", millis());
+  
+  if (crashCount >= MAX_CRASH_COUNT) {
+    // Too many rapid crashes — force safe defaults
+    Serial.printf("[LED] CRASH PROTECTION: %d crashes detected! Resetting to STATIC mode\n", crashCount);
+    _mode = LED_STATIC;
+    _prefs.putUChar("led_mode", LED_STATIC);
+    _prefs.putUChar("crash_cnt", 0);  // Reset counter
+  } else {
+    _mode = _prefs.getUChar("led_mode", LED_RAINBOW);
+    if (_mode >= LED_MODE_COUNT) _mode = LED_RAINBOW;
+  }
+  
   _staticR = _prefs.getUChar("led_r", 0);
   _staticG = _prefs.getUChar("led_g", 120);
   _staticB = _prefs.getUChar("led_b", 255);
@@ -41,6 +93,7 @@ void initLeds() {
   if (_brightness == 0) _brightness = 180;
   _reverse = _prefs.getBool("led_dir", false);
   _ledOn = _prefs.getBool("led_on", true);
+  _prefs.end();
 
   _strip.begin();
   _strip.setBrightness(255);  // Set ONCE to max, we scale manually
@@ -49,7 +102,15 @@ void initLeds() {
   }
   _strip.show();
 
-  Serial.printf("[LED] Initialized %u LEDs on GPIO %d (Mode: %d, On: %d)\n", NUM_LEDS, PIN_LED_DATA, _mode, _ledOn);
+  Serial.printf("[LED] Initialized %u LEDs on GPIO %d (Mode: %d, On: %d, CrashCnt: %d)\n", 
+                NUM_LEDS, PIN_LED_DATA, _mode, _ledOn, crashCount);
+}
+
+// Call after system is stable (e.g. 5s after boot) to clear crash counter
+void clearLedCrashCounter() {
+  _prefs.begin("led_cfg", false);
+  _prefs.putUChar("crash_cnt", 0);
+  _prefs.end();
 }
 
 void setLedCount(uint16_t count) {
@@ -63,7 +124,7 @@ uint16_t getLedCount() { return _numLeds; }
 void setLedMode(uint8_t mode) {
   if (mode < LED_MODE_COUNT) {
     _mode = mode;
-    _prefs.putUChar("led_mode", _mode);
+    markDirty();  // Deferred save — written after 3s stability
   }
 }
 
@@ -71,14 +132,12 @@ uint8_t getLedMode() { return _mode; }
 
 void setLedColor(uint8_t r, uint8_t g, uint8_t b) {
   _staticR = r; _staticG = g; _staticB = b;
-  _prefs.putUChar("led_r", r);
-  _prefs.putUChar("led_g", g);
-  _prefs.putUChar("led_b", b);
+  markDirty();
 }
 
 void setLedBrightness(uint8_t brightness) {
   _brightness = brightness;
-  _prefs.putUChar("led_bri", _brightness);
+  markDirty();
 }
 
 uint8_t getLedBrightness() { return _brightness; }
@@ -87,21 +146,21 @@ void setLedSpeed(uint8_t speed) {
   if (speed < 1) speed = 1;
   if (speed > 100) speed = 100;
   _speed = speed;
-  _prefs.putUChar("led_spd", _speed);
+  markDirty();
 }
 
 uint8_t getLedSpeed() { return _speed; }
 
 void setLedDirection(bool reverse) {
   _reverse = reverse;
-  _prefs.putBool("led_dir", _reverse);
+  markDirty();
 }
 
 bool getLedDirection() { return _reverse; }
 
 void setLedOn(bool on) {
   _ledOn = on;
-  _prefs.putBool("led_on", _ledOn);
+  markDirty();
   if (!on) {
     _strip.clear();
     _strip.show();

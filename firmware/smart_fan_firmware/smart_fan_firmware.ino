@@ -18,6 +18,7 @@
 static uint32_t lastDisplayUpdate = 0;
 static uint32_t lastCommNotify = 0;
 static uint32_t lastLedUpdate = 0;
+static bool _crashCounterCleared = false;
 
 void setup() {
   Serial.begin(115200);
@@ -153,4 +154,16 @@ void loop() {
 
     lastCommNotify = now;
   }
+  // ---- 7. Deferred NVS save (writes after 3s stability) ----
+  flushLedPrefs();
+
+  // ---- 8. Clear crash counter after stable run ----
+  if (!_crashCounterCleared && now > 8000) {
+    clearLedCrashCounter();
+    _crashCounterCleared = true;
+    Serial.println("[SYS] Boot stable — crash counter cleared");
+  }
+
+  // Feed watchdog — prevent TG1WDT_SYS_RST on tight loop with BLE+WiFi+I2C
+  delay(1);
 }

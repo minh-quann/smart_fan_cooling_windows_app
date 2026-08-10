@@ -168,6 +168,7 @@ namespace SmartFanCooling.ViewModels
                 }
 
                 CheckAndAutoConnectDevices();
+                UpdateEspHardwareTelemetry(IsConnected);
 
                 // When offline, Llano Hub RPM is strictly 0!
                 if (!IsConnected)

@@ -34,4 +34,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!-- Tell dotnet watch to monitor all XAML files for instant auto-reload -->
+  <ItemGroup>
+    <Watch Include="**\*.xaml" Exclude="obj\**\*;bin\**\*" />
+  </ItemGroup>
 </Project>

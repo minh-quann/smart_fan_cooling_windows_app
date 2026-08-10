@@ -1,0 +1,338 @@
+<UserControl
+    x:Class="SmartFanCooling.Views.EspManager.EspManagerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:SmartFanCooling.Converters">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:StringMatchToVisibilityConverter x:Key="StringMatchToVisibilityConverter"/>
+        <converters:ConnectTextConverter x:Key="ConnectTextConverter"/>
+        <converters:PercentToScaleConverter x:Key="PercentToScaleConverter"/>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="18">
+        <!-- Master Header Card -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <FontIcon Glyph="&#xE703;" Foreground="{ThemeResource SystemAccentColor}" FontSize="24"/>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="QUẢN LÝ THIẾT BỊ VI ĐIỀU KHIỂN ESP32 (ESP32 DEVICE MANAGER)" FontSize="16" FontWeight="Bold"/>
+                        <TextBlock Text="Giám sát giao thức kết nối (USB / Wi-Fi / BLE), quản lý mạng Wi-Fi, Bluetooth và thông số phần cứng ESP32" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Quick Open Connection Dialog Button -->
+                <Button Grid.Column="1" Command="{Binding OpenEspConnectionDialogCommand}" CommandParameter="0" Style="{ThemeResource AccentButtonStyle}" Padding="12,7">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="13"/>
+                        <TextBlock Text="Đổi / Thêm Kết Nối Mới" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Active Protocol Overview Status Banner -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="10" Padding="12">
+                        <FontIcon Glyph="&#xE814;" Foreground="{ThemeResource SystemAccentColor}" FontSize="24"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="GIAO THỨC ĐANG HOẠT ĐỘNG:" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding ActiveConnectionType}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ConnectionStatusText}" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="10,5">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE701;" Foreground="#FF9800" FontSize="12"/>
+                            <TextBlock Text="{Binding EspWifiSsid, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}Wi-Fi: {0}'}" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="10,5">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE702;" Foreground="#00BCD4" FontSize="12"/>
+                            <TextBlock Text="{Binding EspBleDeviceName, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}BLE: {0}'}" FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main 2-Column Dashboard Layout -->
+        <Grid ColumnSpacing="18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="6*"/>
+                <ColumnDefinition Width="6*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT COLUMN: Wi-Fi & BLE Network Management Cards -->
+            <StackPanel Grid.Column="0" Spacing="16">
+
+                <!-- Wi-Fi Network Manager Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon Glyph="&#xE701;" Foreground="#FF9800" FontSize="20"/>
+                                <StackPanel>
+                                    <TextBlock Text="QUẢN LÝ MẠNG WI-FI ESP32" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="Cấu hình SSID, Mật khẩu và quên mạng Wi-Fi lưu trên ESP32" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,3">
+                                <TextBlock Text="{Binding IsEspWifiConnected, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=InverseText}" FontSize="11" FontWeight="Bold" Foreground="#4CAF50"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Wi-Fi Connected Details Box -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="14">
+                            <StackPanel Spacing="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE8A7;" Foreground="#FF9800" FontSize="14"/>
+                                        <TextBlock Text="Mạng đang kết nối:" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding EspWifiSsid}" FontWeight="Bold" FontSize="12"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding EspWifiIpAddress, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}IP: {0}'}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                </Grid>
+
+                                <!-- Signal Strength RSSI Bar -->
+                                <StackPanel Spacing="4">
+                                    <Grid>
+                                        <TextBlock Text="Tín hiệu Wi-Fi (RSSI):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding EspWifiRssiPercentText, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0}'}" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="#FF9800"/>
+                                    </Grid>
+                                    <ProgressBar Value="{Binding EspWifiRssi}" Maximum="100" Height="5" Foreground="#FF9800" Background="#33FF9800"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Actions & Wi-Fi Provisioning Form -->
+                        <StackPanel Spacing="10">
+                            <!-- Forget Wi-Fi Button -->
+                            <Button Command="{Binding ForgetWifiCommand}" HorizontalAlignment="Stretch" Padding="10,7">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74D;" Foreground="#F44336" FontSize="13"/>
+                                    <TextBlock Text="Quên Mạng Wi-Fi Này (Xóa Lưu Trên ESP32)" FontWeight="Bold" Foreground="#F44336"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Add New Wi-Fi Form Box -->
+                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="14">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="THÊM / ĐỔI MẠNG WI-FI MỚI CHO ESP32:" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                    
+                                    <TextBox Text="{Binding WifiSsid, Mode=TwoWay}" Header="Tên Mạng Wi-Fi (SSID)" PlaceholderText="Nhập tên Wi-Fi (VD: MyHome_5G)"/>
+                                    <PasswordBox Password="{Binding WifiPassword, Mode=TwoWay}" Header="Mật Khẩu Wi-Fi" PlaceholderText="Nhập mật khẩu Wi-Fi"/>
+
+                                    <Button Command="{Binding SendWifiProvisioningCommand}" Style="{ThemeResource AccentButtonStyle}" HorizontalAlignment="Stretch" Padding="10,7" Margin="0,4,0,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE75C;" FontSize="13"/>
+                                            <TextBlock Text="Lưu &amp; Kết Nối Wi-Fi Mới Qua ESP32" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <TextBlock Text="{Binding WifiProvisionStatus}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bluetooth BLE Manager Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon Glyph="&#xE702;" Foreground="#00BCD4" FontSize="20"/>
+                                <StackPanel>
+                                    <TextBlock Text="QUẢN LÝ BLUETOOTH BLE ESP32" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="Quản lý ghép đôi, ngắt kết nối và quét thiết bị Bluetooth Low Energy" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,3">
+                                <TextBlock Text="{Binding EspBleDeviceName}" FontSize="11" FontWeight="Bold" Foreground="#00BCD4"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- BLE Connected Details Box -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE702;" Foreground="#00BCD4" FontSize="14"/>
+                                        <TextBlock Text="{Binding EspBleDeviceName}" FontWeight="Bold" FontSize="13"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding EspBleMacAddress, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}MAC: {0}'}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#2000BCD4" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ConnectionStatusText}" FontSize="10" FontWeight="Bold" Foreground="#00BCD4"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- BLE Action Buttons -->
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" Command="{Binding ForgetBleCommand}" HorizontalAlignment="Stretch" Padding="10,7">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE74D;" Foreground="#F44336" FontSize="12"/>
+                                    <TextBlock Text="Quên / Ngắt BLE" FontWeight="Bold" Foreground="#F44336"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Grid.Column="1" Command="{Binding OpenEspConnectionDialogCommand}" CommandParameter="0" Style="{ThemeResource AccentButtonStyle}" HorizontalAlignment="Stretch" Padding="10,7">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE702;" FontSize="12"/>
+                                    <TextBlock Text="Quét BLE Mới" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- RIGHT COLUMN: ESP32 Hardware Specs & Live Telemetry -->
+            <StackPanel Grid.Column="1" Spacing="16">
+
+                <!-- Hardware Specifications & Telemetry Card -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon Glyph="&#xE9E9;" Foreground="{ThemeResource SystemAccentColor}" FontSize="20"/>
+                                <StackPanel>
+                                    <TextBlock Text="THÔNG SỐ PHẦN CỨNG ESP32 (HARDWARE TELEMETRY)" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="Chi tiết thông số vi điều khiển ESP32, bộ nhớ RAM, thời gian chạy và linh kiện gắn kèm" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Grid of Specifications -->
+                        <Grid RowSpacing="12" ColumnSpacing="12">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Spec 1: Chip Model -->
+                            <Border Grid.Row="0" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="DÒNG VI XỬ LÝ (CHIPSET):" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspChipModel}" FontSize="12" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 2: Firmware Version -->
+                            <Border Grid.Row="0" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="PHIÊN BẢN FIRMWARE:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspFirmwareVersion}" FontSize="12" FontWeight="Bold" Foreground="#4CAF50"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 3: MAC Address -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="ĐỊA CHỈ MAC PHẦN CỨNG:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspMacAddress}" FontSize="12" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 4: Free Heap RAM -->
+                            <Border Grid.Row="1" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="BỘ NHỚ RAM TRỐNG (FREE HEAP):" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspFreeHeapText}" FontSize="12" FontWeight="Bold" Foreground="#00BCD4"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 5: Uptime -->
+                            <Border Grid.Row="2" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="THỜI GIAN HOẠT ĐỘNG (UPTIME):" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspUptimeText}" FontSize="12" FontWeight="Bold" Foreground="#FF9800"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 6: CPU Temp -->
+                            <Border Grid.Row="2" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="NHIỆT ĐỘ CHIP ESP32:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspCpuTempText}" FontSize="12" FontWeight="Bold" Foreground="#FF5722"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 7: OLED Screens -->
+                            <Border Grid.Row="3" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="MÀN HÌNH OLED ĐANG GẮN:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspActiveOledScreensText}" FontSize="12" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Spec 8: Fan Channels -->
+                            <Border Grid.Row="3" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="KÊNH ĐIỀU KHIỂN QUẠT:" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding EspFanChannelsText}" FontSize="12" FontWeight="Bold" Foreground="#9C27B0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

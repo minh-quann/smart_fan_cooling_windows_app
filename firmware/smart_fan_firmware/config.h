@@ -26,7 +26,7 @@
 // Buttons on OLED 1.3" module - Bottom terminal row
 #define PIN_BTN_CON       21  // CON - Toggle LED on/off (GPIO 21)
 #define PIN_BTN_BAK       37  // BAK - Cycle LED mode (GPIO 37)
-#define PIN_BTN_PSH       45  // PSH - Toggle fan on/off (GPIO 45)
+#define PIN_BTN_PSH       47  // PSH - Toggle fan on/off (GPIO 47)
 
 // OLED 0.96" secondary display (I2C2)
 #define PIN_OLED2_SDA     17

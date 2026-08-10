@@ -36,6 +36,23 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private bool _oledShowBottomDivider = true;
         [ObservableProperty] private bool _oledShowPwmBar = true;
 
+        public bool IsRowCount2 => OledRowCount == 2;
+        public bool IsRowCount3 => OledRowCount == 3;
+        public bool IsRowCount4 => OledRowCount == 4;
+
+        public bool IsRow3Visible => OledRowCount >= 3;
+        public bool IsRow4Visible => OledRowCount >= 4;
+
+        partial void OnOledRowCountChanged(int value)
+        {
+            OnPropertyChanged(nameof(IsRowCount2));
+            OnPropertyChanged(nameof(IsRowCount3));
+            OnPropertyChanged(nameof(IsRowCount4));
+            OnPropertyChanged(nameof(IsRow3Visible));
+            OnPropertyChanged(nameof(IsRow4Visible));
+            NotifyOledEvaluatedTextChanges();
+        }
+
         // Granular Sub-Metric Toggles for CPU Line
         [ObservableProperty] private bool _oledShowCpuTemp = true;
         [ObservableProperty] private bool _oledShowCpuUsage = true;
@@ -139,7 +156,6 @@ namespace SmartFanCooling.ViewModels
             OnPropertyChanged(nameof(EvaluatedRow4Text));
         }
 
-        partial void OnOledRowCountChanged(int value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledShowTopDividerChanged(bool value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledShowBottomDividerChanged(bool value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledShowPwmBarChanged(bool value) => NotifyOledEvaluatedTextChanges();
@@ -235,6 +251,7 @@ namespace SmartFanCooling.ViewModels
                     OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
                 );
                 int targetDisp = ActiveOledScreenTab == 0 ? 1 : 2;
+                _serialService.SetCustomOledMode(targetDisp, true);
                 _serialService.SendOledBitmap(targetDisp, hex);
                 StatusMessage = $"⚡ Đã render & nạp khung hình Hex lên Màn hình OLED {targetDisp} thành công!";
             }

@@ -72,18 +72,7 @@ void initDisplays() {
     }
   }
 
-  // 2. If no device found on GPIO 8/9, try scanning GPIO 47/48 fallback
-  if (!i2c1Addr) {
-    Serial.println("  Scanning I2C1 Bus B Fallback (SDA=GPIO 47, SCL=GPIO 48)...");
-    I2C1.begin(47, 48, 100000);
-    for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
-      I2C1.beginTransmission(addr);
-      if (I2C1.endTransmission() == 0) {
-        Serial.printf("    ==> FOUND I2C1 Device on GPIO 47/48 at Address 0x%02X!\n", addr);
-        if (addr == 0x3C || addr == 0x3D) i2c1Addr = addr;
-      }
-    }
-  }
+  // NOTE: Fallback I2C on GPIO 47/48 removed — GPIO 47 is used for PSH button
 
   // 3. Scan I2C2 (Secondary bus: GPIO 17 / 18)
   Serial.printf("  Scanning I2C2 Bus (SDA=GPIO %d, SCL=GPIO %d)...\n", PIN_OLED2_SDA, PIN_OLED2_SCL);

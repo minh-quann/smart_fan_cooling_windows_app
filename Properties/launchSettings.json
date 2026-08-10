@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "smart_fan_cooling_windows_app": {
+      "commandName": "Project",
+      "hotReloadEnabled": true,
+      "environmentVariables": {
+        "DOTNET_MODIFIABLE_ASSEMBLIES": "debug",
+        "DOTNET_WATCH_SUPPRESS_EMITTER_PROMPTS": "1",
+        "DOTNET_WATCH_RESTART_ON_RUDE_EDIT": "true"
+      }
+    }
+  }
+}

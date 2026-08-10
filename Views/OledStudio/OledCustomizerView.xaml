@@ -43,47 +43,101 @@
                     <StackPanel Grid.Column="0" Spacing="16">
                         <TextBlock Text="PREVIEW MÀN HÌNH OLED 128x64 PIXELS (REAL-TIME CANVAS)" FontWeight="Bold" FontSize="13"/>
                         
-                        <!-- Dynamic Pixel Canvas Display Box -->
-                        <Border Background="#03060E" BorderBrush="{ThemeResource SystemAccentColor}" BorderThickness="2" CornerRadius="10" Height="170" Padding="14">
-                            <Grid RowSpacing="6">
+                        <!-- REAL PHYSICAL OLED DISPLAY MODULE FRAME (EXACT 2:1 ASPECT RATIO FOR 128x64 PIXELS) -->
+                        <Border Background="#0B0F19" BorderBrush="#1E283A" BorderThickness="2" CornerRadius="12" Padding="14,12" HorizontalAlignment="Center" Width="370">
+                            <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- Dòng 1 -->
-                                <StackPanel Grid.Row="0" Spacing="4">
-                                    <TextBlock Text="{Binding EvaluatedRow1Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="14" FontWeight="Bold" CharacterSpacing="20"/>
-                                    <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowTopDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                </StackPanel>
+                                <!-- Top PCB Screw Holes & Hardware Model Label -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <Ellipse Width="10" Height="10" Fill="#162030" Stroke="#3D506A" StrokeThickness="1.5"/>
+                                        <TextBlock Text="{Binding ActiveOledScreenTitle}" FontSize="10" FontWeight="Bold" Foreground="#6C829E"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="128x64 PIXELS (2:1)" FontSize="9" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                        <Ellipse Width="10" Height="10" Fill="#162030" Stroke="#3D506A" StrokeThickness="1.5"/>
+                                    </StackPanel>
+                                </Grid>
 
-                                <!-- Dòng 2 -->
-                                <TextBlock Grid.Row="1" Text="{Binding EvaluatedRow2Text}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                <!-- REAL OLED SCREEN GLASS (EXACT 2:1 ASPECT RATIO: 340px x 170px) -->
+                                <Border Grid.Row="1" Background="#000000" BorderBrush="#00E5FF" BorderThickness="2" CornerRadius="4" Width="340" Height="170" Padding="12,10" HorizontalAlignment="Center">
+                                    <Grid RowSpacing="6">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                                <!-- Dòng 3 -->
-                                <TextBlock Grid.Row="2" Text="{Binding EvaluatedRow3Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                        <!-- Dòng 1 -->
+                                        <StackPanel Grid.Row="0" Spacing="4">
+                                            <TextBlock Text="{Binding EvaluatedRow1Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="Bold" CharacterSpacing="10"/>
+                                            <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowTopDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                        </StackPanel>
 
-                                <!-- Dòng 4 -->
-                                <StackPanel Grid.Row="3" Spacing="4" Margin="0,2,0,0">
-                                    <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowBottomDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                    <TextBlock Text="{Binding EvaluatedRow4Text}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="Bold"/>
-                                </StackPanel>
+                                        <!-- Dòng 2 -->
+                                        <TextBlock Grid.Row="1" Text="{Binding EvaluatedRow2Text}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0"/>
 
-                                <!-- Bottom Progress Bar -->
-                                <StackPanel Grid.Row="5" Spacing="4" Visibility="{Binding OledShowPwmBar, Converter={StaticResource BoolToVisibilityConverter}}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
-                                        <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="6" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                        <!-- Dòng 3 -->
+                                        <TextBlock Grid.Row="2" Text="{Binding EvaluatedRow3Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0" Visibility="{Binding IsRow3Visible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                                        <!-- Dòng 4 -->
+                                        <StackPanel Grid.Row="3" Spacing="4" Margin="0,2,0,0" Visibility="{Binding IsRow4Visible, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowBottomDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            <TextBlock Text="{Binding EvaluatedRow4Text}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
+                                        </StackPanel>
+
+                                        <!-- Bottom Progress Bar -->
+                                        <StackPanel Grid.Row="5" Spacing="4" Visibility="{Binding OledShowPwmBar, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
+                                                <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="5" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                            </Grid>
+                                        </StackPanel>
                                     </Grid>
-                                </StackPanel>
+                                </Border>
+
+                                <!-- Bottom PCB Pin Headers (GND VCC SCL SDA) & Screw Holes -->
+                                <Grid Grid.Row="2" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Ellipse Width="10" Height="10" Fill="#162030" Stroke="#3D506A" StrokeThickness="1.5"/>
+                                    </StackPanel>
+
+                                    <!-- Gold Pin Headers -->
+                                    <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="3">
+                                            <Rectangle Width="5" Height="5" Fill="#FFC107" RadiusX="1" RadiusY="1"/>
+                                            <TextBlock Text="GND" FontSize="9" FontWeight="Bold" Foreground="#78909C"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="3">
+                                            <Rectangle Width="5" Height="5" Fill="#FFC107" RadiusX="1" RadiusY="1"/>
+                                            <TextBlock Text="VCC" FontSize="9" FontWeight="Bold" Foreground="#EF5350"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="3">
+                                            <Rectangle Width="5" Height="5" Fill="#FFC107" RadiusX="1" RadiusY="1"/>
+                                            <TextBlock Text="SCL" FontSize="9" FontWeight="Bold" Foreground="#42A5F5"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="3">
+                                            <Rectangle Width="5" Height="5" Fill="#FFC107" RadiusX="1" RadiusY="1"/>
+                                            <TextBlock Text="SDA" FontSize="9" FontWeight="Bold" Foreground="#66BB6A"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Ellipse Width="10" Height="10" Fill="#162030" Stroke="#3D506A" StrokeThickness="1.5"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
                         </Border>
 
@@ -93,9 +147,9 @@
                                 <TextBlock Text="CẤU TRÚC BỐ CỤC MÀN HÌNH" FontWeight="Bold" FontSize="12"/>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="Số dòng hiển thị:" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                    <Button Content="2 Dòng (Chữ to)" Command="{Binding SetOledRowCountCommand}" CommandParameter="2"/>
-                                    <Button Content="3 Dòng (Vừa)" Command="{Binding SetOledRowCountCommand}" CommandParameter="3"/>
-                                    <Button Content="4 Dòng (Chi tiết)" Command="{Binding SetOledRowCountCommand}" CommandParameter="4" Style="{StaticResource AccentButtonStyle}"/>
+                                    <ToggleButton Content="2 Dòng (Chữ to)" IsChecked="{Binding IsRowCount2, Mode=OneWay}" Command="{Binding SetOledRowCountCommand}" CommandParameter="2"/>
+                                    <ToggleButton Content="3 Dòng (Vừa)" IsChecked="{Binding IsRowCount3, Mode=OneWay}" Command="{Binding SetOledRowCountCommand}" CommandParameter="3"/>
+                                    <ToggleButton Content="4 Dòng (Chi tiết)" IsChecked="{Binding IsRowCount4, Mode=OneWay}" Command="{Binding SetOledRowCountCommand}" CommandParameter="4"/>
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Spacing="16">

@@ -3,6 +3,8 @@
 
 void initLeds();
 void updateLeds();                 // Call every loop iteration
+void flushLedPrefs();              // Deferred NVS save (call from main loop)
+void clearLedCrashCounter();       // Clear crash counter after stable boot
 void setLedMode(uint8_t mode);     // LedMode enum from config.h
 uint8_t getLedMode();
 void setLedColor(uint8_t r, uint8_t g, uint8_t b);

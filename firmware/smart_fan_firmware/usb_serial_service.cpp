@@ -2,6 +2,7 @@
 #include "config.h"
 #include "fan_controller.h"
 #include "led_effects.h"
+#include "oled_display.h"
 #include "encoder_input.h"
 #include "wifi_service.h"
 #include <ArduinoJson.h>
@@ -19,10 +20,13 @@ static String _rxBuffer = "";
 
 // ---- Process incoming JSON command (same format as WebSocket) ----
 static void handleUSBCommand(const char* payload) {
+  size_t payloadLen = strlen(payload);
+  
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, payload);
   if (err) {
-    return;  // Silently ignore non-JSON lines (e.g. debug prints)
+    Serial.printf("USB: JSON parse FAILED! err=%s len=%u\n", err.c_str(), payloadLen);
+    return;
   }
 
   const char* cmd = doc["cmd"];
@@ -95,8 +99,10 @@ static void handleUSBCommand(const char* payload) {
   else if (strcmp(cmd, "draw_bitmap") == 0) {
     uint8_t disp = doc["disp"] | 1;
     const char* hexData = doc["data"];
+    Serial.printf("USB: draw_bitmap disp=%d hexData=%s\n", disp, hexData ? "OK" : "NULL");
     if (hexData) {
       size_t len = strlen(hexData);
+      Serial.printf("USB: bitmap hex len=%u (need>=2048)\n", len);
       if (len >= 2048) {
         uint8_t bitmap[1024];
         for (size_t i = 0; i < 1024; i++) {
@@ -106,13 +112,20 @@ static void handleUSBCommand(const char* payload) {
           uint8_t valLow = (low >= 'a') ? (low - 'a' + 10) : ((low >= 'A') ? (low - 'A' + 10) : (low - '0'));
           bitmap[i] = (valHigh << 4) | valLow;
         }
+        Serial.printf("USB: Calling drawCustomBitmap(disp=%d)...\n", disp);
         drawCustomBitmap(disp, bitmap);
+        Serial.println("USB: drawCustomBitmap DONE!");
+      } else {
+        Serial.println("USB: bitmap hex too short, SKIPPED!");
       }
+    } else {
+      Serial.println("USB: bitmap data field is NULL!");
     }
   }
   else if (strcmp(cmd, "custom_oled") == 0) {
     uint8_t disp = doc["disp"] | 1;
     bool enable = doc["enable"] | false;
+    Serial.printf("USB: custom_oled disp=%d enable=%d\n", disp, enable);
     setCustomDisplayMode(disp, enable);
   }
   else if (strcmp(cmd, "wifi_config") == 0) {
@@ -180,8 +193,8 @@ static void handleUSBCommand(const char* payload) {
 
 void initUSBSerial() {
   // Serial is already initialized in setup() with Serial.begin(115200)
-  // Just reserve buffer space
-  _rxBuffer.reserve(512);
+  // Reserve buffer space for large bitmap payloads (~2100 bytes)
+  _rxBuffer.reserve(3000);
   Serial.println("USB Serial service ready");
 }
 
@@ -193,14 +206,16 @@ void loopUSBSerial() {
       if (_rxBuffer.length() > 0) {
         // Only process lines that look like JSON (start with '{')
         if (_rxBuffer[0] == '{') {
+          Serial.printf("USB: RX line len=%u\n", _rxBuffer.length());
           handleUSBCommand(_rxBuffer.c_str());
         }
         _rxBuffer = "";
       }
     } else {
       _rxBuffer += c;
-      // Prevent buffer overflow
-      if (_rxBuffer.length() > 500) {
+      // Prevent buffer overflow (allow large bitmap payloads up to 3000 chars)
+      if (_rxBuffer.length() > 3000) {
+        Serial.printf("USB: BUFFER OVERFLOW at %u chars! Discarding.\n", _rxBuffer.length());
         _rxBuffer = "";
       }
     }
