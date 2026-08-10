@@ -92,6 +92,29 @@ static void handleUSBCommand(const char* payload) {
     _gpuFanRpm = doc["gpu_fan"] | 0;
     Serial.printf("USB: Temps CPU=%.1f GPU=%.1f CPU_FAN=%u GPU_FAN=%u\n", _cpuTemp, _gpuTemp, _cpuFanRpm, _gpuFanRpm);
   }
+  else if (strcmp(cmd, "draw_bitmap") == 0) {
+    uint8_t disp = doc["disp"] | 1;
+    const char* hexData = doc["data"];
+    if (hexData) {
+      size_t len = strlen(hexData);
+      if (len >= 2048) {
+        uint8_t bitmap[1024];
+        for (size_t i = 0; i < 1024; i++) {
+          char high = hexData[i * 2];
+          char low = hexData[i * 2 + 1];
+          uint8_t valHigh = (high >= 'a') ? (high - 'a' + 10) : ((high >= 'A') ? (high - 'A' + 10) : (high - '0'));
+          uint8_t valLow = (low >= 'a') ? (low - 'a' + 10) : ((low >= 'A') ? (low - 'A' + 10) : (low - '0'));
+          bitmap[i] = (valHigh << 4) | valLow;
+        }
+        drawCustomBitmap(disp, bitmap);
+      }
+    }
+  }
+  else if (strcmp(cmd, "custom_oled") == 0) {
+    uint8_t disp = doc["disp"] | 1;
+    bool enable = doc["enable"] | false;
+    setCustomDisplayMode(disp, enable);
+  }
   else if (strcmp(cmd, "wifi_config") == 0) {
     const char* ssid = doc["ssid"];
     const char* pass = doc["pass"];

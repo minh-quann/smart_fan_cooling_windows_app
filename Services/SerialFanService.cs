@@ -117,6 +117,16 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"temp\",\"cpu\":{cpuStr},\"gpu\":{gpuStr},\"cpu_fan\":{cpuFanRpm},\"gpu_fan\":{gpuFanRpm}}}");
         }
 
+        public void SendOledBitmap(int dispIndex, string hexData)
+        {
+            SendRawText($"{{\"cmd\":\"draw_bitmap\",\"disp\":{dispIndex},\"data\":\"{hexData}\"}}");
+        }
+
+        public void SetCustomOledMode(int dispIndex, bool enable)
+        {
+            SendRawText($"{{\"cmd\":\"custom_oled\",\"disp\":{dispIndex},\"enable\":{(enable ? "true" : "false")}}}");
+        }
+
         public void SendControl(int pwmPercent, int ledMode, float cpuTemp, float gpuTemp = 0f, int cpuFanRpm = 0, int gpuFanRpm = 0)
         {
             if (IsConnected)

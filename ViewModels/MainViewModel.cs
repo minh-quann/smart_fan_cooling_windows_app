@@ -199,6 +199,62 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private int _rgbSpeed = 50;
         [ObservableProperty] private bool _isLedReverse = false;
 
+        // Independent Dual OLED Custom Canvas Controls (Screen 1 & Screen 2)
+        private readonly OledCanvasService _oledCanvasService = new();
+
+        [ObservableProperty] private bool _isCustomOled1Enabled = false;
+        [ObservableProperty] private string _oled1CustomTitle = "LLANO SMART FAN";
+        [ObservableProperty] private string _oled1CustomMainStat = "30%";
+        [ObservableProperty] private string _oled1CustomSubStat = "2400 RPM";
+        [ObservableProperty] private int _oled1FontSize = 2;
+        [ObservableProperty] private bool _oled1ShowBar = true;
+
+        [ObservableProperty] private bool _isCustomOled2Enabled = false;
+        [ObservableProperty] private string _oled2CustomHeader = "2400 RPM";
+        [ObservableProperty] private string _oled2CustomCpuText = "CPU: 55C | 1200";
+        [ObservableProperty] private string _oled2CustomGpuText = "GPU: 60C | 1500";
+        [ObservableProperty] private string _oled2CustomFooter = "PWM: 50%  USB";
+
+        partial void OnIsCustomOled1EnabledChanged(bool value)
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetCustomOledMode(1, value);
+                if (value) SendCustomOled1Frame();
+            }
+        }
+
+        partial void OnIsCustomOled2EnabledChanged(bool value)
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetCustomOledMode(2, value);
+                if (value) SendCustomOled2Frame();
+            }
+        }
+
+        [RelayCommand]
+        public void SendCustomOled1Frame()
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                string hex = _oledCanvasService.GenerateOled1CustomCanvas(
+                    Oled1CustomTitle, Oled1CustomMainStat, Oled1CustomSubStat, Oled1FontSize, Oled1ShowBar, FanPwm);
+                _serialService.SendOledBitmap(1, hex);
+            }
+        }
+
+        [RelayCommand]
+        public void SendCustomOled2Frame()
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                string hex = _oledCanvasService.GenerateOled2CustomCanvas(
+                    Oled2CustomHeader, Oled2CustomCpuText, Oled2CustomGpuText, Oled2CustomFooter);
+                _serialService.SendOledBitmap(2, hex);
+            }
+        }
+
         // App Mappings
         public ObservableCollection<AppMapping> AppMappings { get; } = new();
         [ObservableProperty] private bool _isAutoAppSwitchEnabled = true;
@@ -487,6 +543,15 @@ namespace SmartFanCooling.ViewModels
                 if (IsConnected && ActiveConnectionType == "USB_SERIAL")
                 {
                     _serialService.SendControl(FanPwm, SelectedLedMode, CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm);
+
+                    if (IsCustomOled1Enabled)
+                    {
+                        SendCustomOled1Frame();
+                    }
+                    if (IsCustomOled2Enabled)
+                    {
+                        SendCustomOled2Frame();
+                    }
                 }
 
                 // Update Native Floating OSD Overlay Window

@@ -18,10 +18,40 @@ static bool _oled1IsSsd = false;
 static bool _oled1Ok = false;
 static bool _oled2Ok = false;
 
+static bool _customOled1Active = false;
+static bool _customOled2Active = false;
+
 // LED mode names for display
 static const char* LED_MODE_NAMES[] = {
   "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE"
 };
+
+void setCustomDisplayMode(uint8_t dispIndex, bool enable) {
+  if (dispIndex == 1) _customOled1Active = enable;
+  else if (dispIndex == 2) _customOled2Active = enable;
+}
+
+void drawCustomBitmap(uint8_t dispIndex, const uint8_t* bitmapData) {
+  if (!bitmapData) return;
+
+  if (dispIndex == 1 && _oled1Ok) {
+    _customOled1Active = true;
+    if (_oled1IsSsd) {
+      oled1_ssd.clearDisplay();
+      oled1_ssd.drawBitmap(0, 0, bitmapData, OLED_WIDTH, OLED1_HEIGHT, SSD1306_WHITE);
+      oled1_ssd.display();
+    } else {
+      oled1_sh.clearDisplay();
+      oled1_sh.drawBitmap(0, 0, bitmapData, OLED_WIDTH, OLED1_HEIGHT, SH110X_WHITE);
+      oled1_sh.display();
+    }
+  } else if (dispIndex == 2 && _oled2Ok) {
+    _customOled2Active = true;
+    oled2.clearDisplay();
+    oled2.drawBitmap(0, 0, bitmapData, OLED_WIDTH, OLED2_HEIGHT, SSD1306_WHITE);
+    oled2.display();
+  }
+}
 
 void initDisplays() {
   // Init I2C buses with standard 100kHz clock for maximum stability over dupont wires
@@ -78,6 +108,7 @@ void initDisplays() {
   bool ok1_ssd = oled1_ssd.begin(SSD1306_SWITCHCAPVCC, addr1);
 
   _oled1Ok = ok1_sh || ok1_ssd;
+  _oled1IsSsd = ok1_ssd;
   Serial.printf("  [RESULT] OLED1 (1.3\" Display) Init: SH1106=%d, SSD1306=%d at Address 0x%02X\n", ok1_sh, ok1_ssd, addr1);
 
   if (_oled1Ok) {
@@ -133,7 +164,7 @@ void initDisplays() {
 }
 
 void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn) {
-  if (!_oled1Ok) return;
+  if (!_oled1Ok || _customOled1Active) return;
 
   if (_oled1IsSsd) {
     // SSD1306 driver update only (0 column offset)
@@ -218,6 +249,8 @@ void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
                             float cpuTemp, float gpuTemp,
                             uint16_t cpuFanRpm, uint16_t gpuFanRpm,
                             bool bleConnected, bool wifiConnected, const char* wifiIP) {
+  if (!_oled2Ok || _customOled2Active) return;
+
   oled2.clearDisplay();
 
   // ---- Yellow zone (Y 0-15): Smart Fan RPM (Large Text Size 2) ----

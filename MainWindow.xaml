@@ -38,6 +38,11 @@
                         <FontIcon Glyph="&#xE9E9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Tùy Biến 2 Màn OLED" Tag="5">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7B8;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="HUD Overlay Game/App" Tag="6">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7F4;"/>
@@ -798,6 +803,64 @@
                         </StackPanel>
 
 
+
+                        <!-- TAB 5: DUAL OLED CUSTOM CANVAS (INDEPENDENT CONTROL FOR OLED 1 & OLED 2) -->
+                        <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=5}">
+                            <Grid ColumnSpacing="18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- SCREEN 1: OLED 1.3" CUSTOMIZER -->
+                                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="16">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <FontIcon Glyph="&#xE7F4;" Foreground="#00BCD4" FontSize="20"/>
+                                                <StackPanel>
+                                                    <TextBlock Text="Màn Hình 1: OLED 1.3&quot;" FontSize="16" FontWeight="Bold"/>
+                                                    <TextBlock Text="Giao diện độc lập màn 1.3 inch (128x64)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <ToggleSwitch IsOn="{Binding IsCustomOled1Enabled, Mode=TwoWay}" OnContent="Bật Custom" OffContent="Tắt (Mặc định)" HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <TextBox Header="Tiêu đề Hàng Trên (Title Bar)" Text="{Binding Oled1CustomTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Header="Thông số Chính (Main Stat Text)" Text="{Binding Oled1CustomMainStat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Header="Thông số Phụ (Sub Stat Text)" Text="{Binding Oled1CustomSubStat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="20">
+                                            <CheckBox Content="Hiện Thanh Bar PWM" IsChecked="{Binding Oled1ShowBar, Mode=TwoWay}"/>
+                                            <Button Content="Cập Nhật Ngay Màn 1" Command="{Binding SendCustomOled1FrameCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- SCREEN 2: OLED 0.96" CUSTOMIZER -->
+                                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="16">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <FontIcon Glyph="&#xE9E9;" Foreground="#FF9800" FontSize="20"/>
+                                                <StackPanel>
+                                                    <TextBlock Text="Màn Hình 2: OLED 0.96&quot;" FontSize="16" FontWeight="Bold"/>
+                                                    <TextBlock Text="Giao diện độc lập màn 0.96 inch (128x64)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <ToggleSwitch IsOn="{Binding IsCustomOled2Enabled, Mode=TwoWay}" OnContent="Bật Custom" OffContent="Tắt (Mặc định)" HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <TextBox Header="Hàng Trên Cùng (Header Text)" Text="{Binding Oled2CustomHeader, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Header="Dòng Thông Số CPU" Text="{Binding Oled2CustomCpuText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Header="Dòng Thông Số GPU" Text="{Binding Oled2CustomGpuText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Header="Dòng Trạng Thái Đáy (Footer)" Text="{Binding Oled2CustomFooter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                        <Button Content="Cập Nhật Ngay Màn 2" Command="{Binding SendCustomOled2FrameCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
 
                         <!-- TAB 6: HUD OVERLAY GAME/APP (1:1 PARITY WITH FLUTTER OVERLAY_SETTINGS_SCREEN.DART) -->
                         <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=6}">
