@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using SmartFanCooling.ViewModels;
 using SmartFanCooling.Models;
 
-namespace SmartFanCooling.Views
+namespace SmartFanCooling.Views.Dialogs
 {
     public sealed partial class EspConnectionDialogView : UserControl
     {

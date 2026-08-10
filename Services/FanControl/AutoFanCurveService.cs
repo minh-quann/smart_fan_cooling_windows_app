@@ -1,13 +1,14 @@
 using System;
+using SmartFanCooling.Services.Interfaces;
 
 namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Calculates fan PWM percentage based on target temperature and fan curve presets.
     /// </summary>
-    public static class AutoFanCurveService
+    public class AutoFanCurveService : IAutoFanCurveService
     {
-        public static int CalculatePwm(float maxTemp, string mode)
+        public int CalculatePwm(float maxTemp, string mode)
         {
             return mode switch
             {

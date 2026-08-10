@@ -226,7 +226,6 @@ namespace SmartFanCooling.Services
         private POINT _dragStartWinPos;
 
         private WndProcDelegate? _wndProcDelegate;
-        private IntPtr _oldWndProc = IntPtr.Zero;
 
         public NativeOsdOverlay()
         {
@@ -442,38 +441,44 @@ namespace SmartFanCooling.Services
             public uint dmDisplayFrequency;
         }
 
-        private int CalculateDisplayFps()
-        {
-            try
-            {
-                DEVMODE devMode = new DEVMODE();
-                devMode.dmSize = (ushort)Marshal.SizeOf(typeof(DEVMODE));
-                if (EnumDisplaySettings(null, ENUM_CURRENT_SETTINGS, ref devMode))
-                {
-                    if (devMode.dmDisplayFrequency > 0 && devMode.dmDisplayFrequency < 1000)
-                    {
-                        return (int)devMode.dmDisplayFrequency;
-                    }
-                }
-            }
-            catch { }
+        private ulong _lastFrameCount = 0;
+        private DateTime _lastFpsSampleTime = DateTime.MinValue;
+        private int _lastCalculatedFps = 0;
 
+        private int CalculateRealGameFps()
+        {
             try
             {
                 DWM_TIMING_INFO timing = new DWM_TIMING_INFO();
                 timing.cbSize = (uint)Marshal.SizeOf(typeof(DWM_TIMING_INFO));
                 if (DwmGetCompositionTimingInfo(IntPtr.Zero, ref timing) == 0)
                 {
-                    if (timing.rateRefresh_den > 0 && timing.rateRefresh_num > 0)
+                    DateTime now = DateTime.Now;
+                    if (_lastFpsSampleTime != DateTime.MinValue)
                     {
-                        int hz = (int)Math.Round((double)timing.rateRefresh_num / timing.rateRefresh_den);
-                        if (hz > 0) return hz;
+                        double elapsedSec = (now - _lastFpsSampleTime).TotalSeconds;
+                        if (elapsedSec >= 0.25)
+                        {
+                            ulong currentFrame = timing.cFrame > 0 ? timing.cFrame : timing.cDXPresent;
+                            ulong frameDelta = currentFrame > _lastFrameCount ? currentFrame - _lastFrameCount : 0;
+                            int measuredFps = (int)Math.Round(frameDelta / elapsedSec);
+
+                            _lastCalculatedFps = Math.Clamp(measuredFps, 0, 1000);
+                            _lastFrameCount = currentFrame;
+                            _lastFpsSampleTime = now;
+                        }
                     }
+                    else
+                    {
+                        _lastFrameCount = timing.cFrame > 0 ? timing.cFrame : timing.cDXPresent;
+                        _lastFpsSampleTime = now;
+                    }
+                    return _lastCalculatedFps;
                 }
             }
             catch { }
 
-            return 240;
+            return 0;
         }
 
         // Correct Win32 COLORREF format: 0x00BBGGRR -> R | (G << 8) | (B << 16)
@@ -566,15 +571,14 @@ namespace SmartFanCooling.Services
             IntPtr oldFont = SelectObject(memDc, hFont);
             SetBkMode(memDc, 1); // TRANSPARENT BK MODE
 
-            int fpsVal = CalculateDisplayFps();
-
-            string fpsLabel = isGameActive ? "FPS |" : "Hz |";
+            int fpsVal = CalculateRealGameFps();
+            bool shouldRenderFps = showFps && isGameActive && fpsVal > 0;
 
             // Precise Width Measurement simulation pass
             int measuredX = sidePadding;
-            if (showFps)
+            if (shouldRenderFps)
             {
-                GetTextExtentPoint32W(memDc, fpsLabel, fpsLabel.Length, out SIZE s1);
+                GetTextExtentPoint32W(memDc, "FPS |", 5, out SIZE s1);
                 string fpsStr = $"{fpsVal}";
                 GetTextExtentPoint32W(memDc, fpsStr, fpsStr.Length, out SIZE s2);
                 measuredX += s1.cx + 8 + s2.cx + groupSpacing;
@@ -767,10 +771,10 @@ namespace SmartFanCooling.Services
             int drawY = topPaddingY;
             bool isTransparentMode = (bgAlpha < 50);
 
-            // 1. FPS / Hz
-            if (showFps)
+            // 1. FPS (ONLY rendered when game is active and real-time FPS > 0! Completely hides Hz 240)
+            if (shouldRenderFps)
             {
-                DrawGdiText(memDc, fpsLabel, ref drawX, drawY, labelColorRef, 8, isTransparentMode);
+                DrawGdiText(memDc, "FPS |", ref drawX, drawY, labelColorRef, 8, isTransparentMode);
                 uint fpsColor = GetDynamicColorRef(fpsVal >= 50 ? 40 : 80, 50f, 80f);
                 DrawGdiText(memDc, $"{fpsVal}", ref drawX, drawY, fpsColor, groupSpacing, isTransparentMode);
             }

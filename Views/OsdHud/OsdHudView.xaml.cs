@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace SmartFanCooling.Views
+namespace SmartFanCooling.Views.OsdHud
 {
     public sealed partial class OsdHudView : UserControl
     {

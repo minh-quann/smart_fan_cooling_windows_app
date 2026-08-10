@@ -4,7 +4,7 @@ using SmartFanCooling.ViewModels;
 using SmartFanCooling.Models;
 using System;
 
-namespace SmartFanCooling.Views
+namespace SmartFanCooling.Views.Dashboard
 {
     public sealed partial class OverviewView : UserControl
     {

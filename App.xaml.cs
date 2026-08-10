@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 namespace SmartFanCooling
 {
     /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
+    /// Application entrypoint & global state manager.
     /// </summary>
     public partial class App : Application
     {

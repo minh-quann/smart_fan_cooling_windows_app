@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Shapes;
 using SmartFanCooling.ViewModels;
 using System;
 
-namespace SmartFanCooling.Views
+namespace SmartFanCooling.Views.FanControl
 {
     public sealed partial class FanCurveView : UserControl
     {

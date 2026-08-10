@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using SmartFanCooling.ViewModels;
 using SmartFanCooling.Models;
 
-namespace SmartFanCooling.Views
+namespace SmartFanCooling.Views.Profiles
 {
     public sealed partial class AppProfilesView : UserControl
     {

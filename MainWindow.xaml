@@ -4,16 +4,23 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="using:SmartFanCooling.Converters"
-    xmlns:views="using:SmartFanCooling.Views">
-
-    <Window.Resources>
-        <converters:ConnectTextConverter x:Key="ConnectTextConverter"/>
-        <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
-        <converters:StringMatchConverter x:Key="StringMatchToVisibilityConverter"/>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-    </Window.Resources>
+    xmlns:dashboard="using:SmartFanCooling.Views.Dashboard"
+    xmlns:fan="using:SmartFanCooling.Views.FanControl"
+    xmlns:lighting="using:SmartFanCooling.Views.Lighting"
+    xmlns:profiles="using:SmartFanCooling.Views.Profiles"
+    xmlns:hardware="using:SmartFanCooling.Views.Hardware"
+    xmlns:oled="using:SmartFanCooling.Views.OledStudio"
+    xmlns:osd="using:SmartFanCooling.Views.OsdHud"
+    xmlns:settings="using:SmartFanCooling.Views.Settings"
+    xmlns:dialogs="using:SmartFanCooling.Views.Dialogs">
 
     <Grid>
+        <Grid.Resources>
+            <converters:ConnectTextConverter x:Key="ConnectTextConverter"/>
+            <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+            <converters:StringMatchToVisibilityConverter x:Key="StringMatchToVisibilityConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        </Grid.Resources>
         <NavigationView x:Name="MainNav"
                         PaneDisplayMode="Left"
                         IsBackButtonVisible="Collapsed"
@@ -146,28 +153,28 @@
                 <ScrollViewer Grid.Row="1" Padding="20">
                     <Grid>
                         <!-- TAB 0: TỔNG QUAN HỆ THỐNG (OVERVIEW) -->
-                        <views:OverviewView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=0}"/>
+                        <dashboard:OverviewView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=0}"/>
 
                         <!-- TAB 1: FAN CURVE EDITOR -->
-                        <views:FanCurveView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}"/>
+                        <fan:FanCurveView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}"/>
 
                         <!-- TAB 2: ĐÈN LED RGB -->
-                        <views:RgbControlView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=2}"/>
+                        <lighting:RgbControlView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=2}"/>
 
                         <!-- TAB 3: GÁN APP AUTO-SWITCH -->
-                        <views:AppProfilesView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=3}"/>
+                        <profiles:AppProfilesView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=3}"/>
 
                         <!-- TAB 4: THÔNG SỐ PHẦN CỨNG -->
-                        <views:HardwareSpecsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=4}"/>
+                        <hardware:HardwareSpecsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=4}"/>
 
                         <!-- TAB 5: TÙY BIẾN 2 MÀN OLED -->
-                        <views:OledCustomizerView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=5}"/>
+                        <oled:OledCustomizerView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=5}"/>
 
                         <!-- TAB 6: HUD OVERLAY GAME/APP -->
-                        <views:OsdHudView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=6}"/>
+                        <osd:OsdHudView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=6}"/>
 
                         <!-- TAB 7: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
-                        <views:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}"/>
+                        <settings:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}"/>
                     </Grid>
                 </ScrollViewer>
 
@@ -257,6 +264,11 @@
         </Grid>
 
         <!-- ESP32 BLE & WIFI PROVISIONING DIALOG -->
-        <views:EspConnectionDialogView/>
+        <dialogs:EspConnectionDialogView/>
     </Grid>
 </Window>
+
+
+
+
+
