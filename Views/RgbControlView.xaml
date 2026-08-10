@@ -1,0 +1,87 @@
+<UserControl
+    x:Class="SmartFanCooling.Views.RgbControlView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:SmartFanCooling.Converters">
+
+    <UserControl.Resources>
+        <converters:FloatFormatConverter x:Key="FloatFormatConverter"/>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="18">
+        <!-- LED Strip Live Simulation Box -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE790;" Foreground="{ThemeResource SystemAccentColor}"/>
+                    <TextBlock Text="MÔ PHỎNG DẢI LED RGB (WS2812B / FASTLED)" FontWeight="Bold" FontSize="14"/>
+                </StackPanel>
+                <Border Background="Black" CornerRadius="8" Height="46" Padding="16,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                        <Border Width="12" Height="12" CornerRadius="6" Background="{Binding SelectedRgbColorHex}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+            <StackPanel Spacing="16">
+                <TextBlock Text="Cấu Hình Hiệu Ứng Đèn LED RGB" FontSize="16" FontWeight="Bold"/>
+                
+                <TextBlock Text="Chế Độ LED RGB:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <ComboBox SelectedIndex="{Binding SelectedLedMode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="0. Tắt Đèn (Off)"/>
+                    <ComboBoxItem Content="1. Màu Cố Định (Static)"/>
+                    <ComboBoxItem Content="2. Vòng Cầu Vồng (Rainbow)"/>
+                    <ComboBoxItem Content="3. Nhịp Thở Đơn Màu (Breathing)"/>
+                    <ComboBoxItem Content="4. Đồng Bộ Tốc Độ Quạt (Speed Sync)"/>
+                    <ComboBoxItem Content="5. Sóng Cầu Vồng (Wave)"/>
+                    <ComboBoxItem Content="6. Ngọn Lửa (Fire)"/>
+                    <ComboBoxItem Content="7. Sao Băng Chạy Vòng (Comet / Chase)"/>
+                    <ComboBoxItem Content="8. Quét Màu Nối Tiếp (Color Wipe)"/>
+                    <ComboBoxItem Content="9. Mạch Đập (Pulse)"/>
+                    <ComboBoxItem Content="10. Xoay Đôi 2 Nửa (Dual Spin)"/>
+                </ComboBox>
+
+                <!-- Direction Toggle -->
+                <Grid Margin="0,4,0,0">
+                    <TextBlock Text="Chiều Quay Hiệu Ứng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    <ToggleSwitch HorizontalAlignment="Right" OnContent="Ngược chiều" OffContent="Xuôi chiều" IsOn="{Binding IsLedReverse, Mode=TwoWay}"/>
+                </Grid>
+
+                <TextBlock Text="Bảng Màu Nhanh (Dùng cho Màu Cố Định / Nhịp Thở):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Cyan" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#00BCD4" Background="#00BCD4" Foreground="Black"/>
+                    <Button Content="Red" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF5722" Background="#FF5722" Foreground="White"/>
+                    <Button Content="Green" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#4CAF50" Background="#4CAF50" Foreground="Black"/>
+                    <Button Content="Purple" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#9C27B0" Background="#9C27B0" Foreground="White"/>
+                    <Button Content="Orange" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF9800" Background="#FF9800" Foreground="Black"/>
+                    <Button Content="White" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FFFFFF" Background="#FFFFFF" Foreground="Black"/>
+                </StackPanel>
+
+                <Grid>
+                    <TextBlock Text="Độ Sáng LED (%):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding RgbBrightness, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} %'}" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                </Grid>
+                <Slider Minimum="0" Maximum="100" Value="{Binding RgbBrightness, Mode=TwoWay}"/>
+
+                <Grid>
+                    <TextBlock Text="Tốc Độ Hiệu Ứng (%):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding RgbSpeed, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} %'}" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                </Grid>
+                <Slider Minimum="1" Maximum="100" Value="{Binding RgbSpeed, Mode=TwoWay}"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

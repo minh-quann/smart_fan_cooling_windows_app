@@ -81,6 +81,7 @@ namespace SmartFanCooling.ViewModels
 
         private string EvaluateWidgetText(string widgetType, string fallbackText)
         {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
             return widgetType switch
             {
                 "HEADER_TITLE" => string.IsNullOrEmpty(Oled1CustomTitle) ? "LLANO SMART FAN" : Oled1CustomTitle,
@@ -88,42 +89,45 @@ namespace SmartFanCooling.ViewModels
                 "GPU_TELEMETRY" => BuildGpuLineText(),
                 "FAN_TELEMETRY" => BuildFanLineText(),
                 "PWM_PCT" => $"PWM: {FanPwm}%",
-                "RAM_TELEMETRY" => $"RAM: {RamUsedGB:F1}/{RamTotalGB:F1}GB",
-                "POWER_TELEMETRY" => $"PWR: {CpuPowerW:F0}W/{GpuPowerW:F0}W",
-                "CLOCK_TELEMETRY" => $"CLK: {CpuMaxClockGHz:F1}G/{GpuClockMHz:F0}M",
+                "RAM_TELEMETRY" => $"RAM: {RamUsedGB.ToString("F1", inv)}/{RamTotalGB.ToString("F1", inv)}GB",
+                "POWER_TELEMETRY" => $"PWR: {CpuPowerW.ToString("F0", inv)}W/{GpuPowerW.ToString("F0", inv)}W",
+                "CLOCK_TELEMETRY" => $"CLK: {CpuMaxClockGHz.ToString("F1", inv)}G/{GpuClockMHz.ToString("F0", inv)}M",
                 _ => fallbackText
             };
         }
 
         private string BuildCpuLineText()
         {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
             var parts = new List<string>();
-            if (OledShowCpuTemp) parts.Add($"{CpuTemp:F0}C");
-            if (OledShowCpuUsage) parts.Add($"{CpuUsage:F0}%");
-            if (OledShowCpuClock) parts.Add($"{CpuMaxClockGHz:F1}G");
-            if (OledShowCpuPower) parts.Add($"{CpuPowerW:F0}W");
+            if (OledShowCpuTemp) parts.Add($"{CpuTemp.ToString("F0", inv)}C");
+            if (OledShowCpuUsage) parts.Add($"{CpuUsage.ToString("F0", inv)}%");
+            if (OledShowCpuClock) parts.Add($"{CpuMaxClockGHz.ToString("0.0", inv)}G");
+            if (OledShowCpuPower) parts.Add($"{CpuPowerW.ToString("F0", inv)}W");
             if (OledShowCpuFan && CpuFanRpm > 0) parts.Add($"{CpuFanRpm}RPM");
             return parts.Count > 0 ? "CPU: " + string.Join(" | ", parts) : "CPU: --";
         }
 
         private string BuildGpuLineText()
         {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
             var parts = new List<string>();
-            if (OledShowGpuTemp) parts.Add($"{GpuTemp:F0}C");
-            if (OledShowGpuUsage) parts.Add($"{GpuUsage:F0}%");
-            if (OledShowGpuClock) parts.Add($"{GpuClockMHz:F0}M");
-            if (OledShowGpuPower) parts.Add($"{GpuPowerW:F0}W");
-            if (OledShowGpuVram) parts.Add($"{GpuVramUsedGB:F1}GB");
+            if (OledShowGpuTemp) parts.Add($"{GpuTemp.ToString("F0", inv)}C");
+            if (OledShowGpuUsage) parts.Add($"{GpuUsage.ToString("F0", inv)}%");
+            if (OledShowGpuClock) parts.Add($"{GpuClockMHz.ToString("F0", inv)}M");
+            if (OledShowGpuPower) parts.Add($"{GpuPowerW.ToString("F0", inv)}W");
+            if (OledShowGpuVram) parts.Add($"{GpuVramUsedGB.ToString("F1", inv)}GB");
             if (OledShowGpuFan && GpuFanRpm > 0) parts.Add($"{GpuFanRpm}RPM");
             return parts.Count > 0 ? "GPU: " + string.Join(" | ", parts) : "GPU: --";
         }
 
         private string BuildFanLineText()
         {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
             var parts = new List<string>();
             if (OledShowSmartFanRpm) parts.Add($"{FanRpm} RPM");
             if (OledShowSmartFanPwm) parts.Add($"PWM: {FanPwm}%");
-            if (OledShowRamUsage) parts.Add($"RAM: {RamUsedGB:F1}/{RamTotalGB:F1}GB");
+            if (OledShowRamUsage) parts.Add($"RAM: {RamUsedGB.ToString("F1", inv)}/{RamTotalGB.ToString("F1", inv)}GB");
             return parts.Count > 0 ? string.Join(" | ", parts) : "LLANO SMART FAN";
         }
 

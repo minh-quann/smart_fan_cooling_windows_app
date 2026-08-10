@@ -1,0 +1,27 @@
+<UserControl
+    x:Class="SmartFanCooling.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="18">
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Thiết Lập Hệ Thống &amp; Cấu Hình Ứng Dụng" FontSize="16" FontWeight="Bold"/>
+                
+                <ToggleSwitch Header="Khởi Động Cùng Windows" IsOn="{Binding StartWithWindows, Mode=TwoWay}"/>
+                <ToggleSwitch Header="Thu Nhỏ Xuống Khay Hệ Thống (System Tray) Khi Đóng" IsOn="{Binding MinimizeToTray, Mode=TwoWay}"/>
+
+                <TextBlock Text="Tốc Độ Baud Rate Cổng Serial COM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <ComboBox SelectedValue="{Binding SelectedBaudRate, Mode=TwoWay}" SelectedValuePath="Content" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="9600"/>
+                    <ComboBoxItem Content="115200"/>
+                    <ComboBoxItem Content="230400"/>
+                    <ComboBoxItem Content="921600"/>
+                </ComboBox>
+
+                <TextBlock Text="Tần Số Cập Nhật Cảm Biến Phần Cứng (ms):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <Slider Minimum="250" Maximum="5000" StepFrequency="250" Value="{Binding RefreshIntervalMs, Mode=TwoWay}"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
