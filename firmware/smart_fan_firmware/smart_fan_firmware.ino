@@ -57,11 +57,9 @@ void setup() {
   initEncoder2();
   Serial.println("[OK] Enc2 (scroll wheel) GPIO 15/16 ready");
 
-  // Default state: fan ON at 30%, LED rainbow
+  // Default startup state: fan ON at 30% (LED mode and state are restored from Flash by initLeds)
   setFanOn(true);
   setFanSpeed(30);
-  setLedOn(true);
-  setLedMode(LED_RAINBOW);
 
   Serial.println("=== System Ready ===\n");
 }

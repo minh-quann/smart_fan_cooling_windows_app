@@ -30,18 +30,26 @@ static uint32_t scaleColor32(uint32_t c, uint8_t bri) {
 
 void initLeds() {
   _prefs.begin("led_cfg", false);
+  _mode = _prefs.getUChar("led_mode", LED_RAINBOW);
+  if (_mode >= LED_MODE_COUNT) _mode = LED_RAINBOW;
+  _staticR = _prefs.getUChar("led_r", 0);
+  _staticG = _prefs.getUChar("led_g", 120);
+  _staticB = _prefs.getUChar("led_b", 255);
   _speed = _prefs.getUChar("led_spd", 50);
   if (_speed == 0 || _speed > 100) _speed = 50;
   _brightness = _prefs.getUChar("led_bri", 180);
   if (_brightness == 0) _brightness = 180;
   _reverse = _prefs.getBool("led_dir", false);
+  _ledOn = _prefs.getBool("led_on", true);
 
   _strip.begin();
   _strip.setBrightness(255);  // Set ONCE to max, we scale manually
-  _strip.clear();
+  if (!_ledOn || _mode == LED_OFF) {
+    _strip.clear();
+  }
   _strip.show();
 
-  Serial.printf("[LED] Initialized %u LEDs on GPIO %d\n", NUM_LEDS, PIN_LED_DATA);
+  Serial.printf("[LED] Initialized %u LEDs on GPIO %d (Mode: %d, On: %d)\n", NUM_LEDS, PIN_LED_DATA, _mode, _ledOn);
 }
 
 void setLedCount(uint16_t count) {
@@ -53,13 +61,19 @@ void setLedCount(uint16_t count) {
 uint16_t getLedCount() { return _numLeds; }
 
 void setLedMode(uint8_t mode) {
-  if (mode < LED_MODE_COUNT) _mode = mode;
+  if (mode < LED_MODE_COUNT) {
+    _mode = mode;
+    _prefs.putUChar("led_mode", _mode);
+  }
 }
 
 uint8_t getLedMode() { return _mode; }
 
 void setLedColor(uint8_t r, uint8_t g, uint8_t b) {
   _staticR = r; _staticG = g; _staticB = b;
+  _prefs.putUChar("led_r", r);
+  _prefs.putUChar("led_g", g);
+  _prefs.putUChar("led_b", b);
 }
 
 void setLedBrightness(uint8_t brightness) {
@@ -87,6 +101,7 @@ bool getLedDirection() { return _reverse; }
 
 void setLedOn(bool on) {
   _ledOn = on;
+  _prefs.putBool("led_on", _ledOn);
   if (!on) {
     _strip.clear();
     _strip.show();
