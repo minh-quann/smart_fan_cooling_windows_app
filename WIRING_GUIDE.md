@@ -42,14 +42,14 @@ Tài liệu thiết kế toàn diện cho hệ thống điều khiển quạt t�
 | | `⚫ GND` | `GND 1` (Cọc Trái Trên) | **Dây 13** | Tiếp địa dải LED RGB |
 | | `🩵 DIN` | `GPIO 7` | **Dây 14** | Tín hiệu hiệu ứng màu FastLED |
 | **Màn Chính: OLED 1.3" + Encoder (9 Chân)** | `🟡 VCC` (Chân 9) | `3V3 Out` (ESP32) | **Dây 15** | Nguồn 3.3V nuôi Màn 1.3" & Encoder |
-| | `⚫ GND` (Chân 8) | `GND 4` (Cọc Phải Dưới) | **Dây 16** | Tiếp địa Màn 1.3" & Encoder |
-| | `🟣 CON` (Chân 1) | `GPIO 12` | **Dây 17** | Nút CON phía dưới: Bật/Tắt LED RGB |
-| | `🟪 SDA` (Chân 2) | `GPIO 8` | **Dây 18** | Dữ liệu I2C1 Màn OLED 1.3" |
-| | `🟪 SCL` (Chân 3) | `GPIO 9` | **Dây 19** | Clock I2C1 Màn OLED 1.3" |
-| | `🟢 PSH` (Chân 4) | `GPIO 14` | **Dây 20** | Ấn thẳng Núm PSH: Bật/Tắt Quạt & Chọn Menu |
-| | `🟣 TRA` (Chân 5) | `GPIO 10` | **Dây 21** | Xoay Núm: Kênh A điều tốc 0-100% |
-| | `🟣 TRB` (Chân 6) | `GPIO 11` | **Dây 22** | Xoay Núm: Kênh B điều tốc 0-100% |
-| | `🟣 BAK` (Chân 7) | `GPIO 13` | **Dây 23** | Nút BAK phía trên: Đổi chế độ LED RGB |
+| | `⚫ GND` (Chân 8) | `GND 2` (Cọc Trái Dưới) | **Dây 16** | Tiếp địa Màn 1.3" & Encoder |
+| | `🟣 CON` (Chân 1) | `GPIO 21` | **Dây 17** | Nút CON phía dưới: Bật/Tắt LED RGB (Cọc dãy dưới) |
+| | `🟪 SDA` (Chân 2) | `GPIO 47` | **Dây 18** | Dữ liệu I2C1 Màn OLED 1.3" (Cọc dãy dưới) |
+| | `🟪 SCL` (Chân 3) | `GPIO 48` | **Dây 19** | Clock I2C1 Màn OLED 1.3" (Cọc dãy dưới) |
+| | `🟢 PSH` (Chân 4) | `GPIO 45` | **Dây 20** | Ấn thẳng Núm PSH: Bật/Tắt Quạt & Chọn Menu (Cọc dãy dưới) |
+| | `🟣 TRA` (Chân 5) | `GPIO 35` | **Dây 21** | Xoay Núm: Kênh A điều tốc 0-100% (Cọc dãy dưới) |
+| | `🟣 TRB` (Chân 6) | `GPIO 36` | **Dây 22** | Xoay Núm: Kênh B điều tốc 0-100% (Cọc dãy dưới) |
+| | `🟣 BAK` (Chân 7) | `GPIO 37` | **Dây 23** | Nút BAK phía trên: Đổi chế độ LED RGB (Cọc dãy dưới) |
 | **Màn Phụ: OLED 0.96" (4 Chân)** | `🟡 VCC` | `3V3 Out` (ESP32) | **Dây 24** | Nguồn 3.3V nuôi Màn OLED 0.96" |
 | | `⚫ GND` | `GND 4` (Cọc Phải Dưới) | **Dây 25** | Tiếp địa Màn OLED 0.96" |
 | | `🟪 SCL` (SCK) | `GPIO 18` | **Dây 26** | Clock I2C2 Màn OLED 0.96" |
@@ -85,23 +85,23 @@ flowchart TB
         V5_IN["🔴 5Vin (Nhận 5.2V từ XY3606)"]
         
         subgraph GND_GROUP["⚫ CỌC GND VẬT LÝ TRÊN BO"]
-            GND_1["GND 1 (Trái Trên) — GND Dải LED RGB"]
-            GND_2["GND 2 (Trái Dưới 1) — GND Chung (Nguồn XY3606, MOSFET...)"]
+            GND_1["GND 1 (Trái Trên cạnh 5Vin) — GND Chung All (Nguồn XY3606, MOSFET, LED RGB...)"]
+            GND_2["GND 2 (Trái Dưới) — Dùng cho Màn OLED 1.3'"]
             GND_3["GND 3 (Trái Dưới 2) — Dự phòng"]
-            GND_4["GND 4 (Phải Dưới) — Dùng cho Màn OLED 1.3'"]
+            GND_4["GND 4 (Phải Dưới) — Dự phòng"]
         end
 
         V33["3V3 Out (Cấp 3.3V cho Pull-up TACH & OLED 1.3')"]
         GPIO4["GPIO 4 — PWM Out (25kHz)"]
         GPIO5["GPIO 5 — TACH Trực Tiếp (Pull-up 10kΩ lên 3.3V)"]
         GPIO7["GPIO 7 — LED Data Out"]
-        GPIO8["GPIO 8 — SDA Màn 1.3'"]
-        GPIO9["GPIO 9 — SCL Màn 1.3'"]
-        GPIO10["GPIO 10 — Encoder Kênh A (TRA)"]
-        GPIO11["GPIO 11 — Encoder Kênh B (TRB)"]
-        GPIO12["GPIO 12 — Nút Bật/Tắt LED (CON)"]
-        GPIO13["GPIO 13 — Nút Đổi Mode LED (BAK)"]
-        GPIO14["GPIO 14 — Nút Bật/Tắt Quạt (PSH)"]
+        GPIO21["GPIO 21 — Nút Bật/Tắt LED (CON - Dãy dưới)"]
+        GPIO47["GPIO 47 — SDA Màn 1.3' (Dãy dưới)"]
+        GPIO48["GPIO 48 — SCL Màn 1.3' (Dãy dưới)"]
+        GPIO45["GPIO 45 — Nút Bật/Tắt Quạt (PSH - Dãy dưới)"]
+        GPIO35["GPIO 35 — Encoder Kênh A (TRA - Dãy dưới)"]
+        GPIO36["GPIO 36 — Encoder Kênh B (TRB - Dãy dưới)"]
+        GPIO37["GPIO 37 — Nút Đổi Mode LED (BAK - Dãy dưới)"]
     end
 
     subgraph MOSFET["⚡ Module Dual MOSFET (HW-517)"]
@@ -347,13 +347,13 @@ flowchart TB
             P_G4["🟢 Cọc GPIO 4 — Xung PWM 25kHz xuất sang MOSFET"]
             P_G5["🟣 Cọc GPIO 5 — Xung RPM từ Dây TACH (Pull-up 10k)"]
             P_G7["🩵 Cọc GPIO 7 — Data LED RGB (DIN)"]
-            P_G8["🟪 Cọc GPIO 8 — SDA Màn OLED 1.3'"]
-            P_G9["🟪 Cọc GPIO 9 — SCL Màn OLED 1.3'"]
-            P_G10["🟪 Cọc GPIO 10 — Encoder Kênh A (TRA)"]
-            P_G11["🟪 Cọc GPIO 11 — Encoder Kênh B (TRB)"]
-            P_G12["🟣 Cọc GPIO 12 — Nút Bật/Tắt LED (CON)"]
-            P_G13["🟣 Cọc GPIO 13 — Nút Đổi Mode LED (BAK)"]
-            P_G14["🟢 Cọc GPIO 14 — Nút Bật/Tắt Quạt (PSH)"]
+            P_G21["🟣 Cọc GPIO 21 — Nút Bật/Tắt LED (CON - Dãy dưới)"]
+            P_G47["🟪 Cọc GPIO 47 — SDA Màn OLED 1.3' (Dãy dưới)"]
+            P_G48["🟪 Cọc GPIO 48 — SCL Màn OLED 1.3' (Dãy dưới)"]
+            P_G45["🟢 Cọc GPIO 45 — Nút Bật/Tắt Quạt (PSH - Dãy dưới)"]
+            P_G35["🟪 Cọc GPIO 35 — Encoder Kênh A (TRA - Dãy dưới)"]
+            P_G36["🟪 Cọc GPIO 36 — Encoder Kênh B (TRB - Dãy dưới)"]
+            P_G37["🟣 Cọc GPIO 37 — Nút Đổi Mode LED (BAK - Dãy dưới)"]
         end
     end
 
@@ -379,13 +379,13 @@ flowchart TB
     %% ===== 6. MÀN HÌNH DUY NHẤT OLED 1.3" + ENCODER =====
     subgraph OLED1 ["🖥️ 6. MÀN HÌNH DUY NHẤT: OLED 1.3' + ROTARY ENCODER (9 CHÂN)"]
         direction TB
-        O1_CON["🟣 Chân 1: CON (Nút Bật/Tắt LED — GPIO 12)"]
-        O1_SDA["🟪 Chân 2: SDA (I2C1 Data — GPIO 8)"]
-        O1_SCL["🟪 Chân 3: SCL (I2C1 Clock — GPIO 9)"]
-        O1_PSH["🟢 Chân 4: PSH (Nút Bật/Tắt Quạt — GPIO 14)"]
-        O1_TRA["🟪 Chân 5: TRA (Encoder Kênh A — GPIO 10)"]
-        O1_TRB["🟪 Chân 6: TRB (Encoder Kênh B — GPIO 11)"]
-        O1_BAK["🟣 Chân 7: BAK (Nút Đổi Mode LED — GPIO 13)"]
+        O1_CON["🟣 Chân 1: CON (Nút Bật/Tắt LED — GPIO 21)"]
+        O1_SDA["🟪 Chân 2: SDA (I2C1 Data — GPIO 47)"]
+        O1_SCL["🟪 Chân 3: SCL (I2C1 Clock — GPIO 48)"]
+        O1_PSH["🟢 Chân 4: PSH (Nút Bật/Tắt Quạt — GPIO 45)"]
+        O1_TRA["🟪 Chân 5: TRA (Encoder Kênh A — GPIO 35)"]
+        O1_TRB["🟪 Chân 6: TRB (Encoder Kênh B — GPIO 36)"]
+        O1_BAK["🟣 Chân 7: BAK (Nút Đổi Mode LED — GPIO 37)"]
         O1_GND["⚫ Chân 8: GND (Nối Cọc GND 4)"]
         O1_VCC["🟡 Chân 9: VCC (Nối Cọc 3V3 Out)"]
     end

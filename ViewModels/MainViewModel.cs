@@ -17,6 +17,7 @@ namespace SmartFanCooling.ViewModels
         private readonly HardwareMonitorService _hardwareService;
         private readonly SerialFanService _serialService;
         private readonly DispatcherTimer _timer;
+        private bool _isUpdatingHardware = false;
 
         // Selected Navigation Tab Index (0: Overview, 1: Fan Curve, 2: RGB, 3: App Profiles, 4: Hardware, 5: GPIO & Mouse Test, 6: HUD Overlay, 7: Settings)
         [ObservableProperty]
@@ -50,22 +51,70 @@ namespace SmartFanCooling.ViewModels
 
         // Llano Smart Fan Speed & PWM
         [ObservableProperty] private int _fanPwm = 50;
+        [ObservableProperty] private int _targetRpm = 1200;
         [ObservableProperty] private int _fanRpm = 0;
         [ObservableProperty] private bool _isFanStateOn = true;
+        private bool _isSyncingFromHardware = false;
 
         partial void OnFanPwmChanged(int value)
         {
-            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
                 _serialService.SetFanSpeed(value);
             }
         }
 
+        partial void OnTargetRpmChanged(int value)
+        {
+            int rounded = value > 0 ? (int)(Math.Round(value / 100.0) * 100) : 0;
+            if (rounded != value)
+            {
+                TargetRpm = rounded;
+                return;
+            }
+
+            if (!_isSyncingFromHardware)
+            {
+                int pct = value > 0 ? Math.Clamp((int)Math.Round(value / 28.0), 0, 100) : 0;
+                FanPwm = pct;
+                if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+                {
+                    _serialService.SetTargetRpm(value);
+                    _serialService.SetFanSpeed(pct);
+                }
+            }
+        }
+
         partial void OnSelectedLedModeChanged(int value)
         {
-            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
                 _serialService.SetLedMode(value);
+            }
+        }
+
+        partial void OnRgbBrightnessChanged(int value)
+        {
+            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                int byteVal = Math.Clamp((int)(value * 2.55), 0, 255);
+                _serialService.SetLedBrightness(byteVal);
+            }
+        }
+
+        partial void OnRgbSpeedChanged(int value)
+        {
+            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetLedSpeed(Math.Clamp(value, 1, 100));
+            }
+        }
+
+        partial void OnIsLedReverseChanged(bool value)
+        {
+            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                _serialService.SetLedDirection(value);
             }
         }
 
@@ -76,6 +125,11 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private string _statusMessage = "Hệ thống sẵn sàng. Vui lòng chọn cổng COM để kết nối ESP32-S3.";
 
         public ObservableCollection<string> AvailableComPorts { get; } = new();
+
+        // Customizable Quick RPM Presets
+        public ObservableCollection<RpmPreset> QuickRpmPresets { get; } = new();
+        [ObservableProperty] private int _newPresetRpm = 1400;
+        [ObservableProperty] private string _newPresetLabel = "1400";
 
         // Profiles
         public ObservableCollection<FanProfile> Profiles { get; } = new();
@@ -139,10 +193,11 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private string _selectedFanCurve = "Balanced";
 
         // RGB Lighting
-        [ObservableProperty] private int _selectedLedMode = 1; // 0: Off, 1: Static, 2: Breathing, 3: Rainbow, 4: Speed Pulse
+        [ObservableProperty] private int _selectedLedMode = 1;
         [ObservableProperty] private string _selectedRgbColorHex = "#00BCD4";
-        [ObservableProperty] private int _rgbBrightness = 100;
+        [ObservableProperty] private int _rgbBrightness = 80;
         [ObservableProperty] private int _rgbSpeed = 50;
+        [ObservableProperty] private bool _isLedReverse = false;
 
         // App Mappings
         public ObservableCollection<AppMapping> AppMappings { get; } = new();
@@ -223,6 +278,31 @@ namespace SmartFanCooling.ViewModels
                     }
                 });
             };
+            _serialService.OnFanPctReceived += fanPct =>
+            {
+                App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (FanPwm != fanPct)
+                    {
+                        _isSyncingFromHardware = true;
+                        FanPwm = Math.Clamp(fanPct, 0, 100);
+                        IsFanStateOn = FanPwm > 0;
+                        _isSyncingFromHardware = false;
+                    }
+                });
+            };
+            _serialService.OnLedModeReceived += ledMode =>
+            {
+                App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (SelectedLedMode != ledMode)
+                    {
+                        _isSyncingFromHardware = true;
+                        SelectedLedMode = ledMode;
+                        _isSyncingFromHardware = false;
+                    }
+                });
+            };
             _serialService.OnLogReceived += msg =>
             {
                 App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
@@ -232,6 +312,7 @@ namespace SmartFanCooling.ViewModels
             };
 
             InitializeDefaultProfiles();
+            LoadRpmPresets();
             RefreshComPorts();
             CheckAndAutoConnectDevices();
 
@@ -344,80 +425,90 @@ namespace SmartFanCooling.ViewModels
 
         private void Timer_Tick(object? sender, object e)
         {
-            _hardwareService.UpdateSensors();
+            if (_isUpdatingHardware) return;
+            _isUpdatingHardware = true;
 
-            // CPU Telemetry
-            CpuTemp = _hardwareService.CpuTemperature;
-            CpuUsage = _hardwareService.CpuUsage;
-            CpuPowerW = _hardwareService.CpuPowerW;
-            CpuMaxClockGHz = _hardwareService.CpuMaxClockGHz;
-            if (!string.IsNullOrEmpty(_hardwareService.CpuName) && _hardwareService.CpuName != "CPU")
+            try
             {
-                CpuName = _hardwareService.CpuName;
-            }
+                _hardwareService.UpdateSensors();
 
-            // GPU Telemetry
-            GpuTemp = _hardwareService.GpuTemperature;
-            GpuUsage = _hardwareService.GpuUsage;
-            GpuPowerW = _hardwareService.GpuPowerW;
-            GpuClockMHz = _hardwareService.GpuClockMHz;
-            GpuVramUsedGB = _hardwareService.GpuVramUsedGB;
-            if (!string.IsNullOrEmpty(_hardwareService.GpuName) && _hardwareService.GpuName != "GPU")
-            {
-                GpuName = _hardwareService.GpuName;
-            }
-
-            // System RAM Telemetry
-            RamUsagePercent = _hardwareService.RamUsagePercent;
-            RamUsedGB = _hardwareService.RamUsedGB;
-            if (_hardwareService.RamTotalGB > 0) RamTotalGB = _hardwareService.RamTotalGB;
-            RamStatusText = $"Bộ nhớ đã dùng: {RamUsedGB:F1} GB / {RamTotalGB:F1} GB";
-
-            // Laptop Fans
-            CpuFanRpm = _hardwareService.HardwareCpuFanRpm;
-            GpuFanRpm = _hardwareService.HardwareGpuFanRpm;
-
-            float maxTemp = Math.Max(CpuTemp, GpuTemp);
-
-            if (IsAutoMode)
-            {
-                FanPwm = CalculatePwmFromCurve(maxTemp);
-            }
-
-            CheckAndAutoConnectDevices();
-
-            // When offline, Llano Hub RPM is strictly 0!
-            if (!IsConnected)
-            {
-                FanRpm = 0;
-            }
-            else if (FanRpm < 300 || FanRpm > 3500)
-            {
-                // Below 300 = fan not spinning, above 3500 = tach noise
-                // Estimate: RPM = 300 + (PWM% * 25), range 300-2800
-                FanRpm = FanPwm > 0 ? 300 + (FanPwm * 25) : 0;
-            }
-
-            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
-            {
-                _serialService.SendControl(FanPwm, SelectedLedMode, CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm);
-            }
-
-            // Update Native Floating OSD Overlay Window
-            if (IsOverlayEnabled)
-            {
-                if (_osdWindow == null)
+                // CPU Telemetry
+                CpuTemp = _hardwareService.CpuTemperature;
+                CpuUsage = _hardwareService.CpuUsage;
+                CpuPowerW = _hardwareService.CpuPowerW;
+                CpuMaxClockGHz = _hardwareService.CpuMaxClockGHz;
+                if (!string.IsNullOrEmpty(_hardwareService.CpuName) && _hardwareService.CpuName != "CPU")
                 {
-                    _osdWindow = new NativeOsdOverlay();
-                    _osdWindow.SetPresetPosition(OverlayPositionPreset);
-                    _osdWindow.SetClickThrough(IsOverlayLocked);
+                    CpuName = _hardwareService.CpuName;
                 }
-                UpdateOsdOverlayNow();
+
+                // GPU Telemetry
+                GpuTemp = _hardwareService.GpuTemperature;
+                GpuUsage = _hardwareService.GpuUsage;
+                GpuPowerW = _hardwareService.GpuPowerW;
+                GpuClockMHz = _hardwareService.GpuClockMHz;
+                GpuVramUsedGB = _hardwareService.GpuVramUsedGB;
+                if (!string.IsNullOrEmpty(_hardwareService.GpuName) && _hardwareService.GpuName != "GPU")
+                {
+                    GpuName = _hardwareService.GpuName;
+                }
+
+                // System RAM Telemetry
+                RamUsagePercent = _hardwareService.RamUsagePercent;
+                RamUsedGB = _hardwareService.RamUsedGB;
+                if (_hardwareService.RamTotalGB > 0) RamTotalGB = _hardwareService.RamTotalGB;
+                RamStatusText = $"Bộ nhớ đã dùng: {RamUsedGB:F1} GB / {RamTotalGB:F1} GB";
+
+                // Laptop Fans
+                CpuFanRpm = _hardwareService.HardwareCpuFanRpm;
+                GpuFanRpm = _hardwareService.HardwareGpuFanRpm;
+
+                float maxTemp = Math.Max(CpuTemp, GpuTemp);
+
+                if (IsAutoMode)
+                {
+                    FanPwm = CalculatePwmFromCurve(maxTemp);
+                }
+
+                CheckAndAutoConnectDevices();
+
+                // When offline, Llano Hub RPM is strictly 0!
+                if (!IsConnected)
+                {
+                    FanRpm = 0;
+                }
+                else if (FanRpm < 300 || FanRpm > 3500)
+                {
+                    // Below 300 = fan not spinning, above 3500 = tach noise
+                    // Estimate: RPM = 300 + (PWM% * 25), range 300-2800
+                    FanRpm = FanPwm > 0 ? 300 + (FanPwm * 25) : 0;
+                }
+
+                if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+                {
+                    _serialService.SendControl(FanPwm, SelectedLedMode, CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm);
+                }
+
+                // Update Native Floating OSD Overlay Window
+                if (IsOverlayEnabled)
+                {
+                    if (_osdWindow == null)
+                    {
+                        _osdWindow = new NativeOsdOverlay();
+                        _osdWindow.SetPresetPosition(OverlayPositionPreset);
+                        _osdWindow.SetClickThrough(IsOverlayLocked);
+                    }
+                    UpdateOsdOverlayNow();
+                }
+                else if (_osdWindow != null)
+                {
+                    _osdWindow.Dispose();
+                    _osdWindow = null;
+                }
             }
-            else if (_osdWindow != null)
+            finally
             {
-                _osdWindow.Dispose();
-                _osdWindow = null;
+                _isUpdatingHardware = false;
             }
         }
 
@@ -660,13 +751,116 @@ namespace SmartFanCooling.ViewModels
         [RelayCommand]
         public void SetQuickFanPreset(object? parameter)
         {
-            if (parameter != null && int.TryParse(parameter.ToString(), out int pwmPercent))
+            if (parameter != null && int.TryParse(parameter.ToString(), out int targetRpm))
             {
                 IsAutoMode = false;
-                FanPwm = pwmPercent;
-                IsFanStateOn = pwmPercent > 0;
-                StatusMessage = $"Đã đặt tốc độ quạt thủ công: {pwmPercent}%";
+                TargetRpm = targetRpm;
+                IsFanStateOn = targetRpm > 0;
+                StatusMessage = targetRpm > 0 ? $"Đã đặt tốc độ quạt mục tiêu: {targetRpm} RPM" : "Đã tắt quạt thủ công";
             }
+        }
+
+        [RelayCommand]
+        public void SelectRpmPreset(RpmPreset? preset)
+        {
+            if (preset != null)
+            {
+                IsAutoMode = false;
+                TargetRpm = preset.Rpm;
+                IsFanStateOn = preset.Rpm > 0;
+                StatusMessage = preset.Rpm > 0 ? $"Đã chọn mốc tốc độ: {preset.Label} ({preset.Rpm} RPM)" : "Đã tắt quạt";
+            }
+        }
+
+        [RelayCommand]
+        public void AddCustomRpmPreset()
+        {
+            int rpm = Math.Clamp((int)(Math.Round(NewPresetRpm / 100.0) * 100), 0, 2800);
+            string label = rpm == 2800 ? "2800 Max" : (rpm == 0 ? "Tắt" : $"{rpm}");
+
+            var existing = QuickRpmPresets.FirstOrDefault(p => p.Rpm == rpm);
+            if (existing != null)
+            {
+                existing.Label = label;
+                StatusMessage = $"Đã cập nhật mốc tốc độ: {label}";
+            }
+            else
+            {
+                QuickRpmPresets.Add(new RpmPreset(label, rpm));
+                var sorted = QuickRpmPresets.OrderBy(p => p.Rpm).ToList();
+                QuickRpmPresets.Clear();
+                foreach (var item in sorted)
+                {
+                    QuickRpmPresets.Add(item);
+                }
+                StatusMessage = $"Đã thêm mốc tốc độ mới: {label}";
+            }
+            SaveRpmPresets();
+        }
+
+        [RelayCommand]
+        public void DeleteRpmPreset(RpmPreset? preset)
+        {
+            if (preset != null && QuickRpmPresets.Contains(preset))
+            {
+                string name = preset.Label;
+                QuickRpmPresets.Remove(preset);
+                StatusMessage = $"Đã xóa mốc tốc độ: {name}";
+                SaveRpmPresets();
+            }
+        }
+
+        [RelayCommand]
+        public void ResetDefaultRpmPresets()
+        {
+            InitializeDefaultRpmPresets();
+            SaveRpmPresets();
+            StatusMessage = "Đã khôi phục các mốc tốc độ mặc định";
+        }
+
+        private void InitializeDefaultRpmPresets()
+        {
+            QuickRpmPresets.Clear();
+            QuickRpmPresets.Add(new RpmPreset("Tắt", 0));
+            QuickRpmPresets.Add(new RpmPreset("800", 800));
+            QuickRpmPresets.Add(new RpmPreset("1200", 1200));
+            QuickRpmPresets.Add(new RpmPreset("1600", 1600));
+            QuickRpmPresets.Add(new RpmPreset("2000", 2000));
+            QuickRpmPresets.Add(new RpmPreset("2800 Max", 2800));
+        }
+
+        private void SaveRpmPresets()
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartFanCooling");
+                System.IO.Directory.CreateDirectory(dir);
+                string file = System.IO.Path.Combine(dir, "rpm_presets.json");
+                string json = System.Text.Json.JsonSerializer.Serialize(QuickRpmPresets);
+                System.IO.File.WriteAllText(file, json);
+            }
+            catch { }
+        }
+
+        private void LoadRpmPresets()
+        {
+            try
+            {
+                string file = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartFanCooling", "rpm_presets.json");
+                if (System.IO.File.Exists(file))
+                {
+                    string json = System.IO.File.ReadAllText(file);
+                    var items = System.Text.Json.JsonSerializer.Deserialize<List<RpmPreset>>(json);
+                    if (items != null && items.Count > 0)
+                    {
+                        QuickRpmPresets.Clear();
+                        foreach (var item in items) QuickRpmPresets.Add(item);
+                        return;
+                    }
+                }
+            }
+            catch { }
+            InitializeDefaultRpmPresets();
         }
 
         [RelayCommand]

@@ -11,22 +11,22 @@
 // LED strip
 #define PIN_LED_DATA      7   // WS2812B DIN
 
-// OLED 1.3" main display (I2C1)
-#define PIN_OLED1_SDA     8
-#define PIN_OLED1_SCL     9
+// OLED 1.3" main display (I2C1) - Standard Hardware I2C Pins
+#define PIN_OLED1_SDA     8   // GPIO 8 (SDA)
+#define PIN_OLED1_SCL     9   // GPIO 9 (SCL)
 
-// Rotary encoder 1 (on OLED 1.3" module)
-#define PIN_ENC_A         10  // TRA - Channel A
-#define PIN_ENC_B         11  // TRB - Channel B
+// Rotary encoder 1 (on OLED 1.3" module) - Bottom terminal row
+#define PIN_ENC_A         35  // TRA - Channel A (GPIO 35)
+#define PIN_ENC_B         36  // TRB - Channel B (GPIO 36)
 
 // Rotary encoder 2 (mouse scroll wheel)
 #define PIN_ENC2_A        15  // Enc2 Channel A
 #define PIN_ENC2_B        16  // Enc2 Channel B
 
-// Buttons on OLED 1.3" module
-#define PIN_BTN_CON       12  // CON - Toggle LED on/off
-#define PIN_BTN_BAK       13  // BAK - Cycle LED mode
-#define PIN_BTN_PSH       14  // PSH - Toggle fan on/off
+// Buttons on OLED 1.3" module - Bottom terminal row
+#define PIN_BTN_CON       21  // CON - Toggle LED on/off (GPIO 21)
+#define PIN_BTN_BAK       37  // BAK - Cycle LED mode (GPIO 37)
+#define PIN_BTN_PSH       45  // PSH - Toggle fan on/off (GPIO 45)
 
 // OLED 0.96" secondary display (I2C2)
 #define PIN_OLED2_SDA     17
@@ -39,9 +39,8 @@
 #define FAN_PWM_FREQ      25000   // 25kHz for PC fan
 #define FAN_PWM_RES       8       // 8-bit resolution (0-255)
 #define FAN_PWM_CHANNEL   0
-#define FAN_TACH_PPR      2       // 2 pulses per revolution
-
-#define NUM_LEDS          12
+#define FAN_TACH_PPR      2       // 2 pulses per revolution (Standard PC / Blower fan hardware TACH)
+#define NUM_LEDS          64      // 64 LEDs (Llano RGB ring)
 #define LED_TYPE          WS2812B
 #define LED_COLOR_ORDER   GRB
 
@@ -52,7 +51,7 @@
 
 // Timing
 #define DEBOUNCE_MS       200
-#define ENCODER_STEP      5       // 5% per detent (tune after real test)
+#define ENCODER_STEP      4       // 4% per detent = exactly 100 RPM per click (300 to 2800 RPM)
 #define COMM_NOTIFY_MS    500     // BLE + WiFi notify interval
 #define DISPLAY_UPDATE_MS 100
 #define RPM_CALC_MS       1000
@@ -103,5 +102,9 @@ enum LedMode : uint8_t {
   LED_SPEED_SYNC = 4,
   LED_WAVE       = 5,
   LED_FIRE       = 6,
-  LED_MODE_COUNT = 7
+  LED_COMET      = 7,
+  LED_COLOR_WIPE = 8,
+  LED_PULSE      = 9,
+  LED_DUAL_SPIN  = 10,
+  LED_MODE_COUNT = 11
 };

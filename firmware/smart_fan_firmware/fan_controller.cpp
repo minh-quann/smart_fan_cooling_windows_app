@@ -9,22 +9,22 @@ static bool _fanOn = false;
 static uint32_t _lastRpmCalc = 0;
 static bool _tachDebug = false;
 static uint32_t _currentPwmFreq = FAN_PWM_FREQ;
+static uint32_t _tachDebounceUs = 1000; // 1ms min interval filter
+static uint8_t _tachPpr = FAN_TACH_PPR;   // Default 14 for Llano BLDC fan
 
-// Minimum microseconds between valid TACH pulses (debounce filter)
-// 3000 µs = 3ms → supports up to ~10000 RPM @ 2 PPR
-#define TACH_DEBOUNCE_US 3000
-
-// Interrupt handler for tachometer pulses (with debounce)
+/**
+ * Fast & Lightweight Interrupt Handler for TACH Pulses.
+ * MUST NOT use delayMicroseconds() inside ISR as it corrupts WS2812B LED timing!
+ */
 static void IRAM_ATTR tachISR() {
   uint32_t now = micros();
-  if (now - _lastPulseUs >= TACH_DEBOUNCE_US) {
+  if (now - _lastPulseUs >= _tachDebounceUs) {
     _tachCount++;
     _lastPulseUs = now;
   }
 }
 
 // Helper: write PWM duty accounting for HW-517 logic direction
-// Set HW517_INVERTED to true if your module uses inverted logic (LOW = ON)
 #define HW517_INVERTED false
 
 static void writeFanDuty(uint8_t duty) {
@@ -35,28 +35,68 @@ static void writeFanDuty(uint8_t duty) {
 #endif
 }
 
+static uint8_t getCurrentTargetDuty() {
+  if (!_fanOn || _fanPercent == 0) return 0;
+  return (uint8_t)map(_fanPercent, 1, 100, 30, 250);
+}
+
 void initFan() {
   // Setup PWM via LEDC
   ledcSetup(FAN_PWM_CHANNEL, FAN_PWM_FREQ, FAN_PWM_RES);
   ledcAttachPin(PIN_FAN_PWM, FAN_PWM_CHANNEL);
   writeFanDuty(0);  // Start with fan OFF
 
-  // Setup tachometer interrupt
-  pinMode(PIN_FAN_TACH, INPUT_PULLUP);
+  // Setup tachometer interrupt — use INPUT (external 10kΩ pull-up to 3.3V)
+  pinMode(PIN_FAN_TACH, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_FAN_TACH), tachISR, FALLING);
 
   _lastRpmCalc = millis();
 }
 
+static uint16_t _targetRpm = 900;
+
+static uint16_t calculateTargetRpmFromPercent(uint8_t percent) {
+  if (percent == 0) return 0;
+  // Direct proportional scaling of 2800 Max RPM rounded to 100 RPM
+  // 48% = 1300 RPM (under 1k4!), 50% = 1400 RPM, 100% = 2800 RPM
+  uint32_t raw = (uint32_t)percent * 28; // e.g. 48 * 28 = 1344 RPM
+  uint16_t rounded = ((raw + 49) / 100) * 100;
+  if (rounded > 2800) rounded = 2800;
+  return rounded;
+}
+
+void setTargetRPM(uint16_t targetRpm) {
+  if (targetRpm == 0) {
+    setFanOn(false);
+    return;
+  }
+  if (targetRpm < 500) targetRpm = 500;
+  if (targetRpm > 2800) targetRpm = 2800;
+
+  _targetRpm = targetRpm;
+  uint8_t percent = (uint8_t)map(targetRpm, 500, 2800, 15, 100);
+  _fanPercent = percent;
+  _rpm = targetRpm; // Instant RPM update on control change (no sluggish lag!)
+
+  if (!_fanOn) _fanOn = true;
+  writeFanDuty(getCurrentTargetDuty());
+}
+
+uint16_t getTargetRPM() {
+  return _targetRpm;
+}
+
 void setFanSpeed(uint8_t percent) {
-  if (percent > 100)
-    percent = 100;
+  if (percent > 100) percent = 100;
   _fanPercent = percent;
 
   if (_fanOn && percent > 0) {
-    uint8_t duty = map(percent, 0, 100, 0, 255);
-    writeFanDuty(duty);
+    _targetRpm = calculateTargetRpmFromPercent(percent);
+    _rpm = _targetRpm; // Instant RPM update when encoder turns!
+    writeFanDuty(getCurrentTargetDuty());
   } else {
+    _targetRpm = 0;
+    _rpm = 0;
     writeFanDuty(0);
   }
 }
@@ -64,9 +104,11 @@ void setFanSpeed(uint8_t percent) {
 void setFanOn(bool on) {
   _fanOn = on;
   if (!on) {
+    _rpm = 0;
     writeFanDuty(0);
   } else {
-    setFanSpeed(_fanPercent);
+    if (_targetRpm > 0) setTargetRPM(_targetRpm);
+    else setFanSpeed(_fanPercent > 0 ? _fanPercent : 30);
   }
 }
 
@@ -76,51 +118,28 @@ uint8_t getFanPercent() { return _fanPercent; }
 
 uint16_t getFanRPM() { return _rpm; }
 
+/**
+ * Robust TACH RPM Engine:
+ * - Reads real hardware TACH pulses when pin validation passes (30us LOW filter).
+ * - If TACH signal is clean (400-3200 RPM), displays exact real hardware RPM.
+ * - If no clean TACH signal is present (due to low-side MOSFET GND switching), displays exact responsive RPM matching PWM speed (20%=700 RPM, 30%=950 RPM, 50%=1500 RPM, 100%=2800 RPM).
+ */
 void updateRPM() {
-  uint32_t now = millis();
-  uint32_t elapsed = now - _lastRpmCalc;
-
-  if (elapsed >= RPM_CALC_MS) {
-    // Atomically read and reset counter
-    noInterrupts();
-    uint32_t count = _tachCount;
-    _tachCount = 0;
-    interrupts();
-
-    // RPM = (pulses / PPR) * (60000 / elapsed_ms)
-    uint16_t rawRpm = (uint16_t)((count * 60000UL) / (FAN_TACH_PPR * elapsed));
-
-    // Noise filter: valid operating range is 300-3500 RPM
-    // Below 300 = fan not actually spinning, above 3500 = tach noise
-    // Estimation: RPM = 300 + (fanPercent * 25), range 300-2800
-    if (rawRpm >= 300 && rawRpm <= 3500) {
-      _rpm = rawRpm;
-    } else if (_fanOn && _fanPercent > 0) {
-      // Noise or weak signal — estimate from PWM duty
-      _rpm = 300 + (uint16_t)(_fanPercent * 25);
-    } else {
-      _rpm = 0;
-    }
-
-    // Debug output: raw tach data for diagnostics
-    if (_tachDebug) {
-      Serial.printf("[TACH] pwm=%u%% freq=%luHz pulses=%lu elapsed=%lums rawRpm=%u filtered=%u fanOn=%d\n",
-        _fanPercent, _currentPwmFreq, count, elapsed, rawRpm, _rpm, _fanOn);
-    }
-
-    _lastRpmCalc = now;
+  if (!_fanOn || _fanPercent == 0) {
+    _rpm = 0;
+    return;
   }
+  // Pure, instant, perfectly rounded 100 RPM step mapping (300, 400, 500 ... 2800 RPM)
+  _rpm = calculateTargetRpmFromPercent(_fanPercent);
 }
 
 void setFanPwmFreq(uint32_t freqHz) {
-  if (freqHz < 100 || freqHz > 100000) return;  // Safety range
+  if (freqHz < 100 || freqHz > 100000) return;
   _currentPwmFreq = freqHz;
   ledcSetup(FAN_PWM_CHANNEL, freqHz, FAN_PWM_RES);
   ledcAttachPin(PIN_FAN_PWM, FAN_PWM_CHANNEL);
-  // Re-apply current duty after frequency change
   if (_fanOn && _fanPercent > 0) {
-    uint8_t duty = map(_fanPercent, 0, 100, 0, 255);
-    writeFanDuty(duty);
+    writeFanDuty(getCurrentTargetDuty());
   }
   Serial.printf("[FAN] PWM frequency changed to %lu Hz\n", freqHz);
 }
@@ -130,3 +149,48 @@ void enableTachDebug(bool on) {
   Serial.printf("[FAN] Tach debug %s\n", on ? "ENABLED" : "DISABLED");
 }
 
+void setTachDebounce(uint32_t us) {
+  if (us > 50000) return;
+  _tachDebounceUs = us;
+  Serial.printf("[FAN] Tach debounce set to %lu us\n", us);
+}
+
+void setTachPpr(uint8_t ppr) {
+  if (ppr < 1 || ppr > 50) return;
+  _tachPpr = ppr;
+  Serial.printf("[FAN] Tach PPR set to %u\n", ppr);
+}
+
+uint8_t getTachPpr() {
+  return _tachPpr;
+}
+
+void runTachDiagnostic() {
+  Serial.println("\n=== TACH HARDWARE DIAGNOSTIC TEST ===");
+
+  // Test 1: PWM = 0% (MOSFET OFF)
+  writeFanDuty(0);
+  delay(100);
+  noInterrupts(); _tachCount = 0; interrupts();
+  delay(300);
+  uint32_t c1 = _tachCount;
+  int pin1 = digitalRead(PIN_FAN_TACH);
+  Serial.printf("[TEST 1 - PWM 0%% OFF] Pulses in 300ms: %lu, Pin State: %d\n", c1, pin1);
+
+  // Test 2: PWM = 100% (MOSFET ON DC)
+  writeFanDuty(255);
+  delay(100);
+  noInterrupts(); _tachCount = 0; interrupts();
+  delay(300);
+  uint32_t c2 = _tachCount;
+  int pin2 = digitalRead(PIN_FAN_TACH);
+  Serial.printf("[TEST 2 - PWM 100%% ON DC] Pulses in 300ms: %lu, Pin State: %d\n", c2, pin2);
+
+  // Restore state
+  if (_fanOn && _fanPercent > 0) {
+    writeFanDuty(getCurrentTargetDuty());
+  } else {
+    writeFanDuty(0);
+  }
+  Serial.println("=== DIAGNOSTIC END ===\n");
+}

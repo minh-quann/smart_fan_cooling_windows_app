@@ -164,7 +164,10 @@
 
     .pin-name { font-family: 'Fira Code', monospace; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
     .pin-target { font-size: 10px; font-weight: 600; color: #34d399; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
-    .pin-wire-info { font-size: 9px; color: var(--text-muted); }
+    .pins-grid-44 .pin-box, .pins-grid-9 .pin-box { min-width: 0; height: 72px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; padding: 8px 10px; }
+    .pins-grid .pin-box { min-height: 72px; box-sizing: border-box; }
+    .pins-grid-44 .pin-target { font-size: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+    .pin-wire-info { font-size: 9px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .card-pwr { border-color: rgba(239, 68, 68, 0.4); }
     .card-esp { border-color: rgba(16, 185, 129, 0.5); background: #061912; }

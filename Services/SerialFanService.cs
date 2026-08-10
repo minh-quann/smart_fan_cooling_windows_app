@@ -16,6 +16,8 @@ namespace SmartFanCooling.Services
         private string _rxBuffer = "";
 
         public event Action<int>? OnRpmReceived;
+        public event Action<int>? OnFanPctReceived;
+        public event Action<int>? OnLedModeReceived;
         public event Action<string>? OnLogReceived;
 
         public bool IsConnected => _serialPort != null && _serialPort.IsOpen;
@@ -73,6 +75,11 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"fan_speed\",\"value\":{percent}}}");
         }
 
+        public void SetTargetRpm(int targetRpm)
+        {
+            SendRawText($"{{\"cmd\":\"fan_target_rpm\",\"value\":{targetRpm}}}");
+        }
+
         public void SetFanState(bool on)
         {
             SendRawText($"{{\"cmd\":\"fan_state\",\"value\":{(on ? 1 : 0)}}}");
@@ -93,6 +100,16 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"led_brightness\",\"value\":{brightness}}}");
         }
 
+        public void SetLedSpeed(int speed)
+        {
+            SendRawText($"{{\"cmd\":\"led_speed\",\"value\":{speed}}}");
+        }
+
+        public void SetLedDirection(bool reverse)
+        {
+            SendRawText($"{{\"cmd\":\"led_direction\",\"reverse\":{(reverse ? "true" : "false")}}}");
+        }
+
         public void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0)
         {
             string cpuStr = cpuTemp.ToString("F1", CultureInfo.InvariantCulture);
@@ -104,8 +121,6 @@ namespace SmartFanCooling.Services
         {
             if (IsConnected)
             {
-                SetFanSpeed(pwmPercent);
-                SetLedMode(ledMode);
                 SendTemperature(cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm);
             }
         }
@@ -173,6 +188,24 @@ namespace SmartFanCooling.Services
                         {
                             int rpm = rpmProp.GetInt32();
                             OnRpmReceived?.Invoke(rpm);
+                        }
+                    }
+
+                    if (root.TryGetProperty("fan_pct", out var fanPctProp))
+                    {
+                        if (fanPctProp.ValueKind == JsonValueKind.Number)
+                        {
+                            int fanPct = fanPctProp.GetInt32();
+                            OnFanPctReceived?.Invoke(fanPct);
+                        }
+                    }
+
+                    if (root.TryGetProperty("led_mode", out var ledModeProp))
+                    {
+                        if (ledModeProp.ValueKind == JsonValueKind.Number)
+                        {
+                            int ledMode = ledModeProp.GetInt32();
+                            OnLedModeReceived?.Invoke(ledMode);
                         }
                     }
                 }

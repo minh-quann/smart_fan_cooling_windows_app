@@ -545,5 +545,21 @@ namespace SmartFanCooling
 
             RedrawFanCurveGraph();
         }
+
+        private void OnPresetButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is RpmPreset preset)
+            {
+                ViewModel.SelectRpmPreset(preset);
+            }
+        }
+
+        private void OnDeletePresetClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem item && item.Tag is RpmPreset preset)
+            {
+                ViewModel.DeleteRpmPreset(preset);
+            }
+        }
     }
 }

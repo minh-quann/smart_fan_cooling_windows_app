@@ -22,12 +22,15 @@ DefaultDirName={autopf}\SmartFanCooling
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=OutputInstaller
-OutputBaseFilename=Smart_Fan_Cooling_Setup_v1.2
+OutputBaseFilename=Smart_Fan_Cooling_Setup_v2.1_CustomPresets
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64
+CloseApplications=yes
+CloseApplicationsFilter=*smart_fan_cooling_windows_app*
+UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -45,7 +48,45 @@ Name: "{group}\Gỡ cài đặt {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "LlanoSmartFanCooling"; ValueData: """{app}\{#MyAppExeName}"""; Tasks: autostart
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "LlanoSmartFanCooling"; ValueData: """{app}\{#MyAppExeName}"""; Tasks: autostart; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"; ValueType: string; ValueName: "{app}\{#MyAppExeName}"; ValueData: "~ RUNASADMIN"; Flags: uninsdeletevalue
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: runascurrentuser postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: postinstall skipifsilent
+
+[Code]
+// Clean up stuck WinRing0 kernel driver service before install/uninstall
+// to prevent LibreHardwareMonitor from failing to load Ring-0 driver
+procedure CleanupKernelDriver();
+var
+  ResultCode: Integer;
+begin
+  // Kill any running instance of the app first
+  Exec('taskkill.exe', '/F /IM smart_fan_cooling_windows_app.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(500);
+  // Stop the WinRing0 kernel driver service (may be in STOP_PENDING state)
+  Exec('sc.exe', 'stop R0smart_fan_cooling_windows_app', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(500);
+  // Delete the driver service entry so LibreHardwareMonitor can create a fresh one
+  Exec('sc.exe', 'delete R0smart_fan_cooling_windows_app', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(500);
+  // Also try to delete the .sys file left behind in the app directory
+  DeleteFile(ExpandConstant('{app}\smart_fan_cooling_windows_app.sys'));
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  CleanupKernelDriver();
+  Result := '';
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    CleanupKernelDriver();
+  end;
+end;

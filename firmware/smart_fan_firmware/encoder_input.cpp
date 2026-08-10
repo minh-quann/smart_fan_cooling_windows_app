@@ -32,7 +32,8 @@ int8_t getEncoderDelta() {
   if (steps != 0) {
     _lastEncCount += steps * 2;
   }
-  return steps;
+  // Invert steps so clockwise rotation increases fan speed (+)
+  return -steps;
 }
 
 ButtonEvent checkButtons() {

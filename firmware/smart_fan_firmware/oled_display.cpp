@@ -9,9 +9,14 @@
 static TwoWire I2C1 = TwoWire(0);
 static TwoWire I2C2 = TwoWire(1);
 
-// Display objects
-static Adafruit_SH1106G oled1(OLED_WIDTH, OLED1_HEIGHT, &I2C1, -1);
+// Display objects — Dual driver support for 1.3" OLED (SH1106 or SSD1306)
+static Adafruit_SH1106G oled1_sh(OLED_WIDTH, OLED1_HEIGHT, &I2C1, -1);
+static Adafruit_SSD1306 oled1_ssd(OLED_WIDTH, OLED1_HEIGHT, &I2C1, -1);
 static Adafruit_SSD1306 oled2(OLED_WIDTH, OLED2_HEIGHT, &I2C2, -1);
+
+static bool _oled1IsSsd = false;
+static bool _oled1Ok = false;
+static bool _oled2Ok = false;
 
 // LED mode names for display
 static const char* LED_MODE_NAMES[] = {
@@ -19,106 +24,194 @@ static const char* LED_MODE_NAMES[] = {
 };
 
 void initDisplays() {
-  // Init I2C buses with assigned pins
-  I2C1.begin(PIN_OLED1_SDA, PIN_OLED1_SCL, 400000);
-  I2C2.begin(PIN_OLED2_SDA, PIN_OLED2_SCL, 400000);
+  // Init I2C buses with standard 100kHz clock for maximum stability over dupont wires
+  I2C1.begin(PIN_OLED1_SDA, PIN_OLED1_SCL, 100000);
+  I2C2.begin(PIN_OLED2_SDA, PIN_OLED2_SCL, 100000);
 
-  // Scan I2C2 bus to find OLED address
-  Serial.println("  I2C2 scan (GPIO17/18):");
-  uint8_t oled2Addr = 0;
-  for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
-    I2C2.beginTransmission(addr);
-    if (I2C2.endTransmission() == 0) {
-      Serial.printf("  Found device at 0x%02X\n", addr);
-      if (addr == 0x3C || addr == 0x3D) oled2Addr = addr;
-    }
-  }
+  Serial.println("==================================================");
+  Serial.println(">>> COMPREHENSIVE DUAL OLED DIAGNOSTIC SCAN <<<");
 
-  // Scan I2C1 bus too
-  Serial.println("  I2C1 scan (GPIO8/9):");
+  // 1. Scan I2C1 (Primary bus: GPIO 8 / 9)
+  Serial.printf("  Scanning I2C1 Bus A (SDA=GPIO %d, SCL=GPIO %d)...\n", PIN_OLED1_SDA, PIN_OLED1_SCL);
+  uint8_t i2c1Addr = 0;
   for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
     I2C1.beginTransmission(addr);
     if (I2C1.endTransmission() == 0) {
-      Serial.printf("  Found device at 0x%02X\n", addr);
+      Serial.printf("    ==> FOUND I2C1 Device at Address 0x%02X!\n", addr);
+      if (addr == 0x3C || addr == 0x3D) i2c1Addr = addr;
     }
   }
 
-  // Init main 1.3" OLED (SH1106)
-  if (oled1.begin(OLED_ADDR, true)) {
-    oled1.clearDisplay();
-    oled1.setTextColor(SH110X_WHITE);
-    oled1.setTextSize(1);
-    oled1.setCursor(20, 28);
-    oled1.print("Llano Smart Fan");
-    oled1.display();
+  // 2. If no device found on GPIO 8/9, try scanning GPIO 47/48 fallback
+  if (!i2c1Addr) {
+    Serial.println("  Scanning I2C1 Bus B Fallback (SDA=GPIO 47, SCL=GPIO 48)...");
+    I2C1.begin(47, 48, 100000);
+    for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
+      I2C1.beginTransmission(addr);
+      if (I2C1.endTransmission() == 0) {
+        Serial.printf("    ==> FOUND I2C1 Device on GPIO 47/48 at Address 0x%02X!\n", addr);
+        if (addr == 0x3C || addr == 0x3D) i2c1Addr = addr;
+      }
+    }
   }
 
-  // Init secondary 0.96" OLED (SSD1306) - use detected address
-  uint8_t addr2 = oled2Addr ? oled2Addr : OLED_ADDR;
-  Serial.printf("  OLED2 using addr 0x%02X\n", addr2);
-  if (oled2.begin(SSD1306_SWITCHCAPVCC, addr2)) {
+  // 3. Scan I2C2 (Secondary bus: GPIO 17 / 18)
+  Serial.printf("  Scanning I2C2 Bus (SDA=GPIO %d, SCL=GPIO %d)...\n", PIN_OLED2_SDA, PIN_OLED2_SCL);
+  uint8_t i2c2Addr1 = 0, i2c2Addr2 = 0;
+  for (uint8_t addr = 0x01; addr < 0x7F; addr++) {
+    I2C2.beginTransmission(addr);
+    if (I2C2.endTransmission() == 0) {
+      Serial.printf("    ==> FOUND I2C2 Device at Address 0x%02X!\n", addr);
+      if (!i2c2Addr1) i2c2Addr1 = addr;
+      else i2c2Addr2 = addr;
+    }
+  }
+
+  // 4. Initialize BOTH SH1106 and SSD1306 drivers for 1.3" OLED to guarantee display activation regardless of chip model!
+  uint8_t addr1 = i2c1Addr ? i2c1Addr : OLED_ADDR;
+  
+  bool ok1_sh = oled1_sh.begin(addr1, true);
+  if (ok1_sh) {
+    oled1_sh.setContrast(255);
+  }
+  
+  bool ok1_ssd = oled1_ssd.begin(SSD1306_SWITCHCAPVCC, addr1);
+
+  _oled1Ok = ok1_sh || ok1_ssd;
+  Serial.printf("  [RESULT] OLED1 (1.3\" Display) Init: SH1106=%d, SSD1306=%d at Address 0x%02X\n", ok1_sh, ok1_ssd, addr1);
+
+  if (_oled1Ok) {
+    // Render splash screen on SH1106 driver
+    oled1_sh.clearDisplay();
+    oled1_sh.setTextColor(SH110X_WHITE);
+    oled1_sh.setTextSize(2);
+    oled1_sh.setCursor(0, 0);
+    oled1_sh.print("1.3\" OLED");
+    oled1_sh.setTextSize(1);
+    oled1_sh.setCursor(0, 24);
+    oled1_sh.print("Llano Smart Fan");
+    oled1_sh.setCursor(0, 42);
+    oled1_sh.print("SH1106 Active!");
+    oled1_sh.display();
+
+    // Render splash screen on SSD1306 driver
+    oled1_ssd.clearDisplay();
+    oled1_ssd.setTextColor(SSD1306_WHITE);
+    oled1_ssd.setTextSize(2);
+    oled1_ssd.setCursor(0, 0);
+    oled1_ssd.print("1.3\" OLED");
+    oled1_ssd.setTextSize(1);
+    oled1_ssd.setCursor(0, 24);
+    oled1_ssd.print("Llano Smart Fan");
+    oled1_ssd.setCursor(0, 42);
+    oled1_ssd.print("SSD1306 Active!");
+    oled1_ssd.display();
+  }
+
+  // 5. Init secondary 0.96" OLED (SSD1306)
+  uint8_t addr2 = i2c2Addr1 ? i2c2Addr1 : OLED_ADDR;
+  bool ok2 = oled2.begin(SSD1306_SWITCHCAPVCC, addr2);
+  if (!ok2 && addr2 == 0x3C) {
+    ok2 = oled2.begin(SSD1306_SWITCHCAPVCC, 0x3D);
+    if (ok2) addr2 = 0x3D;
+  }
+
+  if (ok2) {
+    _oled2Ok = true;
+    Serial.printf("  [SUCCESS] OLED2 (0.96\" SSD1306) Active at Address 0x%02X!\n", addr2);
     oled2.clearDisplay();
     oled2.setTextColor(SSD1306_WHITE);
     oled2.setTextSize(1);
-    oled2.setCursor(30, 28);
-    oled2.print("System Info");
+    oled2.setCursor(20, 24);
+    oled2.print("System Info OK!");
     oled2.display();
-    Serial.println("  OLED2 init OK!");
   } else {
-    Serial.println("  OLED2 init FAILED!");
+    _oled2Ok = false;
+    Serial.println("  [ERROR] OLED2 (0.96\" Display) FAILED!");
   }
+  Serial.println("==================================================");
 }
 
 void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn) {
-  oled1.clearDisplay();
+  if (!_oled1Ok) return;
 
-  // Title bar
-  oled1.setTextSize(1);
-  oled1.setCursor(0, 0);
-  oled1.print("LLANO SMART FAN");
+  if (_oled1IsSsd) {
+    // SSD1306 driver update only (0 column offset)
+    oled1_ssd.clearDisplay();
+    oled1_ssd.setTextSize(1);
+    oled1_ssd.setCursor(0, 0);
+    oled1_ssd.print("LLANO SMART FAN");
+    oled1_ssd.drawLine(0, 10, 127, 10, SSD1306_WHITE);
 
-  // Horizontal divider
-  oled1.drawLine(0, 10, 127, 10, SH110X_WHITE);
+    oled1_ssd.setTextSize(2);
+    oled1_ssd.setCursor(0, 14);
+    if (fanOn) {
+      oled1_ssd.print(fanPercent);
+      oled1_ssd.print("%");
+    } else {
+      oled1_ssd.print("OFF");
+    }
 
-  // Fan status - large text
-  oled1.setTextSize(2);
-  oled1.setCursor(0, 14);
-  if (fanOn) {
-    oled1.print(fanPercent);
-    oled1.print("%");
+    oled1_ssd.setTextSize(1);
+    oled1_ssd.setCursor(75, 14);
+    oled1_ssd.print("RPM");
+    oled1_ssd.setTextSize(2);
+    oled1_ssd.setCursor(75, 24);
+    oled1_ssd.print(rpm);
+
+    oled1_ssd.drawLine(0, 42, 127, 42, SSD1306_WHITE);
+    oled1_ssd.setTextSize(1);
+    oled1_ssd.setCursor(0, 46);
+    oled1_ssd.print("PWM:");
+    int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
+    oled1_ssd.drawRect(30, 45, 82, 8, SSD1306_WHITE);
+    oled1_ssd.fillRect(31, 46, barWidth, 6, SSD1306_WHITE);
+
+    oled1_ssd.setCursor(0, 56);
+    oled1_ssd.print("LED: ");
+    if (ledMode < LED_MODE_COUNT) {
+      oled1_ssd.print(LED_MODE_NAMES[ledMode]);
+    }
+    oled1_ssd.display();
   } else {
-    oled1.print("OFF");
+    // SH1106 driver update only (standard SH1106 offset)
+    oled1_sh.clearDisplay();
+    oled1_sh.setTextSize(1);
+    oled1_sh.setCursor(0, 0);
+    oled1_sh.print("LLANO SMART FAN");
+    oled1_sh.drawLine(0, 10, 127, 10, SH110X_WHITE);
+
+    oled1_sh.setTextSize(2);
+    oled1_sh.setCursor(0, 14);
+    if (fanOn) {
+      oled1_sh.print(fanPercent);
+      oled1_sh.print("%");
+    } else {
+      oled1_sh.print("OFF");
+    }
+
+    oled1_sh.setTextSize(1);
+    oled1_sh.setCursor(75, 14);
+    oled1_sh.print("RPM");
+    oled1_sh.setTextSize(2);
+    oled1_sh.setCursor(75, 24);
+    oled1_sh.print(rpm);
+
+    oled1_sh.drawLine(0, 42, 127, 42, SH110X_WHITE);
+    oled1_sh.setTextSize(1);
+    oled1_sh.setCursor(0, 46);
+    oled1_sh.print("PWM:");
+    int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
+    oled1_sh.drawRect(30, 45, 82, 8, SH110X_WHITE);
+    oled1_sh.fillRect(31, 46, barWidth, 6, SH110X_WHITE);
+
+    oled1_sh.setCursor(0, 56);
+    oled1_sh.print("LED: ");
+    if (ledMode < LED_MODE_COUNT) {
+      oled1_sh.print(LED_MODE_NAMES[ledMode]);
+    }
+    oled1_sh.display();
   }
-
-  // RPM display
-  oled1.setTextSize(1);
-  oled1.setCursor(75, 14);
-  oled1.print("RPM");
-  oled1.setTextSize(2);
-  oled1.setCursor(75, 24);
-  oled1.print(rpm);
-
-  // Divider
-  oled1.drawLine(0, 42, 127, 42, SH110X_WHITE);
-
-  // Fan speed bar (visual gauge)
-  oled1.setTextSize(1);
-  oled1.setCursor(0, 46);
-  oled1.print("PWM:");
-
-  // Draw progress bar
-  int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
-  oled1.drawRect(30, 45, 82, 8, SH110X_WHITE);
-  oled1.fillRect(31, 46, barWidth, 6, SH110X_WHITE);
-
-  // LED mode
-  oled1.setCursor(0, 56);
-  oled1.print("LED: ");
-  if (ledMode < LED_MODE_COUNT) {
-    oled1.print(LED_MODE_NAMES[ledMode]);
-  }
-
-  oled1.display();
 }
 
 void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
@@ -128,10 +221,14 @@ void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
   oled2.clearDisplay();
 
   // ---- Yellow zone (Y 0-15): Smart Fan RPM (Large Text Size 2) ----
+  // Always display completely rounded even 100 RPM numbers (300, 400, 500 ... 2800 RPM)
+  uint16_t cleanRpm = (smartFanRpm > 0) ? (((smartFanRpm + 49) / 100) * 100) : 0;
+  if (cleanRpm > 2800) cleanRpm = 2800;
+
   oled2.setTextSize(2);
   oled2.setTextColor(SSD1306_WHITE);
   oled2.setCursor(0, 0);
-  oled2.printf("%u RPM", smartFanRpm);
+  oled2.printf("%u RPM", cleanRpm);
 
   // ---- Blue zone (Y 16-63): Content ----
   oled2.setTextSize(1);

@@ -43,6 +43,11 @@ static void handleUSBCommand(const char* payload) {
     setFanSpeed(val);
     Serial.printf("USB: Fan speed -> %d%%\n", val);
   }
+  else if (strcmp(cmd, "fan_target_rpm") == 0) {
+    uint16_t rpm = doc["value"] | 0;
+    setTargetRPM(rpm);
+    Serial.printf("USB: Target RPM -> %u\n", rpm);
+  }
   else if (strcmp(cmd, "fan_state") == 0) {
     bool on = doc["value"] | 0;
     setFanOn(on);
@@ -64,6 +69,21 @@ static void handleUSBCommand(const char* payload) {
     uint8_t val = doc["value"] | 0;
     setLedBrightness(val);
     Serial.printf("USB: LED brightness -> %d\n", val);
+  }
+  else if (strcmp(cmd, "led_speed") == 0) {
+    uint8_t val = doc["value"] | 50;
+    setLedSpeed(val);
+    Serial.printf("USB: LED speed -> %d\n", val);
+  }
+  else if (strcmp(cmd, "led_direction") == 0) {
+    bool rev = doc["reverse"] | doc["value"] | false;
+    setLedDirection(rev);
+    Serial.printf("USB: LED direction reverse -> %d\n", rev);
+  }
+  else if (strcmp(cmd, "set_led_count") == 0) {
+    uint16_t val = doc["value"] | 0;
+    setLedCount(val);
+    Serial.printf("USB: LED count -> %u\n", val);
   }
   else if (strcmp(cmd, "temp") == 0) {
     _cpuTemp = doc["cpu"] | 0.0f;
@@ -116,11 +136,22 @@ static void handleUSBCommand(const char* payload) {
     bool on = doc["value"] | 0;
     enableTachDebug(on);
   }
+  else if (strcmp(cmd, "test_tach") == 0) {
+    runTachDiagnostic();
+  }
+  else if (strcmp(cmd, "set_ppr") == 0) {
+    uint8_t ppr = doc["value"] | 14;
+    setTachPpr(ppr);
+  }
   else if (strcmp(cmd, "set_pwm_freq") == 0) {
     uint32_t freq = doc["value"] | 0;
     if (freq > 0) {
       setFanPwmFreq(freq);
     }
+  }
+  else if (strcmp(cmd, "set_debounce") == 0) {
+    uint32_t us = doc["value"] | 0;
+    setTachDebounce(us);
   }
 }
 
@@ -156,6 +187,7 @@ void loopUSBSerial() {
   if (_usbConnected && (millis() - _lastPing > USB_TIMEOUT_MS)) {
     _usbConnected = false;
     Serial.println("USB: Client disconnected (timeout)");
+    setLedOn(false);  // Auto turn off LEDs on PC shutdown / disconnect
   }
 }
 
@@ -183,12 +215,12 @@ void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn
                      float cpuTemp, float gpuTemp) {
   if (!_usbConnected) return;
 
-  char buf[160];
+  char buf[180];
   snprintf(buf, sizeof(buf),
-    "{\"fan_pct\":%u,\"fan_on\":%s,\"led_mode\":%u,\"led_on\":%s,\"rpm\":%u,\"cpu\":%.1f,\"gpu\":%.1f}",
+    "{\"fan_pct\":%u,\"fan_on\":%s,\"led_mode\":%u,\"led_on\":%s,\"rpm\":%u,\"target_rpm\":%u,\"cpu\":%.1f,\"gpu\":%.1f}",
     fanPercent, fanOn ? "true" : "false",
     ledMode, ledOn ? "true" : "false",
-    getFanRPM(), cpuTemp, gpuTemp
+    getFanRPM(), getTargetRPM(), cpuTemp, gpuTemp
   );
   Serial.println(buf);
 }

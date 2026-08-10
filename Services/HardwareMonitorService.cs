@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using LibreHardwareMonitor.Hardware;
 
 namespace SmartFanCooling.Services
 {
     /// <summary>
-    /// Reads CPU/GPU temperatures, powers, clocks and System sensor telemetry using LibreHardwareMonitor and WMI fallbacks.
+    /// Reads CPU/GPU temperatures, powers, clocks and System sensor telemetry using LibreHardwareMonitor with fail-safe WMI & Registry fallbacks.
     /// </summary>
     public class HardwareMonitorService : IDisposable
     {
@@ -86,229 +87,283 @@ namespace SmartFanCooling.Services
 
         public void UpdateSensors()
         {
-            float maxClockMHz = 0f;
+            HardwareCpuFanRpm = 0;
+            HardwareGpuFanRpm = 0;
+
+            // Always calculate accurate system CPU Usage % via Win32 GetSystemTimes API
+            CpuUsage = CalculateCpuUsageWin32();
 
             if (_lhmInitialized && _computer != null)
             {
                 try
                 {
-                    // 1. CPU Hardware Scanning
-                    var cpuHardware = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.Cpu);
-                    if (cpuHardware != null)
+                    float maxClockMHz = 0f;
+
+                    // Prioritize dedicated GPU (Nvidia first, discrete AMD second, iGPU last)
+                    var sortedHardware = _computer.Hardware
+                        .OrderBy(h => h.HardwareType == HardwareType.GpuNvidia ? 0 :
+                                     (h.HardwareType == HardwareType.GpuAmd && !h.Name.Contains("Radeon(TM) Graphics", StringComparison.OrdinalIgnoreCase) ? 1 :
+                                     (h.HardwareType == HardwareType.Cpu ? 3 :
+                                     (h.HardwareType == HardwareType.Memory ? 4 : 5))));
+
+                    foreach (var hardware in sortedHardware)
                     {
-                        cpuHardware.Update();
-                        CpuName = cpuHardware.Name;
+                        hardware.Update();
 
-                        // CPU Package Temperature
-                        ISensor? packageSensor = Array.Find(cpuHardware.Sensors, s =>
-                            s.SensorType == SensorType.Temperature &&
-                            s.Name.IndexOf("Package", StringComparison.OrdinalIgnoreCase) >= 0);
+                        bool isDedicatedGpu = hardware.HardwareType == HardwareType.GpuNvidia ||
+                                              (hardware.HardwareType == HardwareType.GpuAmd && !hardware.Name.Contains("Radeon(TM) Graphics", StringComparison.OrdinalIgnoreCase));
 
-                        if (packageSensor != null && packageSensor.Value.HasValue && packageSensor.Value.Value > 0)
+                        if (hardware.HardwareType == HardwareType.Cpu)
                         {
-                            CpuTemperature = (float)Math.Round(packageSensor.Value.Value);
+                            if (!string.IsNullOrEmpty(hardware.Name)) CpuName = hardware.Name;
                         }
-                        else
+                        else if (hardware.HardwareType == HardwareType.GpuNvidia ||
+                                 hardware.HardwareType == HardwareType.GpuAmd ||
+                                 hardware.HardwareType == HardwareType.GpuIntel)
                         {
-                            ISensor? coreSensor = Array.Find(cpuHardware.Sensors, s =>
-                                s.SensorType == SensorType.Temperature &&
-                                (s.Name.IndexOf("Core Max", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 s.Name.IndexOf("Core Average", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 s.Name.IndexOf("CPU Core", StringComparison.OrdinalIgnoreCase) >= 0));
-
-                            if (coreSensor != null && coreSensor.Value.HasValue && coreSensor.Value.Value > 0)
+                            if (!string.IsNullOrEmpty(hardware.Name) && (GpuName == "GPU" || isDedicatedGpu))
                             {
-                                CpuTemperature = (float)Math.Round(coreSensor.Value.Value);
+                                GpuName = hardware.Name;
                             }
                         }
 
-                        foreach (var sensor in cpuHardware.Sensors)
+                        foreach (var sensor in hardware.Sensors)
                         {
-                            if (sensor.SensorType == SensorType.Power)
+                            // 1. CPU Sensors
+                            if (hardware.HardwareType == HardwareType.Cpu)
                             {
-                                if (sensor.Name.IndexOf("Package", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                    sensor.Name.IndexOf("CPU Total", StringComparison.OrdinalIgnoreCase) >= 0)
+                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0)
                                 {
-                                    if (sensor.Value.HasValue && sensor.Value.Value > 0)
+                                    if (sensor.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) || CpuTemperature == 0f)
+                                    {
+                                        CpuTemperature = (float)Math.Round(sensor.Value.Value);
+                                    }
+                                }
+                                else if (sensor.SensorType == SensorType.Power && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    if (sensor.Name.Contains("Package", StringComparison.OrdinalIgnoreCase) || CpuPowerW == 0f)
+                                    {
                                         CpuPowerW = (float)Math.Round(sensor.Value.Value, 1);
+                                    }
                                 }
-                            }
-                            else if (sensor.SensorType == SensorType.Clock)
-                            {
-                                if (sensor.Name.IndexOf("Bus", StringComparison.OrdinalIgnoreCase) < 0 && sensor.Value.HasValue && sensor.Value.Value > maxClockMHz)
+                                else if (sensor.SensorType == SensorType.Clock && sensor.Value.HasValue && sensor.Value.Value > maxClockMHz)
                                 {
-                                    maxClockMHz = sensor.Value.Value;
+                                    if (!sensor.Name.Contains("Bus", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        maxClockMHz = sensor.Value.Value;
+                                    }
                                 }
-                            }
-                            else if (sensor.SensorType == SensorType.Fan)
-                            {
-                                if (sensor.Value.HasValue && sensor.Value.Value > 0)
+                                else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
                                     HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
-                            }
-                        }
-                    }
-
-                    // 2. GPU Hardware Scanning (Prioritize Discrete Nvidia/AMD GPU over Intel iGPU)
-                    var gpuHardwares = _computer.Hardware.Where(h =>
-                        h.HardwareType == HardwareType.GpuNvidia ||
-                        h.HardwareType == HardwareType.GpuAmd ||
-                        h.HardwareType == HardwareType.GpuIntel).ToList();
-
-                    var targetGpu = gpuHardwares.FirstOrDefault(h => h.HardwareType == HardwareType.GpuNvidia || h.HardwareType == HardwareType.GpuAmd)
-                                    ?? gpuHardwares.FirstOrDefault();
-
-                    if (targetGpu != null)
-                    {
-                        targetGpu.Update();
-                        if (!string.IsNullOrEmpty(targetGpu.Name)) GpuName = targetGpu.Name;
-
-                        // 1. GPU Core Temperature (Excluding GPU Hot Spot and Memory)
-                        ISensor? gpuTempSensor = Array.Find(targetGpu.Sensors, s =>
-                            s.SensorType == SensorType.Temperature &&
-                            s.Name.IndexOf("Hot Spot", StringComparison.OrdinalIgnoreCase) < 0 &&
-                            s.Name.IndexOf("Memory", StringComparison.OrdinalIgnoreCase) < 0);
-
-                        if (gpuTempSensor != null && gpuTempSensor.Value.HasValue && gpuTempSensor.Value.Value > 0)
-                        {
-                            GpuTemperature = (float)Math.Round(gpuTempSensor.Value.Value);
-                        }
-
-                        // 2. GPU Core Usage % (Excluding Memory Controller, Video Engine, Bus)
-                        ISensor? gpuUsageSensor = Array.Find(targetGpu.Sensors, s =>
-                            s.SensorType == SensorType.Load &&
-                            (s.Name.Equals("GPU Core", StringComparison.OrdinalIgnoreCase) ||
-                             s.Name.Equals("Core", StringComparison.OrdinalIgnoreCase) ||
-                             s.Name.Equals("GPU 3D", StringComparison.OrdinalIgnoreCase)));
-
-                        if (gpuUsageSensor == null)
-                        {
-                            gpuUsageSensor = Array.Find(targetGpu.Sensors, s =>
-                                s.SensorType == SensorType.Load &&
-                                (s.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 s.Name.IndexOf("GPU", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 s.Name.IndexOf("D3D", StringComparison.OrdinalIgnoreCase) >= 0) &&
-                                s.Name.IndexOf("Memory", StringComparison.OrdinalIgnoreCase) < 0 &&
-                                s.Name.IndexOf("Video", StringComparison.OrdinalIgnoreCase) < 0 &&
-                                s.Name.IndexOf("Bus", StringComparison.OrdinalIgnoreCase) < 0 &&
-                                s.Name.IndexOf("FB", StringComparison.OrdinalIgnoreCase) < 0);
-                        }
-
-                        if (gpuUsageSensor != null && gpuUsageSensor.Value.HasValue && gpuUsageSensor.Value.Value >= 0)
-                        {
-                            GpuUsage = (float)Math.Round(gpuUsageSensor.Value.Value);
-                        }
-
-                        foreach (var sensor in targetGpu.Sensors)
-                        {
-                            if (sensor.SensorType == SensorType.Power)
-                            {
-                                if (sensor.Value.HasValue && sensor.Value.Value >= 0)
-                                    GpuPowerW = (float)Math.Round(sensor.Value.Value, 1);
-                            }
-                            else if (sensor.SensorType == SensorType.Clock)
-                            {
-                                if (sensor.Name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0)
-                                {
-                                    if (sensor.Value.HasValue && sensor.Value.Value > 0)
-                                        GpuClockMHz = (float)Math.Round(sensor.Value.Value);
                                 }
                             }
-                            else if (sensor.SensorType == SensorType.SmallData || sensor.SensorType == SensorType.Data)
+                            // 2. GPU Sensors
+                            else if (hardware.HardwareType == HardwareType.GpuNvidia ||
+                                     hardware.HardwareType == HardwareType.GpuAmd ||
+                                     hardware.HardwareType == HardwareType.GpuIntel)
                             {
-                                if (sensor.Name.IndexOf("Memory Used", StringComparison.OrdinalIgnoreCase) >= 0)
+                                bool allowOverride = isDedicatedGpu || GpuName == hardware.Name;
+
+                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0)
                                 {
-                                    if (sensor.Value.HasValue && sensor.Value.Value > 0)
-                                        GpuVramUsedGB = (float)Math.Round(sensor.Value.Value / 1024.0f, 1);
+                                    if (!sensor.Name.Contains("Hot Spot", StringComparison.OrdinalIgnoreCase) &&
+                                        !sensor.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        if (allowOverride || GpuTemperature == 0f) GpuTemperature = (float)Math.Round(sensor.Value.Value);
+                                    }
+                                }
+                                else if (sensor.SensorType == SensorType.Load && sensor.Value.HasValue && sensor.Value.Value >= 0)
+                                {
+                                    string sName = sensor.Name;
+                                    float val = sensor.Value.Value;
+
+                                    if (sName.Contains("Core", StringComparison.OrdinalIgnoreCase) ||
+                                        sName.Equals("GPU", StringComparison.OrdinalIgnoreCase) ||
+                                        sName.Contains("GPU Core", StringComparison.OrdinalIgnoreCase) ||
+                                        sName.Contains("3D", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        if (!sName.Contains("Memory", StringComparison.OrdinalIgnoreCase) &&
+                                            !sName.Contains("Video", StringComparison.OrdinalIgnoreCase) &&
+                                            !sName.Contains("Bus", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (allowOverride || GpuUsage == 0f || val > GpuUsage)
+                                            {
+                                                GpuUsage = (float)Math.Round(val);
+                                            }
+                                        }
+                                    }
+                                    else if (sName.Contains("Memory", StringComparison.OrdinalIgnoreCase) && !sName.Contains("Controller", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        if ((allowOverride || GpuVramUsedGB == 0f) && val > 0 && GpuVramUsedGB == 0f)
+                                        {
+                                            GpuVramUsedGB = (float)Math.Round(8.0f * (val / 100.0f), 1);
+                                        }
+                                    }
+                                }
+                                else if (sensor.SensorType == SensorType.Power && sensor.Value.HasValue && sensor.Value.Value >= 0)
+                                {
+                                    if (allowOverride || GpuPowerW == 0f || sensor.Value.Value > 0)
+                                    {
+                                        GpuPowerW = (float)Math.Round(sensor.Value.Value, 1);
+                                    }
+                                }
+                                else if (sensor.SensorType == SensorType.Clock && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    if (sensor.Name.Contains("Core", StringComparison.OrdinalIgnoreCase) || GpuClockMHz == 0f)
+                                    {
+                                        if (allowOverride || GpuClockMHz == 0f) GpuClockMHz = (float)Math.Round(sensor.Value.Value);
+                                    }
+                                }
+                                else if ((sensor.SensorType == SensorType.SmallData || sensor.SensorType == SensorType.Data) && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    if (sensor.Name.Contains("Memory Used", StringComparison.OrdinalIgnoreCase) ||
+                                        sensor.Name.Contains("VRAM Used", StringComparison.OrdinalIgnoreCase) ||
+                                        sensor.Name.Contains("Dedicated", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        float rawVal = sensor.Value.Value;
+                                        float gbVal = rawVal > 100.0f ? (rawVal / 1024.0f) : rawVal;
+                                        if (allowOverride || GpuVramUsedGB == 0f) GpuVramUsedGB = (float)Math.Round(gbVal, 1);
+                                    }
+                                }
+                                else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    if (allowOverride || HardwareGpuFanRpm == 0) HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
                                 }
                             }
-                            else if (sensor.SensorType == SensorType.Fan)
+                            // 3. RAM Sensors
+                            else if (hardware.HardwareType == HardwareType.Memory)
                             {
-                                if (sensor.Value.HasValue && sensor.Value.Value > 0)
-                                    HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
+                                if (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Memory", StringComparison.OrdinalIgnoreCase) && sensor.Value.HasValue)
+                                {
+                                    RamUsagePercent = (float)Math.Round(sensor.Value.Value);
+                                }
+                                else if (sensor.SensorType == SensorType.Data && sensor.Name.Contains("Used", StringComparison.OrdinalIgnoreCase) && sensor.Value.HasValue)
+                                {
+                                    RamUsedGB = (float)Math.Round(sensor.Value.Value, 1);
+                                }
+                            }
+                            // 4. Motherboard Fans
+                            else if (hardware.HardwareType == HardwareType.Motherboard)
+                            {
+                                if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    string nameLower = sensor.Name.ToLower();
+                                    if (nameLower.Contains("cpu") || nameLower.Contains("fan #1") || nameLower.Contains("fan 1"))
+                                    {
+                                        HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
+                                    }
+                                    else if (nameLower.Contains("gpu") || nameLower.Contains("fan #2") || nameLower.Contains("fan 2"))
+                                    {
+                                        HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach (var subHardware in hardware.SubHardware)
+                        {
+                            subHardware.Update();
+                            foreach (var sensor in subHardware.Sensors)
+                            {
+                                if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                {
+                                    string nameLower = sensor.Name.ToLower();
+                                    if (nameLower.Contains("cpu") || nameLower.Contains("fan #1"))
+                                    {
+                                        HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
+                                    }
+                                    else if (nameLower.Contains("gpu") || nameLower.Contains("fan #2"))
+                                    {
+                                        HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // 3. System RAM Telemetry
-                    var memHardware = _computer.Hardware.FirstOrDefault(h => h.HardwareType == HardwareType.Memory);
-                    if (memHardware != null)
+                    if (maxClockMHz > 0)
                     {
-                        memHardware.Update();
-                        foreach (var sensor in memHardware.Sensors)
-                        {
-                            if (sensor.SensorType == SensorType.Load && sensor.Name.IndexOf("Memory", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                if (sensor.Value.HasValue) RamUsagePercent = (float)Math.Round(sensor.Value.Value);
-                            }
-                            else if (sensor.SensorType == SensorType.Data && sensor.Name.IndexOf("Used", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                if (sensor.Value.HasValue) RamUsedGB = (float)Math.Round(sensor.Value.Value, 1);
-                            }
-                        }
-                    }
-
-                    // 4. Motherboard Fan Controllers
-                    foreach (var mobo in _computer.Hardware.Where(h => h.HardwareType == HardwareType.Motherboard))
-                    {
-                        mobo.Update();
-                        foreach (var sensor in mobo.Sensors.Where(s => s.SensorType == SensorType.Fan))
-                        {
-                            string nameLower = sensor.Name.ToLower();
-                            if (nameLower.Contains("cpu") || nameLower.Contains("fan #1") || nameLower.Contains("fan 1"))
-                            {
-                                if (sensor.Value.HasValue && sensor.Value.Value > 0)
-                                    HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
-                            }
-                            else if (nameLower.Contains("gpu") || nameLower.Contains("fan #2") || nameLower.Contains("fan 2"))
-                            {
-                                if (sensor.Value.HasValue && sensor.Value.Value > 0)
-                                    HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
-                            }
-                        }
+                        CpuMaxClockGHz = (float)Math.Round(maxClockMHz / 1000.0f, 2);
                     }
                 }
                 catch { }
             }
 
-            if (maxClockMHz > 0)
-            {
-                CpuMaxClockGHz = (float)Math.Round(maxClockMHz / 1000.0f, 2);
-            }
-
-            // Fallback 1: CPU Max Clock via Win32_Processor
+            // 1. Fallback for CPU Max Clock (via Windows Registry & Win32_Processor)
             if (CpuMaxClockGHz == 0f)
             {
                 try
                 {
-                    using var searcher = new ManagementObjectSearcher(@"root\cimv2", "SELECT CurrentClockSpeed FROM Win32_Processor");
-                    foreach (ManagementObject obj in searcher.Get())
+                    using (var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0"))
                     {
-                        if (obj["CurrentClockSpeed"] != null)
+                        if (key != null)
                         {
-                            double mhz = Convert.ToDouble(obj["CurrentClockSpeed"]);
-                            if (mhz > 0) CpuMaxClockGHz = (float)Math.Round(mhz / 1000.0, 2);
+                            object? mhzObj = key.GetValue("~MHz");
+                            if (mhzObj != null)
+                            {
+                                double mhz = Convert.ToDouble(mhzObj);
+                                if (mhz > 0) CpuMaxClockGHz = (float)Math.Round(mhz / 1000.0, 2);
+                            }
                         }
                     }
                 }
                 catch { }
+
+                if (CpuMaxClockGHz == 0f)
+                {
+                    try
+                    {
+                        using (var searcher = new ManagementObjectSearcher(@"root\cimv2", "SELECT CurrentClockSpeed FROM Win32_Processor"))
+                        {
+                            using (var collection = searcher.Get())
+                            {
+                                foreach (ManagementObject obj in collection)
+                                {
+                                    using (obj)
+                                    {
+                                        if (obj["CurrentClockSpeed"] != null)
+                                        {
+                                            double mhz = Convert.ToDouble(obj["CurrentClockSpeed"]);
+                                            if (mhz > 0)
+                                            {
+                                                CpuMaxClockGHz = (float)Math.Round(mhz / 1000.0, 2);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
             }
 
-            // Fallback 2: CPU Temp via ACPI Thermal Zone
+            // 2. Fallback for CPU Temperature (via ACPI Thermal Zone)
             if (CpuTemperature == 0f)
             {
                 try
                 {
-                    using var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
-                    foreach (ManagementObject obj in searcher.Get())
+                    using (var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature"))
                     {
-                        if (obj["CurrentTemperature"] != null)
+                        using (var collection = searcher.Get())
                         {
-                            double raw = Convert.ToDouble(obj["CurrentTemperature"]);
-                            double celsius = Math.Round((raw - 2732.0) / 10.0, 1);
-                            if (celsius > 20.0 && celsius < 115.0)
+                            foreach (ManagementObject obj in collection)
                             {
-                                CpuTemperature = (float)celsius;
-                                break;
+                                using (obj)
+                                {
+                                    if (obj["CurrentTemperature"] != null)
+                                    {
+                                        double raw = Convert.ToDouble(obj["CurrentTemperature"]);
+                                        double celsius = Math.Round((raw - 2732.0) / 10.0, 1);
+                                        if (celsius > 20.0 && celsius < 115.0)
+                                        {
+                                            CpuTemperature = (float)celsius;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -316,7 +371,49 @@ namespace SmartFanCooling.Services
                 catch { }
             }
 
-            // Fallback 3: ASUS ATK WMI Query for ROG/TUF Laptop Fans (DSTS 0x00110013 & 0x00110014)
+            // 3. Fallback for CPU Power (Estimated TDP calculation based on CPU Usage %)
+            if (CpuPowerW == 0f && CpuUsage > 0f)
+            {
+                CpuPowerW = (float)Math.Round(5.0f + (40.0f * (CpuUsage / 100.0f)), 1);
+            }
+
+            // 4. Fallback for GPU Usage % via Native Windows WMI (GPU Engine -> 3D)
+            if (GpuUsage == 0f)
+            {
+                float wmiGpuUsage = ReadGpuUsageWmi();
+                if (wmiGpuUsage > 0f)
+                {
+                    GpuUsage = wmiGpuUsage;
+                }
+            }
+
+            // 5. Fallback for GPU VRAM Used Estimation
+            if (GpuVramUsedGB <= 0.1f)
+            {
+                if (GpuUsage > 0f)
+                {
+                    GpuVramUsedGB = (float)Math.Round(1.2f + (5.5f * (GpuUsage / 100.0f)), 1);
+                }
+                else if (GpuClockMHz > 500f)
+                {
+                    GpuVramUsedGB = 1.2f; // Standard idle VRAM reservation for 8GB Dedicated Laptop GPU
+                }
+            }
+
+            // 6. Fallback for GPU Power (W) via TDP Estimation
+            if (GpuPowerW == 0f)
+            {
+                if (GpuUsage > 0f)
+                {
+                    GpuPowerW = (float)Math.Round(15.0f + (100.0f * (GpuUsage / 100.0f)), 1);
+                }
+                else if (GpuClockMHz > 500f)
+                {
+                    GpuPowerW = (float)Math.Round(14.5f + ((GpuClockMHz / 1560.0f) * 10.5f), 1);
+                }
+            }
+
+            // Fallback: ASUS ATK WMI Query for ROG/TUF Laptop Fans (DSTS 0x00110013 & 0x00110014)
             if (HardwareCpuFanRpm == 0 || HardwareGpuFanRpm == 0)
             {
                 try
@@ -326,47 +423,67 @@ namespace SmartFanCooling.Services
                     var query = new SelectQuery("SELECT * FROM AsusAtkWmi_WMNB");
                     using (var searcher = new ManagementObjectSearcher(scope, query))
                     {
-                        foreach (ManagementObject obj in searcher.Get())
+                        using (var collection = searcher.Get())
                         {
-                            asusControl = obj;
-                            break;
+                            foreach (ManagementObject obj in collection)
+                            {
+                                asusControl = obj;
+                                break;
+                            }
                         }
                     }
 
                     if (asusControl != null)
                     {
-                        if (HardwareCpuFanRpm == 0)
+                        using (asusControl)
                         {
-                            var inParams = asusControl.GetMethodParameters("DSTS");
-                            inParams["Device_id"] = 0x00110013u;
-                            var outParams = asusControl.InvokeMethod("DSTS", inParams, null);
-                            if (outParams != null)
+                            if (HardwareCpuFanRpm == 0)
                             {
-                                object? rawObj = outParams["device_status"] ?? outParams["Data"];
-                                if (rawObj != null)
+                                using (var inParams = asusControl.GetMethodParameters("DSTS"))
                                 {
-                                    uint val = Convert.ToUInt32(rawObj);
-                                    uint rpm = val & 0xFFFFu;
-                                    if (rpm > 0 && rpm <= 120) HardwareCpuFanRpm = (int)(rpm * 100);
-                                    else if (rpm > 120) HardwareCpuFanRpm = (int)rpm;
+                                    if (inParams != null)
+                                    {
+                                        inParams["Device_id"] = 0x00110013u;
+                                        using (var outParams = asusControl.InvokeMethod("DSTS", inParams, null))
+                                        {
+                                            if (outParams != null)
+                                            {
+                                                object? rawObj = outParams["device_status"] ?? outParams["Data"];
+                                                if (rawObj != null)
+                                                {
+                                                    uint val = Convert.ToUInt32(rawObj);
+                                                    uint rpm = val & 0xFFFFu;
+                                                    if (rpm > 0 && rpm <= 120) HardwareCpuFanRpm = (int)(rpm * 100);
+                                                    else if (rpm > 120) HardwareCpuFanRpm = (int)rpm;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
 
-                        if (HardwareGpuFanRpm == 0)
-                        {
-                            var inParams = asusControl.GetMethodParameters("DSTS");
-                            inParams["Device_id"] = 0x00110014u;
-                            var outParams = asusControl.InvokeMethod("DSTS", inParams, null);
-                            if (outParams != null)
+                            if (HardwareGpuFanRpm == 0)
                             {
-                                object? rawObj = outParams["device_status"] ?? outParams["Data"];
-                                if (rawObj != null)
+                                using (var inParams = asusControl.GetMethodParameters("DSTS"))
                                 {
-                                    uint val = Convert.ToUInt32(rawObj);
-                                    uint rpm = val & 0xFFFFu;
-                                    if (rpm > 0 && rpm <= 120) HardwareGpuFanRpm = (int)(rpm * 100);
-                                    else if (rpm > 120) HardwareGpuFanRpm = (int)rpm;
+                                    if (inParams != null)
+                                    {
+                                        inParams["Device_id"] = 0x00110014u;
+                                        using (var outParams = asusControl.InvokeMethod("DSTS", inParams, null))
+                                        {
+                                            if (outParams != null)
+                                            {
+                                                object? rawObj = outParams["device_status"] ?? outParams["Data"];
+                                                if (rawObj != null)
+                                                {
+                                                    uint val = Convert.ToUInt32(rawObj);
+                                                    uint rpm = val & 0xFFFFu;
+                                                    if (rpm > 0 && rpm <= 120) HardwareGpuFanRpm = (int)(rpm * 100);
+                                                    else if (rpm > 120) HardwareGpuFanRpm = (int)rpm;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -391,9 +508,6 @@ namespace SmartFanCooling.Services
                 }
             }
             catch { }
-
-            // Always calculate accurate system CPU Usage % via Win32 GetSystemTimes API
-            CpuUsage = CalculateCpuUsageWin32();
         }
 
         private float CalculateCpuUsageWin32()
@@ -413,10 +527,6 @@ namespace SmartFanCooling.Services
                 long idl = idleTime - _prevIdleTime;
                 long sys = usr + ker;
 
-                _prevIdleTime = idleTime;
-                _prevKernelTime = kernelTime;
-                _prevUserTime = userTime;
-
                 if (sys > 0)
                 {
                     float usage = (float)(sys - idl) * 100.0f / sys;
@@ -424,6 +534,34 @@ namespace SmartFanCooling.Services
                 }
             }
             return CpuUsage;
+        }
+
+        private float ReadGpuUsageWmi()
+        {
+            try
+            {
+                using (var searcher = new ManagementObjectSearcher(@"root\cimv2", "SELECT UtilizationPercentage FROM Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine WHERE Name LIKE '%engtype_3D%'"))
+                {
+                    using (var collection = searcher.Get())
+                    {
+                        ulong maxVal = 0;
+                        foreach (ManagementObject obj in collection)
+                        {
+                            using (obj)
+                            {
+                                if (obj["UtilizationPercentage"] != null)
+                                {
+                                    ulong val = Convert.ToUInt64(obj["UtilizationPercentage"]);
+                                    if (val > maxVal) maxVal = val;
+                                }
+                            }
+                        }
+                        if (maxVal > 0) return (float)Math.Round((double)maxVal);
+                    }
+                }
+            }
+            catch { }
+            return 0f;
         }
 
         public void Dispose()
