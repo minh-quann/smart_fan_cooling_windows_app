@@ -14,7 +14,7 @@ namespace SmartFanCooling.Views
 
         private void BleDeviceBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is BleDeviceInfo device && DataContext is MainViewModel vm)
+            if (sender is Button btn && btn.Tag is BleDeviceItem device && DataContext is MainViewModel vm)
             {
                 vm.ConnectBleDevice(device);
             }

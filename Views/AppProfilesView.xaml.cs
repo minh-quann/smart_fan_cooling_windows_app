@@ -16,7 +16,7 @@ namespace SmartFanCooling.Views
 
         private void RemoveAppBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is AppProfileMapping mapping && ViewModel != null)
+            if (sender is Button btn && btn.Tag is AppMapping mapping && ViewModel != null)
             {
                 ViewModel.RemoveAppMapping(mapping);
             }
