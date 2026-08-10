@@ -804,62 +804,207 @@
 
 
 
-                        <!-- TAB 5: DUAL OLED CUSTOM CANVAS (INDEPENDENT CONTROL FOR OLED 1 & OLED 2) -->
+                        <!-- TAB 5: DUAL OLED CUSTOM CANVAS (INTERACTIVE MULTI-ROW LAYOUT & TELEMETRY WIDGET BUILDER) -->
                         <StackPanel Spacing="18" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=5}">
-                            <Grid ColumnSpacing="18">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- SCREEN 1: OLED 1.3" CUSTOMIZER -->
-                                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                    <StackPanel Spacing="16">
-                                        <Grid>
-                                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <FontIcon Glyph="&#xE7F4;" Foreground="#00BCD4" FontSize="20"/>
-                                                <StackPanel>
-                                                    <TextBlock Text="Màn Hình 1: OLED 1.3&quot;" FontSize="16" FontWeight="Bold"/>
-                                                    <TextBlock Text="Giao diện độc lập màn 1.3 inch (128x64)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                </StackPanel>
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                <StackPanel Spacing="20">
+                                    <!-- Master Header & Screen Switcher Bar -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                            <FontIcon Glyph="&#xE7B8;" Foreground="{ThemeResource SystemAccentColor}" FontSize="24"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ActiveOledScreenTitle}" FontSize="16" FontWeight="Bold"/>
+                                                <TextBlock Text="Tùy biến số dòng, đường phân cách pixel, gán các chỉ số CPU/GPU/Quạt/RAM theo vị trí muốn hiển thị" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                             </StackPanel>
-                                            <ToggleSwitch IsOn="{Binding IsCustomOled1Enabled, Mode=TwoWay}" OnContent="Bật Custom" OffContent="Tắt (Mặc định)" HorizontalAlignment="Right"/>
-                                        </Grid>
-
-                                        <TextBox Header="Tiêu đề Hàng Trên (Title Bar)" Text="{Binding Oled1CustomTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Header="Thông số Chính (Main Stat Text)" Text="{Binding Oled1CustomMainStat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Header="Thông số Phụ (Sub Stat Text)" Text="{Binding Oled1CustomSubStat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
-                                        <StackPanel Orientation="Horizontal" Spacing="20">
-                                            <CheckBox Content="Hiện Thanh Bar PWM" IsChecked="{Binding Oled1ShowBar, Mode=TwoWay}"/>
-                                            <Button Content="Cập Nhật Ngay Màn 1" Command="{Binding SendCustomOled1FrameCommand}" Style="{StaticResource AccentButtonStyle}"/>
                                         </StackPanel>
-                                    </StackPanel>
-                                </Border>
 
-                                <!-- SCREEN 2: OLED 0.96" CUSTOMIZER -->
-                                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                                    <StackPanel Spacing="16">
-                                        <Grid>
-                                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <FontIcon Glyph="&#xE9E9;" Foreground="#FF9800" FontSize="20"/>
-                                                <StackPanel>
-                                                    <TextBlock Text="Màn Hình 2: OLED 0.96&quot;" FontSize="16" FontWeight="Bold"/>
-                                                    <TextBlock Text="Giao diện độc lập màn 0.96 inch (128x64)" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <!-- Screen Selector Buttons -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Button Content="{Binding Oled1TabButtonText}" Command="{Binding SelectOledScreenTabCommand}" CommandParameter="0"/>
+                                            <Button Content="{Binding Oled2TabButtonText}" Command="{Binding SelectOledScreenTabCommand}" CommandParameter="1"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Main 2-Column Configurator Layout -->
+                                    <Grid ColumnSpacing="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="5*"/>
+                                            <ColumnDefinition Width="5*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- LEFT COLUMN: REALTIME PIXEL CANVAS PREVIEW & LAYOUT STRUCTURE -->
+                                        <StackPanel Grid.Column="0" Spacing="16">
+                                            <TextBlock Text="PREVIEW MÀN HÌNH OLED 128x64 PIXELS (REAL-TIME CANVAS)" FontWeight="Bold" FontSize="13"/>
+                                            
+                                            <!-- Dynamic Pixel Canvas Display Box -->
+                                            <Border Background="#03060E" BorderBrush="{ThemeResource SystemAccentColor}" BorderThickness="2" CornerRadius="10" Height="170" Padding="14">
+                                                <Grid RowSpacing="6">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Dòng 1 -->
+                                                    <StackPanel Grid.Row="0" Spacing="4">
+                                                        <TextBlock Text="{Binding EvaluatedRow1Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="14" FontWeight="Bold" CharacterSpacing="20"/>
+                                                        <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowTopDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    </StackPanel>
+
+                                                    <!-- Dòng 2 -->
+                                                    <TextBlock Grid.Row="1" Text="{Binding EvaluatedRow2Text}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="SemiBold" Margin="0,2,0,0"/>
+
+                                                    <!-- Dòng 3 -->
+                                                    <TextBlock Grid.Row="2" Text="{Binding EvaluatedRow3Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="SemiBold" Margin="0,2,0,0"/>
+
+                                                    <!-- Dòng 4 -->
+                                                    <StackPanel Grid.Row="3" Spacing="4" Margin="0,2,0,0">
+                                                        <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowBottomDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                        <TextBlock Text="{Binding EvaluatedRow4Text}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="Bold"/>
+                                                    </StackPanel>
+
+                                                    <!-- Bottom Progress Bar -->
+                                                    <StackPanel Grid.Row="5" Spacing="4" Visibility="{Binding OledShowPwmBar, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
+                                                            <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="8" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Layout Structure Options -->
+                                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="14">
+                                                <StackPanel Spacing="12">
+                                                    <TextBlock Text="CẤU TRÚC BỐ CỤC MÀN HÌNH" FontWeight="Bold" FontSize="12"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="Số dòng hiển thị:" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                        <Button Content="2 Dòng (Chữ to)" Command="{Binding SetOledRowCountCommand}" CommandParameter="2"/>
+                                                        <Button Content="3 Dòng (Vừa)" Command="{Binding SetOledRowCountCommand}" CommandParameter="3"/>
+                                                        <Button Content="4 Dòng (Chi tiết)" Command="{Binding SetOledRowCountCommand}" CommandParameter="4" Style="{StaticResource AccentButtonStyle}"/>
+                                                    </StackPanel>
+
+                                                    <StackPanel Orientation="Horizontal" Spacing="16">
+                                                        <CheckBox Content="Đường phân cách trên" IsChecked="{Binding OledShowTopDivider, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Đường phân cách dưới" IsChecked="{Binding OledShowBottomDivider, Mode=TwoWay}"/>
+                                                        <CheckBox Content="Thanh Bar PWM %" IsChecked="{Binding OledShowPwmBar, Mode=TwoWay}"/>
+                                                    </StackPanel>
                                                 </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- RIGHT COLUMN: INTERACTIVE TELEMETRY WIDGET SLOT ASSIGNMENT -->
+                                        <StackPanel Grid.Column="1" Spacing="16">
+                                            <TextBlock Text="GÁN THÔNG SỐ VÀO TỪNG DÒNG (TELEMETRY WIDGET ASSIGNMENT)" FontWeight="Bold" FontSize="13"/>
+                                            
+                                            <!-- Row 1 Selector -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="DÒNG 1 (HEADER / VỊ TRÍ TRÊN CÙNG):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                                <ComboBox SelectedValue="{Binding OledRow1Widget, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                    <ComboBoxItem Content="📌 Tiêu đề Custom (LLANO SMART FAN)" Tag="HEADER_TITLE"/>
+                                                    <ComboBoxItem Content="🔥 CPU (Nhiệt độ &amp; Usage %)" Tag="CPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🎮 GPU (Nhiệt độ &amp; Usage %)" Tag="GPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🌀 Tốc độ Quạt (RPM)" Tag="FAN_TELEMETRY"/>
+                                                    <ComboBoxItem Content="⚡ Công suất Watt (CPU / GPU)" Tag="POWER_TELEMETRY"/>
+                                                </ComboBox>
                                             </StackPanel>
-                                            <ToggleSwitch IsOn="{Binding IsCustomOled2Enabled, Mode=TwoWay}" OnContent="Bật Custom" OffContent="Tắt (Mặc định)" HorizontalAlignment="Right"/>
-                                        </Grid>
 
-                                        <TextBox Header="Hàng Trên Cùng (Header Text)" Text="{Binding Oled2CustomHeader, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Header="Dòng Thông Số CPU" Text="{Binding Oled2CustomCpuText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Header="Dòng Thông Số GPU" Text="{Binding Oled2CustomGpuText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Header="Dòng Trạng Thái Đáy (Footer)" Text="{Binding Oled2CustomFooter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <!-- Row 2 Selector -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="DÒNG 2 (THÔNG SỐ CHÍNH):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                                <ComboBox SelectedValue="{Binding OledRow2Widget, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                    <ComboBoxItem Content="🔥 CPU (Nhiệt độ &amp; Usage %)" Tag="CPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🎮 GPU (Nhiệt độ &amp; Usage %)" Tag="GPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🌀 Tốc độ Quạt (RPM)" Tag="FAN_TELEMETRY"/>
+                                                    <ComboBoxItem Content="💾 Bộ nhớ RAM Hệ Thống" Tag="RAM_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🚀 Xung nhịp Clock (GHz / MHz)" Tag="CLOCK_TELEMETRY"/>
+                                                </ComboBox>
+                                            </StackPanel>
 
-                                        <Button Content="Cập Nhật Ngay Màn 2" Command="{Binding SendCustomOled2FrameCommand}" Style="{StaticResource AccentButtonStyle}"/>
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
+                                            <!-- Row 3 Selector -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="DÒNG 3 (THÔNG SỐ PHỤ):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                                <ComboBox SelectedValue="{Binding OledRow3Widget, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                    <ComboBoxItem Content="🎮 GPU (Nhiệt độ &amp; Usage %)" Tag="GPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🔥 CPU (Nhiệt độ &amp; Usage %)" Tag="CPU_TELEMETRY"/>
+                                                    <ComboBoxItem Content="🌀 Tốc độ Quạt (RPM)" Tag="FAN_TELEMETRY"/>
+                                                    <ComboBoxItem Content="💾 Bộ nhớ RAM Hệ Thống" Tag="RAM_TELEMETRY"/>
+                                                    <ComboBoxItem Content="⚡ Công suất Watt (CPU / GPU)" Tag="POWER_TELEMETRY"/>
+                                                </ComboBox>
+                                            </StackPanel>
+
+                                            <!-- Row 4 Selector -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="DÒNG 4 (TRẠNG THÁI ĐÁY / FOOTER):" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="Bold"/>
+                                                <ComboBox SelectedValue="{Binding OledRow4Widget, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
+                                                    <ComboBoxItem Content="🌀 Tốc độ Quạt (RPM)" Tag="FAN_TELEMETRY"/>
+                                                    <ComboBoxItem Content="⚡ Tỷ lệ PWM %" Tag="PWM_PCT"/>
+                                                    <ComboBoxItem Content="💾 Bộ nhớ RAM Hệ Thống" Tag="RAM_TELEMETRY"/>
+                                                    <ComboBoxItem Content="📌 Tiêu đề Custom (LLANO SMART FAN)" Tag="HEADER_TITLE"/>
+                                                </ComboBox>
+                                            </StackPanel>
+
+                                            <!-- Granular Sub-Metric Checkboxes -->
+                                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="8" Padding="12">
+                                                <StackPanel Spacing="10">
+                                                    <TextBlock Text="TÙY CHỌN TÍCH CHỌN THÀNH PHẦN HIỂN THỊ:" FontWeight="Bold" FontSize="11"/>
+                                                    
+                                                    <!-- CPU Metrics Toggles -->
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="🔥 Thành phần Dòng CPU:" FontSize="10" Foreground="#00E5FF" FontWeight="Bold"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <CheckBox Content="Nhiệt độ (°C)" IsChecked="{Binding OledShowCpuTemp, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Usage (%)" IsChecked="{Binding OledShowCpuUsage, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Clock (GHz)" IsChecked="{Binding OledShowCpuClock, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Power (W)" IsChecked="{Binding OledShowCpuPower, Mode=TwoWay}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- GPU Metrics Toggles -->
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="🎮 Thành phần Dòng GPU:" FontSize="10" Foreground="#00E5FF" FontWeight="Bold"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <CheckBox Content="Nhiệt độ (°C)" IsChecked="{Binding OledShowGpuTemp, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Usage (%)" IsChecked="{Binding OledShowGpuUsage, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Clock (MHz)" IsChecked="{Binding OledShowGpuClock, Mode=TwoWay}"/>
+                                                            <CheckBox Content="Power (W)" IsChecked="{Binding OledShowGpuPower, Mode=TwoWay}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- Smart Fan / RAM Toggles -->
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="🌀 Thành phần Quạt &amp; Hệ Thống:" FontSize="10" Foreground="#FFB74D" FontWeight="Bold"/>
+                                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                                            <CheckBox Content="Smart Fan RPM" IsChecked="{Binding OledShowSmartFanRpm, Mode=TwoWay}"/>
+                                                            <CheckBox Content="PWM %" IsChecked="{Binding OledShowSmartFanPwm, Mode=TwoWay}"/>
+                                                            <CheckBox Content="RAM GB" IsChecked="{Binding OledShowRamUsage, Mode=TwoWay}"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Custom Text Input Override -->
+                                            <TextBox Header="Văn Bản Tiêu Đề Tùy Chỉnh (Custom Title Text)" Text="{Binding Oled1CustomTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                            <!-- Action Buttons -->
+                                            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
+                                                <Button Content="⚡ Render &amp; Nạp Sang ESP32-S3 Ngay" Command="{Binding SendCurrentOledFrameToEsp32Command}" Style="{StaticResource AccentButtonStyle}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- TAB 6: HUD OVERLAY GAME/APP (1:1 PARITY WITH FLUTTER OVERLAY_SETTINGS_SCREEN.DART) -->

@@ -6,12 +6,14 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using LibreHardwareMonitor.Hardware;
 
+using SmartFanCooling.Services.Interfaces;
+
 namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Reads CPU/GPU temperatures, powers, clocks and System sensor telemetry using LibreHardwareMonitor with fail-safe WMI & Registry fallbacks.
     /// </summary>
-    public class HardwareMonitorService : IDisposable
+    public class HardwareMonitorService : IHardwareMonitorService, IDisposable
     {
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GetSystemTimes(out long lpIdleTime, out long lpKernelTime, out long lpUserTime);

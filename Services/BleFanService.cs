@@ -7,12 +7,14 @@ using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
 using SmartFanCooling.Models;
 
+using SmartFanCooling.Services.Interfaces;
+
 namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Manages Bluetooth Low Energy (BLE) communication with ESP32 Smart Fan.
     /// </summary>
-    public class BleFanService
+    public class BleFanService : IBleFanService
     {
         private BluetoothLEDevice? _bluetoothLeDevice;
         private GattCharacteristic? _controlCharacteristic;

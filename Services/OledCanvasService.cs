@@ -1,13 +1,15 @@
 using System;
 using System.Text;
 
-namespace smart_fan_cooling_windows_app.Services
+using SmartFanCooling.Services.Interfaces;
+
+namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Service for generating 128x64 monochrome bitmap graphics in C#
     /// and encoding them into Hex streams for independent OLED 1 (1.3") and OLED 2 (0.96") displays.
     /// </summary>
-    public class OledCanvasService
+    public class OledCanvasService : IOledCanvasService
     {
         public const int Width = 128;
         public const int Height = 64;
@@ -211,6 +213,52 @@ namespace smart_fan_cooling_windows_app.Services
             // 4. Bottom Zone - Status Footer
             DrawHLine(buf, 0, 50, Width);
             DrawString(buf, 0, 54, footerText, 1);
+
+            return BufferToHex(buf);
+        }
+
+        /// <summary>
+        /// Generate dynamic multi-row custom bitmap hex for OLED displays (2, 3, or 4 rows layout)
+        /// </summary>
+        public string GenerateDynamicOledCanvas(string row1, string row2, string row3, string row4, int rowCount, bool showTopDivider, bool showBottomDivider, bool showProgressBar, int pwmPercent)
+        {
+            byte[] buf = new byte[BufferSize];
+
+            if (rowCount <= 2)
+            {
+                // 2 Large Rows (Scale 2 for Header)
+                DrawString(buf, 0, 2, (row1 ?? "").ToUpper(), 2);
+                if (showTopDivider) DrawHLine(buf, 0, 20, Width);
+                DrawString(buf, 0, 26, (row2 ?? "").ToUpper(), 2);
+                if (showBottomDivider) DrawHLine(buf, 0, 48, Width);
+            }
+            else if (rowCount == 3)
+            {
+                // 3 Medium Rows
+                DrawString(buf, 0, 2, (row1 ?? "").ToUpper(), 2);
+                if (showTopDivider) DrawHLine(buf, 0, 20, Width);
+                DrawString(buf, 0, 24, (row2 ?? "").ToUpper(), 1);
+                DrawString(buf, 0, 36, (row3 ?? "").ToUpper(), 1);
+                if (showBottomDivider) DrawHLine(buf, 0, 48, Width);
+            }
+            else
+            {
+                // 4 Rows Layout
+                DrawString(buf, 0, 0, (row1 ?? "").ToUpper(), 1);
+                if (showTopDivider) DrawHLine(buf, 0, 10, Width);
+                DrawString(buf, 0, 14, (row2 ?? "").ToUpper(), 1);
+                DrawString(buf, 0, 28, (row3 ?? "").ToUpper(), 1);
+                if (showBottomDivider) DrawHLine(buf, 0, 42, Width);
+                DrawString(buf, 0, 46, (row4 ?? "").ToUpper(), 1);
+            }
+
+            if (showProgressBar)
+            {
+                int yPos = (rowCount >= 4) ? 55 : 52;
+                DrawRect(buf, 0, yPos, Width, 9);
+                int fillW = (Math.Clamp(pwmPercent, 0, 100) * (Width - 2)) / 100;
+                if (fillW > 0) FillRect(buf, 1, yPos + 1, fillW, 7);
+            }
 
             return BufferToHex(buf);
         }

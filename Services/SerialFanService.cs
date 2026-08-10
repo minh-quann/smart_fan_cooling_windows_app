@@ -3,13 +3,15 @@ using System.IO.Ports;
 using System.Text.Json;
 using System.Globalization;
 
+using SmartFanCooling.Services.Interfaces;
+
 namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Manages USB Serial communication with ESP32-S3 over COM ports.
     /// Implements protocol matching ESP32 firmware (ping heartbeat, JSON commands & telemetry).
     /// </summary>
-    public class SerialFanService
+    public class SerialFanService : ISerialFanService
     {
         private SerialPort? _serialPort;
         private System.Timers.Timer? _pingTimer;

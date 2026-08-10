@@ -1,9 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
 
+using SmartFanCooling.Services.Interfaces;
+
 namespace SmartFanCooling.Services
 {
-    public class NativeOsdOverlay : IDisposable
+    public class NativeOsdOverlay : INativeOsdOverlay, IDisposable
     {
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         private static extern IntPtr CreateWindowEx(
