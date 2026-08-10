@@ -81,7 +81,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
-                                        <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="8" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                        <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="6" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
                                     </Grid>
                                 </StackPanel>
                             </Grid>

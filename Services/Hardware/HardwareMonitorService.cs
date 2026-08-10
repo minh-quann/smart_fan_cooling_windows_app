@@ -529,6 +529,11 @@ namespace SmartFanCooling.Services
                 long idl = idleTime - _prevIdleTime;
                 long sys = usr + ker;
 
+                // CRITICAL FIX: Update previous system times on EVERY tick so deltas represent tick N - tick (N-1)
+                _prevIdleTime = idleTime;
+                _prevKernelTime = kernelTime;
+                _prevUserTime = userTime;
+
                 if (sys > 0)
                 {
                     float usage = (float)(sys - idl) * 100.0f / sys;

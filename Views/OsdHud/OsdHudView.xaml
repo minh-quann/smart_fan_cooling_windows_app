@@ -107,13 +107,23 @@
                         </StackPanel>
                         <Slider Minimum="0.0" Maximum="1.0" StepFrequency="0.05" Value="{Binding OverlayBackgroundOpacity, Mode=TwoWay}"/>
 
-                         <!-- Font Size Scale Selector (1080, 2K, 4K) -->
-                         <TextBlock Text="KÍCH THƯỚC PHÔNG CHỮ HUD (FONT SIZE SCALE):" FontWeight="Bold" FontSize="12"/>
-                         <ComboBox SelectedValue="{Binding OverlayFontSizeScale, Mode=TwoWay}" SelectedValuePath="Tag" HorizontalAlignment="Stretch">
-                             <ComboBoxItem Content="1080p (Chữ Nhỏ - Màn Full HD)" Tag="1080"/>
-                             <ComboBoxItem Content="2K (Chữ Vừa - Màn 1440p)" Tag="2K"/>
-                             <ComboBoxItem Content="4K (Chữ Lớn - Màn 4K Ultra HD)" Tag="4K"/>
-                         </ComboBox>
+                         <!-- Font Size Slider (Free adjustment 10px - 36px) -->
+                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                             <TextBlock Text="KÍCH THƯỚC PHÔNG CHỮ HUD (FONT SIZE):" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                             <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
+                                 <TextBlock Text="{Binding OverlayFontSizePxText}" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
+                             </Border>
+                         </StackPanel>
+                         <Slider Minimum="10" Maximum="36" StepFrequency="1" Value="{Binding OverlayFontSize, Mode=TwoWay}"/>
+
+                         <!-- OSD Refresh Rate Slider (100ms - 2000ms) -->
+                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                             <TextBlock Text="TẦN SỐ CẬP NHẬT OVERLAY HUD (MS):" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                             <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
+                                 <TextBlock Text="{Binding OsdRefreshIntervalPxText}" FontWeight="Bold" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
+                             </Border>
+                         </StackPanel>
+                         <Slider Minimum="100" Maximum="2000" StepFrequency="50" Value="{Binding OsdRefreshIntervalMs, Mode=TwoWay}"/>
                     </StackPanel>
 
                     <!-- RIGHT COLUMN: Category Sub-Tabs (Basic, CPU, GPU, Memory, Llano Fan) -->

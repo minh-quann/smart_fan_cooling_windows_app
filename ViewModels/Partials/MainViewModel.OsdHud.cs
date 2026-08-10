@@ -18,6 +18,8 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private double _overlayBackgroundOpacity = 0.75;
         [ObservableProperty] private string _overlayStyle = "horizontal";
         [ObservableProperty] private string _overlayFontSizeScale = "2K";
+        [ObservableProperty] private int _overlayFontSize = 16;
+        [ObservableProperty] private int _osdRefreshIntervalMs = 500;
         [ObservableProperty] private string _overlayPositionPreset = "top_center";
         [ObservableProperty] private int _activeOverlayCategoryTab = 0;
         [ObservableProperty] private string _selectedDisplayMode = "always"; 
@@ -48,6 +50,8 @@ namespace SmartFanCooling.ViewModels
         private NativeOsdOverlay? _osdWindow;
 
         public string OverlayBackgroundOpacityPercentText => $"{Math.Round(OverlayBackgroundOpacity * 100):F0}%";
+        public string OverlayFontSizePxText => $"{OverlayFontSize} px";
+        public string OsdRefreshIntervalPxText => $"{OsdRefreshIntervalMs} ms";
         public string OverlayLockStatusText => IsOverlayLocked
             ? "🔒 HUD ĐANG KHÓA (XUYÊN CHUỘT) - BẤM VÀO ĐÂY ĐỂ MỞ KHÓA KÉO DI CHUYỂN HUD (Phím Ctrl + Shift + O)"
             : "🔓 HUD ĐANG MỞ KHÓA - NHẤP GIỮ CHUỘT TRÁI ĐỂ KÉO RÊ ĐẾN VỊ TRÍ BẤT KỲ (Bấm vào đây để khóa lại)";
@@ -97,6 +101,18 @@ namespace SmartFanCooling.ViewModels
         partial void OnOverlayBackgroundOpacityChanged(double value)
         {
             OnPropertyChanged(nameof(OverlayBackgroundOpacityPercentText));
+            UpdateOsdOverlayNow();
+        }
+
+        partial void OnOverlayFontSizeChanged(int value)
+        {
+            OnPropertyChanged(nameof(OverlayFontSizePxText));
+            UpdateOsdOverlayNow();
+        }
+
+        partial void OnOsdRefreshIntervalMsChanged(int value)
+        {
+            OnPropertyChanged(nameof(OsdRefreshIntervalPxText));
             UpdateOsdOverlayNow();
         }
 
@@ -195,7 +211,7 @@ namespace SmartFanCooling.ViewModels
                     ShowGpuTemp || ShowGpuUsage || ShowGpuClock || ShowGpuPower || ShowGpuVram || ShowHardwareGpuFanRpm, GpuUsage, GpuTemp, GpuPowerW, GpuClockMHz, ShowGpuClock, GpuClockUnit, GpuVramUsedGB, ShowGpuVram, GpuFanRpm, ShowHardwareGpuFanRpm,
                     ShowSmartFanRpm || ShowSmartFanPwm, FanPwm, FanRpm,
                     ShowRamUsage, RamUsagePercent,
-                    OverlayBackgroundOpacity, OverlayFontSizeScale
+                    OverlayBackgroundOpacity, OverlayFontSize
                 );
             }
             else if (_osdWindow != null)
@@ -238,6 +254,8 @@ namespace SmartFanCooling.ViewModels
             OverlayBackgroundOpacity = 0.75;
             OverlayStyle = "horizontal";
             OverlayFontSizeScale = "2K";
+            OverlayFontSize = 16;
+            OsdRefreshIntervalMs = 500;
             OverlayPositionPreset = "top_center";
             ShowTime = true;
             ShowCpuTemp = true;

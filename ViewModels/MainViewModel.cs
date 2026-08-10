@@ -31,6 +31,21 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty]
         private int _selectedTabIndex = 0;
 
+        // Dashboard Telemetry Refresh Rate in milliseconds (default: 1000ms = 1s)
+        [ObservableProperty]
+        private int _dashboardRefreshIntervalMs = 1000;
+
+        public string DashboardRefreshIntervalText => $"{DashboardRefreshIntervalMs} ms";
+
+        partial void OnDashboardRefreshIntervalMsChanged(int value)
+        {
+            OnPropertyChanged(nameof(DashboardRefreshIntervalText));
+            if (_timer != null)
+            {
+                _timer.Interval = TimeSpan.FromMilliseconds(Math.Clamp(value, 100, 5000));
+            }
+        }
+
         public MainViewModel() : this(new HardwareMonitorService(), new SerialFanService(), new OledCanvasService(), new BleFanService())
         {
         }
@@ -99,7 +114,7 @@ namespace SmartFanCooling.ViewModels
             RefreshComPorts();
             CheckAndAutoConnectDevices();
 
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DashboardRefreshIntervalMs) };
             _timer.Tick += Timer_Tick;
             _timer.Start();
         }

@@ -523,45 +523,17 @@ namespace SmartFanCooling.Services
             bool showGpu, float gpuUsage, float gpuTemp, float gpuPower, float gpuClockMHz, bool showGpuClock, string gpuClockUnit, float gpuVramGB, bool showGpuVram, int gpuFanRpm, bool showGpuFan,
             bool showFan, int fanPwm, int fanRpm,
             bool showRam, float ramUsage,
-            double transparency, string style)
+            double transparency, int fontSize = 16)
         {
             if (_hwnd == IntPtr.Zero) return;
 
-            // Compact & Sharp font sizing & 100% symmetrical padding
-            int fontHeight = 16;
-            int itemSpacing = 16;
-            int groupSpacing = 24;
-            int sidePadding = 6;
-            int topPaddingY = -3;
-            int verticalExtraBmp = 0;
-
-            switch (style)
-            {
-                case "1080":
-                    fontHeight = 13;
-                    itemSpacing = 16;
-                    groupSpacing = 22;
-                    sidePadding = 6;
-                    topPaddingY = -3;
-                    verticalExtraBmp = 0;
-                    break;
-                case "2K":
-                    fontHeight = 16;
-                    itemSpacing = 16;
-                    groupSpacing = 24;
-                    sidePadding = 6;
-                    topPaddingY = -3;
-                    verticalExtraBmp = 0;
-                    break;
-                case "4K":
-                    fontHeight = 20;
-                    itemSpacing = 18;
-                    groupSpacing = 30;
-                    sidePadding = 8;
-                    topPaddingY = -4;
-                    verticalExtraBmp = 1;
-                    break;
-            }
+            // Smooth & Sharp dynamic font sizing & 100% symmetrical padding
+            int fontHeight = Math.Clamp(fontSize, 10, 48);
+            int itemSpacing = Math.Max(10, (int)(fontHeight * 1.0));
+            int groupSpacing = Math.Max(14, (int)(fontHeight * 1.5));
+            int sidePadding = Math.Max(4, (int)(fontHeight * 0.4));
+            int topPaddingY = -(fontHeight / 5);
+            int verticalExtraBmp = fontHeight > 18 ? 1 : 0;
 
             IntPtr screenDc = GetDC(IntPtr.Zero);
             IntPtr memDc = CreateCompatibleDC(screenDc);

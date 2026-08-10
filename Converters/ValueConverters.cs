@@ -173,4 +173,27 @@ namespace SmartFanCooling.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts a percentage value (0 to 100) to a ScaleX double (0.0 to 1.0) for GPU-accelerated progress bars.
+    /// Anchored strictly at RenderTransformOrigin="0,0.5" (left origin x=0) with zero jerk or animation lag.
+    /// </summary>
+    public class PercentToScaleConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            double val = 0.0;
+            if (value is float f) val = f;
+            else if (value is double d) val = d;
+            else if (value is int i) val = i;
+
+            val = Math.Clamp(val, 0.0, 100.0);
+            return val / 100.0;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

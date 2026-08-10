@@ -18,7 +18,7 @@ namespace SmartFanCooling.Services.Interfaces
             bool showGpu, float gpuUsage, float gpuTemp, float gpuPower, float gpuClock, bool showGpuClock, string gpuClockUnit, float gpuVram, bool showGpuVram, int gpuFanRpm, bool showHardwareGpuFanRpm,
             bool showSmartFan, int fanPwm, int fanRpm,
             bool showRam, float ramUsagePercent,
-            double transparency = 0.75, string fontSizeScale = "2K"
+            double transparency = 0.75, int fontSize = 16
         );
     }
 }

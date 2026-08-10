@@ -99,6 +99,26 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Dashboard Telemetry Refresh Rate Card Widget -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16,14">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE916;" Foreground="{ThemeResource SystemAccentColor}" FontSize="15"/>
+                                <TextBlock Text="TẦN SỐ CẬP NHẬT DASHBOARD" FontWeight="Bold" FontSize="12"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
+                                <TextBlock Text="{Binding DashboardRefreshIntervalText}" FontWeight="Bold" FontSize="11" Foreground="{ThemeResource SystemAccentColor}"/>
+                            </Border>
+                        </Grid>
+                        <Slider Minimum="100" Maximum="3000" StepFrequency="100" Value="{Binding DashboardRefreshIntervalMs, Mode=TwoWay}"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Quick Fan Control Card Widget -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="14">
@@ -274,7 +294,7 @@
                         </Grid>
 
                         <!-- CPU Usage Load Progress Bar -->
-                        <ProgressBar Value="{Binding CpuUsage}" Maximum="100" Height="8" Foreground="#FF5722"/>
+                        <ProgressBar Value="{Binding CpuUsage}" Maximum="100" Height="6" Foreground="#FF5722" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
 
                         <!-- CPU Metric Pills -->
                         <StackPanel Orientation="Horizontal" Spacing="6">
@@ -316,7 +336,7 @@
                         </Grid>
 
                         <!-- GPU Usage Load Progress Bar -->
-                        <ProgressBar Value="{Binding GpuUsage}" Maximum="100" Height="8" Foreground="#FF9800"/>
+                        <ProgressBar Value="{Binding GpuUsage}" Maximum="100" Height="6" Foreground="#FF9800" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
 
                         <!-- GPU Metric Pills -->
                         <StackPanel Orientation="Horizontal" Spacing="6">
@@ -361,7 +381,7 @@
                         </Grid>
 
                         <!-- RAM Usage Progress Bar -->
-                        <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" Height="8" Foreground="#9C27B0"/>
+                        <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" Height="6" Foreground="#9C27B0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
 
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
