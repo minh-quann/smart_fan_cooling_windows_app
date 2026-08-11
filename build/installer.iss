@@ -21,7 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\SmartFanCooling
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-OutputDir=OutputInstaller
+OutputDir=..\OutputInstaller
 OutputBaseFilename=Smart_Fan_Cooling_Setup_v2.1_CustomPresets
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -40,7 +40,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "autostart"; Description: "Khởi chạy ứng dụng cùng Windows (System Startup)"; GroupDescription: "Tùy chọn bổ sung:"
 
 [Files]
-Source: "bin\Release\net10.0-windows10.0.22621.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\bin\x64\Release\net9.0-windows10.0.22621.0\win-x64\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -55,7 +55,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags
 Type: filesandordirs; Name: "{app}"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: postinstall skipifsilent shellexec
 
 [Code]
 // Clean up stuck WinRing0 kernel driver service before install/uninstall

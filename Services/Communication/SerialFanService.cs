@@ -87,6 +87,11 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"fan_state\",\"value\":{(on ? 1 : 0)}}}");
         }
 
+        public void SetLedState(bool on)
+        {
+            SendRawText($"{{\"cmd\":\"led_on\",\"value\":{(on ? "true" : "false")}}}");
+        }
+
         public void SetLedMode(int mode)
         {
             SendRawText($"{{\"cmd\":\"led_mode\",\"value\":{mode}}}");
@@ -225,6 +230,11 @@ namespace SmartFanCooling.Services
             catch { }
         }
 
+        public void SendShutdown()
+        {
+            SendRawText("{\"cmd\":\"shutdown\"}");
+        }
+
         public void Disconnect()
         {
             if (_pingTimer != null)
@@ -240,6 +250,8 @@ namespace SmartFanCooling.Services
                 {
                     if (_serialPort.IsOpen)
                     {
+                        SendShutdown();
+                        System.Threading.Thread.Sleep(50);
                         _serialPort.DataReceived -= SerialPort_DataReceived;
                         _serialPort.Close();
                     }

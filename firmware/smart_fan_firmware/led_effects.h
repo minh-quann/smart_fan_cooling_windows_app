@@ -17,5 +17,6 @@ bool getLedDirection();
 void setLedCount(uint16_t count);           // Dynamic LED count (1-150)
 uint16_t getLedCount();
 void setLedOn(bool on);
+void setLedOnTemporary(bool on);   // Temporary runtime toggle (for PC shutdown/sleep) without overwriting saved NVS state
 bool isLedOn();
 void setLedSpeedPercent(uint8_t fanPercent);  // For SPEED_SYNC mode

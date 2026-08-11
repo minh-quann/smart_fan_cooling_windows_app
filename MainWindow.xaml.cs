@@ -130,6 +130,13 @@ namespace SmartFanCooling
             {
                 this.AppWindow.Closing += AppWindow_Closing;
             }
+
+            Microsoft.Win32.SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+        }
+
+        private void SystemEvents_SessionEnding(object sender, Microsoft.Win32.SessionEndingEventArgs e)
+        {
+            ExitApplication();
         }
 
         private void SetupSystemTrayIcon()
@@ -208,12 +215,22 @@ namespace SmartFanCooling
 
         private void ExitApplication()
         {
-            Shell_NotifyIcon(NIM_DELETE, ref _nid);
-
-            if (_wndProc != null)
+            try
             {
-                RemoveWindowSubclass(_hwnd, _wndProc, 1);
+                Microsoft.Win32.SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
+                Shell_NotifyIcon(NIM_DELETE, ref _nid);
+
+                if (_wndProc != null)
+                {
+                    RemoveWindowSubclass(_hwnd, _wndProc, 1);
+                }
+
+                if (ViewModel.IsConnected)
+                {
+                    ViewModel.ToggleConnection();
+                }
             }
+            catch { }
 
             System.Environment.Exit(0);
         }

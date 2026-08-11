@@ -12,6 +12,7 @@ static uint8_t _brightness = 180;
 static uint8_t _speed = 50;
 static bool _reverse = false;
 static bool _ledOn = true;
+static bool _userLedOn = true;
 static uint8_t _fanPercent = 0;
 static uint32_t _hueStep = 0;
 static Preferences _prefs;
@@ -92,15 +93,18 @@ void initLeds() {
   _brightness = _prefs.getUChar("led_bri", 180);
   if (_brightness == 0) _brightness = 180;
   _reverse = _prefs.getBool("led_dir", false);
-  _ledOn = _prefs.getBool("led_on", true);
+  _userLedOn = _prefs.getBool("led_on", true);
+  _ledOn = _userLedOn;
   _prefs.end();
 
   _strip.begin();
   _strip.setBrightness(255);  // Set ONCE to max, we scale manually
-  if (!_ledOn || _mode == LED_OFF) {
+  if (_ledOn && _mode != LED_OFF) {
+    updateLeds();  // Render last saved LED effect immediately on boot!
+  } else {
     _strip.clear();
+    _strip.show();
   }
-  _strip.show();
 
   Serial.printf("[LED] Initialized %u LEDs on GPIO %d (Mode: %d, On: %d, CrashCnt: %d)\n", 
                 NUM_LEDS, PIN_LED_DATA, _mode, _ledOn, crashCount);
@@ -159,9 +163,19 @@ void setLedDirection(bool reverse) {
 bool getLedDirection() { return _reverse; }
 
 void setLedOn(bool on) {
+  _userLedOn = on;
   _ledOn = on;
   markDirty();
   if (!on) {
+    _strip.clear();
+    _strip.show();
+  }
+}
+
+void setLedOnTemporary(bool on) {
+  // Toggle runtime state (e.g., PC shutdown) without modifying _userLedOn or NVS
+  _ledOn = _userLedOn ? on : false;
+  if (!_ledOn) {
     _strip.clear();
     _strip.show();
   }

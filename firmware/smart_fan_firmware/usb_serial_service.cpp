@@ -32,15 +32,26 @@ static void handleUSBCommand(const char* payload) {
   const char* cmd = doc["cmd"];
   if (!cmd) return;
 
+  // Update connection activity timer on any valid command from PC
+  _lastPing = millis();
+  if (!_usbConnected) {
+    _usbConnected = true;
+    setLedOnTemporary(true);  // Restore LED on PC connection
+    Serial.printf("USB: Client connected via cmd '%s'\n", cmd);
+  }
+
   if (strcmp(cmd, "ping") == 0) {
-    _lastPing = millis();
-    if (!_usbConnected) {
-      _usbConnected = true;
-      Serial.println("{\"cmd\":\"pong\"}");
-      Serial.printf("USB: Client connected\n");
-    } else {
-      Serial.println("{\"cmd\":\"pong\"}");
-    }
+    Serial.println("{\"cmd\":\"pong\"}");
+  }
+  else if (strcmp(cmd, "shutdown") == 0) {
+    setLedOnTemporary(false);  // Turn off physical LEDs for shutdown without corrupting saved startup state
+    _usbConnected = false;
+    Serial.println("USB: Shutdown command received — LEDs turned OFF");
+  }
+  else if (strcmp(cmd, "led_on") == 0) {
+    bool on = doc["value"] | false;
+    setLedOn(on);
+    Serial.printf("USB: LED state -> %s\n", on ? "ON" : "OFF");
   }
   else if (strcmp(cmd, "fan_speed") == 0) {
     uint8_t val = doc["value"] | 0;
@@ -225,7 +236,7 @@ void loopUSBSerial() {
   if (_usbConnected && (millis() - _lastPing > USB_TIMEOUT_MS)) {
     _usbConnected = false;
     Serial.println("USB: Client disconnected (timeout)");
-    setLedOn(false);  // Auto turn off LEDs on PC shutdown / disconnect
+    setLedOnTemporary(false);  // Auto turn off LEDs on PC shutdown / disconnect
   }
 }
 
