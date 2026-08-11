@@ -27,6 +27,7 @@ namespace SmartFanCooling.Services.Interfaces
         void SetLedBrightness(int brightness);
         void SetLedSpeed(int speed);
         void SetLedDirection(bool reverse);
+        void SetRainbowColorCount(int count);
         void SendShutdown();
         void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0);
         void SendOledBitmap(int dispIndex, string hexData);

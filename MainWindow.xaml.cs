@@ -43,6 +43,9 @@ namespace SmartFanCooling
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
 
         private delegate IntPtr SubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, nuint uIdSubclass, nuint dwRefData);
@@ -96,8 +99,29 @@ namespace SmartFanCooling
             public int dwInfoFlags;
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CreateWindowEx(
+            int dwExStyle,
+            string lpClassName,
+            string lpWindowName,
+            int dwStyle,
+            int x,
+            int y,
+            int nWidth,
+            int nHeight,
+            IntPtr hWndParent,
+            IntPtr hMenu,
+            IntPtr hInstance,
+            IntPtr lpParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool DestroyWindow(IntPtr hWnd);
+
+        private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
+
         private NOTIFYICONDATA _nid;
         private IntPtr _hwnd;
+        private IntPtr _msgHwnd = IntPtr.Zero;
         private SubclassProc? _wndProc; // prevent GC collection
 
         public MainViewModel ViewModel { get; }
@@ -143,9 +167,13 @@ namespace SmartFanCooling
         {
             try
             {
+                // Create a Message-Only Window so system tray icon actions never focus or activate MainWindow automatically
+                _msgHwnd = CreateWindowEx(0, "STATIC", "SmartFanTrayMsgHost", 0, 0, 0, 0, 0, HWND_MESSAGE, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+                IntPtr targetHwnd = (_msgHwnd != IntPtr.Zero) ? _msgHwnd : _hwnd;
+
                 _nid = new NOTIFYICONDATA();
                 _nid.cbSize = Marshal.SizeOf(_nid);
-                _nid.hWnd = _hwnd;
+                _nid.hWnd = targetHwnd;
                 _nid.uID = 1001;
                 _nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
                 _nid.uCallbackMessage = WM_TRAYICON;
@@ -160,7 +188,7 @@ namespace SmartFanCooling
                 Shell_NotifyIcon(NIM_ADD, ref _nid);
 
                 _wndProc = new SubclassProc(TrayIconSubclassProc);
-                SetWindowSubclass(_hwnd, _wndProc, 1, 0);
+                SetWindowSubclass(targetHwnd, _wndProc, 1, 0);
             }
             catch { }
         }
@@ -191,11 +219,13 @@ namespace SmartFanCooling
             AppendMenu(hMenu, MF_SEPARATOR, 0, null);
             AppendMenu(hMenu, MF_STRING, ID_TRAY_EXIT, "Thoát");
 
-            SetForegroundWindow(_hwnd);
+            IntPtr targetHwnd = (_msgHwnd != IntPtr.Zero) ? _msgHwnd : _hwnd;
+            SetForegroundWindow(targetHwnd);
 
             GetCursorPos(out POINT pt);
-            int cmd = TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, pt.X, pt.Y, 0, _hwnd, IntPtr.Zero);
+            int cmd = TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, pt.X, pt.Y, 0, targetHwnd, IntPtr.Zero);
             DestroyMenu(hMenu);
+            PostMessage(targetHwnd, 0x0000 /* WM_NULL */, IntPtr.Zero, IntPtr.Zero);
 
             if (cmd == (int)ID_TRAY_OPEN)
             {
@@ -220,9 +250,16 @@ namespace SmartFanCooling
                 Microsoft.Win32.SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
                 Shell_NotifyIcon(NIM_DELETE, ref _nid);
 
+                IntPtr targetHwnd = (_msgHwnd != IntPtr.Zero) ? _msgHwnd : _hwnd;
                 if (_wndProc != null)
                 {
-                    RemoveWindowSubclass(_hwnd, _wndProc, 1);
+                    RemoveWindowSubclass(targetHwnd, _wndProc, 1);
+                }
+
+                if (_msgHwnd != IntPtr.Zero)
+                {
+                    DestroyWindow(_msgHwnd);
+                    _msgHwnd = IntPtr.Zero;
                 }
 
                 if (ViewModel.IsConnected)

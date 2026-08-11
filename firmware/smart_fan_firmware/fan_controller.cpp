@@ -1,5 +1,6 @@
 #include "fan_controller.h"
 #include "config.h"
+#include <Preferences.h>
 
 static volatile uint32_t _tachCount = 0;
 static volatile uint32_t _lastPulseUs = 0;
@@ -11,6 +12,18 @@ static bool _tachDebug = false;
 static uint32_t _currentPwmFreq = FAN_PWM_FREQ;
 static uint32_t _tachDebounceUs = 1000; // 1ms min interval filter
 static uint8_t _tachPpr = FAN_TACH_PPR;   // Default 14 for Llano BLDC fan
+static uint16_t _targetRpm = 900;
+
+// NVS persistence for fan settings
+static Preferences _fanPrefs;
+static bool _fanNvsDirty = false;
+static uint32_t _fanNvsLastChange = 0;
+static const uint32_t FAN_NVS_SAVE_DELAY_MS = 3000;
+
+static void markFanDirty() {
+  _fanNvsDirty = true;
+  _fanNvsLastChange = millis();
+}
 
 /**
  * Fast & Lightweight Interrupt Handler for TACH Pulses.
@@ -40,6 +53,16 @@ static uint8_t getCurrentTargetDuty() {
   return (uint8_t)map(_fanPercent, 1, 100, 30, 250);
 }
 
+static uint16_t calculateTargetRpmFromPercent(uint8_t percent) {
+  if (percent == 0) return 0;
+  // Direct proportional scaling of 2800 Max RPM rounded to 100 RPM
+  // 48% = 1300 RPM (under 1k4!), 50% = 1400 RPM, 100% = 2800 RPM
+  uint32_t raw = (uint32_t)percent * 28; // e.g. 48 * 28 = 1344 RPM
+  uint16_t rounded = ((raw + 49) / 100) * 100;
+  if (rounded > 2800) rounded = 2800;
+  return rounded;
+}
+
 void initFan() {
   // Setup PWM via LEDC
   ledcSetup(FAN_PWM_CHANNEL, FAN_PWM_FREQ, FAN_PWM_RES);
@@ -51,18 +74,27 @@ void initFan() {
   attachInterrupt(digitalPinToInterrupt(PIN_FAN_TACH), tachISR, FALLING);
 
   _lastRpmCalc = millis();
-}
 
-static uint16_t _targetRpm = 900;
+  // Restore fan settings from NVS flash (fanPercent is the source of truth)
+  _fanPrefs.begin("fan_cfg", true);  // Read-only
+  _fanOn = _fanPrefs.getBool("fan_on", true);
+  _fanPercent = _fanPrefs.getUChar("fan_pct", 30);
+  _fanPrefs.end();
 
-static uint16_t calculateTargetRpmFromPercent(uint8_t percent) {
-  if (percent == 0) return 0;
-  // Direct proportional scaling of 2800 Max RPM rounded to 100 RPM
-  // 48% = 1300 RPM (under 1k4!), 50% = 1400 RPM, 100% = 2800 RPM
-  uint32_t raw = (uint32_t)percent * 28; // e.g. 48 * 28 = 1344 RPM
-  uint16_t rounded = ((raw + 49) / 100) * 100;
-  if (rounded > 2800) rounded = 2800;
-  return rounded;
+  // Validate restored percent
+  if (_fanPercent > 100) _fanPercent = 30;
+  if (_fanPercent == 0) _fanPercent = 30;
+
+  // Calculate RPM from restored percent (single source of truth — no drift!)
+  _targetRpm = calculateTargetRpmFromPercent(_fanPercent);
+  _rpm = _targetRpm;
+
+  // Apply to hardware directly — do NOT call setFanSpeed/setFanOn to avoid marking dirty
+  if (_fanOn && _fanPercent > 0) {
+    writeFanDuty(getCurrentTargetDuty());
+  }
+
+  Serial.printf("[FAN] Restored from NVS: on=%d, pct=%d%%, rpm=%d\n", _fanOn, _fanPercent, _targetRpm);
 }
 
 void setTargetRPM(uint16_t targetRpm) {
@@ -80,6 +112,7 @@ void setTargetRPM(uint16_t targetRpm) {
 
   if (!_fanOn) _fanOn = true;
   writeFanDuty(getCurrentTargetDuty());
+  markFanDirty();
 }
 
 uint16_t getTargetRPM() {
@@ -99,6 +132,7 @@ void setFanSpeed(uint8_t percent) {
     _rpm = 0;
     writeFanDuty(0);
   }
+  markFanDirty();
 }
 
 void setFanOn(bool on) {
@@ -110,6 +144,7 @@ void setFanOn(bool on) {
     if (_targetRpm > 0) setTargetRPM(_targetRpm);
     else setFanSpeed(_fanPercent > 0 ? _fanPercent : 30);
   }
+  markFanDirty();
 }
 
 bool isFanOn() { return _fanOn; }
@@ -193,4 +228,17 @@ void runTachDiagnostic() {
     writeFanDuty(0);
   }
   Serial.println("=== DIAGNOSTIC END ===\n");
+}
+
+// Flush pending NVS writes (call from main loop)
+void flushFanPrefs() {
+  if (!_fanNvsDirty) return;
+  if (millis() - _fanNvsLastChange < FAN_NVS_SAVE_DELAY_MS) return;
+
+  _fanPrefs.begin("fan_cfg", false);
+  _fanPrefs.putBool("fan_on", _fanOn);
+  _fanPrefs.putUChar("fan_pct", _fanPercent);
+  _fanPrefs.end();
+  _fanNvsDirty = false;
+  Serial.printf("[FAN] Prefs saved (on=%d, pct=%d%%, rpm=%d)\n", _fanOn, _fanPercent, _targetRpm);
 }

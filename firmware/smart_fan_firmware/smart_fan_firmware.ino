@@ -58,9 +58,7 @@ void setup() {
   initEncoder2();
   Serial.println("[OK] Enc2 (scroll wheel) GPIO 15/16 ready");
 
-  // Default startup state: fan ON at 30% (LED mode and state are restored from Flash by initLeds)
-  setFanOn(true);
-  setFanSpeed(30);
+  // Fan state already restored and applied by initFan() from NVS
 
   Serial.println("=== System Ready ===\n");
 }
@@ -156,6 +154,7 @@ void loop() {
   }
   // ---- 7. Deferred NVS save (writes after 3s stability) ----
   flushLedPrefs();
+  flushFanPrefs();
 
   // ---- 8. Clear crash counter after stable run ----
   if (!_crashCounterCleared && now > 8000) {

@@ -23,7 +23,7 @@ static bool _customOled2Active = false;
 
 // LED mode names for display
 static const char* LED_MODE_NAMES[] = {
-  "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE"
+  "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE", "COMET", "PULSE", "DUAL SPIN"
 };
 
 void setCustomDisplayMode(uint8_t dispIndex, bool enable) {
@@ -189,7 +189,7 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
 
     oled1_ssd.setCursor(0, 56);
     oled1_ssd.print("LED: ");
-    if (ledMode < LED_MODE_COUNT) {
+    if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
       oled1_ssd.print(LED_MODE_NAMES[ledMode]);
     }
     oled1_ssd.display();
@@ -227,7 +227,7 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
 
     oled1_sh.setCursor(0, 56);
     oled1_sh.print("LED: ");
-    if (ledMode < LED_MODE_COUNT) {
+    if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
       oled1_sh.print(LED_MODE_NAMES[ledMode]);
     }
     oled1_sh.display();

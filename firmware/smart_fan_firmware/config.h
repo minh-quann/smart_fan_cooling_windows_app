@@ -103,8 +103,7 @@ enum LedMode : uint8_t {
   LED_WAVE       = 5,
   LED_FIRE       = 6,
   LED_COMET      = 7,
-  LED_COLOR_WIPE = 8,
-  LED_PULSE      = 9,
-  LED_DUAL_SPIN  = 10,
-  LED_MODE_COUNT = 11
+  LED_PULSE      = 8,
+  LED_DUAL_SPIN  = 9,
+  LED_MODE_COUNT = 10
 };

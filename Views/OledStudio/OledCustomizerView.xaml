@@ -66,45 +66,110 @@
 
                                 <!-- REAL OLED SCREEN GLASS (EXACT 2:1 ASPECT RATIO: 340px x 170px) -->
                                 <Border Grid.Row="1" Background="#000000" BorderBrush="#00E5FF" BorderThickness="2" CornerRadius="4" Width="340" Height="170" Padding="12,10" HorizontalAlignment="Center">
-                                    <Grid RowSpacing="6">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                                    <Grid>
+                                        <!-- 1. CUSTOM STUDIO CANVAS LAYOUT PREVIEW (When Custom Mode is Enabled) -->
+                                        <Grid RowSpacing="6" Visibility="{Binding IsCurrentScreenCustomEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                                        <!-- Dòng 1 -->
-                                        <StackPanel Grid.Row="0" Spacing="4">
-                                            <TextBlock Text="{Binding EvaluatedRow1Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="Bold" CharacterSpacing="10"/>
-                                            <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowTopDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                        </StackPanel>
+                                            <!-- Dòng 1 -->
+                                            <StackPanel Grid.Row="0" Spacing="4">
+                                                <TextBlock Text="{Binding EvaluatedRow1Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="Bold" CharacterSpacing="10"/>
+                                                <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowTopDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            </StackPanel>
 
-                                        <!-- Dòng 2 -->
-                                        <TextBlock Grid.Row="1" Text="{Binding EvaluatedRow2Text}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                            <!-- Dòng 2 -->
+                                            <TextBlock Grid.Row="1" Text="{Binding EvaluatedRow2Text}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0"/>
 
-                                        <!-- Dòng 3 -->
-                                        <TextBlock Grid.Row="2" Text="{Binding EvaluatedRow3Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0" Visibility="{Binding IsRow3Visible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            <!-- Dòng 3 -->
+                                            <TextBlock Grid.Row="2" Text="{Binding EvaluatedRow3Text}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0" Visibility="{Binding IsRow3Visible, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                                        <!-- Dòng 4 -->
-                                        <StackPanel Grid.Row="3" Spacing="4" Margin="0,2,0,0" Visibility="{Binding IsRow4Visible, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowBottomDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding EvaluatedRow4Text}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
-                                        </StackPanel>
+                                            <!-- Dòng 4 -->
+                                            <StackPanel Grid.Row="3" Spacing="4" Margin="0,2,0,0" Visibility="{Binding IsRow4Visible, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Border Height="1" Background="#4400E5FF" Visibility="{Binding OledShowBottomDivider, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                <TextBlock Text="{Binding EvaluatedRow4Text}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
+                                            </StackPanel>
 
-                                        <!-- Bottom Progress Bar -->
-                                        <StackPanel Grid.Row="5" Spacing="4" Visibility="{Binding OledShowPwmBar, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
-                                                <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="5" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
-                                            </Grid>
-                                        </StackPanel>
+                                            <!-- Bottom Progress Bar -->
+                                            <StackPanel Grid.Row="5" Spacing="4" Visibility="{Binding OledShowPwmBar, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
+                                                    <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="5" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- 2. FIRMWARE DEFAULT LAYOUT FOR OLED 1 (1.3" SH1106/SSD1306 - updateMainDisplay) -->
+                                        <Grid RowSpacing="4" Visibility="{Binding IsCurrentScreenDefaultEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Layout Screen 1 (SH1106) -->
+                                            <StackPanel Grid.Row="0" Visibility="{Binding IsOled1TabActive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="{Binding Oled1DefaultHeader}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="Bold"/>
+                                                <Border Height="1" Background="#00E5FF" Margin="0,4,0,4"/>
+                                                <Grid Margin="0,2,0,2">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Oled1DefaultFanStatus}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="20" FontWeight="Bold"/>
+                                                    </StackPanel>
+                                                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                        <TextBlock Text="RPM" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Oled1DefaultRpmText}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Border Height="1" Background="#00E5FF" Margin="0,4,0,4"/>
+                                                <Grid Margin="0,2,0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
+                                                    <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="6" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Oled1DefaultLedModeText}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Layout Screen 2 (0.96" SSD1306 Bicolor Yellow/Blue - updateSecondaryDisplay) -->
+                                            <StackPanel Grid.Row="0" Spacing="4" Visibility="{Binding IsOled2TabActive, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <!-- Top Yellow Header Zone (Y 0-15): Smart Fan RPM (Size 2) -->
+                                                <Border Background="#1A1F2C" CornerRadius="4" Padding="6,3" Margin="0,0,0,2" BorderBrush="#FFD700" BorderThickness="1">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding Oled2DefaultRpmHeader}" Foreground="#FFD700" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold" HorizontalAlignment="Left"/>
+                                                        <TextBlock Text="[YELLOW ZONE]" Foreground="#FFD700" FontSize="9" Opacity="0.7" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Blue Content Zone (Y 16-63) -->
+                                                <StackPanel Spacing="6" Margin="0,2,0,0">
+                                                    <!-- CPU Line (Y=20) -->
+                                                    <TextBlock Text="{Binding Oled2DefaultCpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
+                                                    
+                                                    <!-- GPU Line (Y=36) -->
+                                                    <TextBlock Text="{Binding Oled2DefaultGpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
+
+                                                    <!-- PWM & Transport Line (Y=52) -->
+                                                    <Grid Margin="0,4,0,0">
+                                                        <TextBlock Text="{Binding Oled2DefaultPwmText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding Oled2DefaultTransportText}" Foreground="#4CAF50" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
                                     </Grid>
                                 </Border>
 

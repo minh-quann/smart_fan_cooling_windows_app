@@ -93,7 +93,12 @@ static void handleUSBCommand(const char* payload) {
   else if (strcmp(cmd, "led_direction") == 0) {
     bool rev = doc["reverse"] | doc["value"] | false;
     setLedDirection(rev);
-    Serial.printf("USB: LED direction reverse -> %d\n", rev);
+    Serial.printf("USB: LED direction -> %s\n", rev ? "REVERSE" : "FORWARD");
+  }
+  else if (strcmp(cmd, "rainbow_count") == 0) {
+    uint8_t count = doc["value"] | 0;
+    setRainbowColorCount(count);
+    Serial.printf("USB: Rainbow color count -> %d\n", count);
   }
   else if (strcmp(cmd, "set_led_count") == 0) {
     uint16_t val = doc["value"] | 0;

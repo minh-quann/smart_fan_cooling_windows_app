@@ -117,6 +117,11 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"led_direction\",\"reverse\":{(reverse ? "true" : "false")}}}");
         }
 
+        public void SetRainbowColorCount(int count)
+        {
+            SendRawText($"{{\"cmd\":\"rainbow_count\",\"value\":{count}}}");
+        }
+
         public void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0)
         {
             string cpuStr = cpuTemp.ToString("F1", CultureInfo.InvariantCulture);

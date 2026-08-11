@@ -19,7 +19,7 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private string _overlayStyle = "horizontal";
         [ObservableProperty] private string _overlayFontSizeScale = "2K";
         [ObservableProperty] private int _overlayFontSize = 16;
-        [ObservableProperty] private int _osdRefreshIntervalMs = 500;
+        [ObservableProperty] private int _osdRefreshIntervalMs = 1000;
         [ObservableProperty] private string _overlayPositionPreset = "top_center";
         [ObservableProperty] private int _activeOverlayCategoryTab = 0;
         [ObservableProperty] private string _selectedDisplayMode = "always"; 
@@ -255,7 +255,7 @@ namespace SmartFanCooling.ViewModels
             OverlayStyle = "horizontal";
             OverlayFontSizeScale = "2K";
             OverlayFontSize = 16;
-            OsdRefreshIntervalMs = 500;
+            OsdRefreshIntervalMs = 1000;
             OverlayPositionPreset = "top_center";
             ShowTime = true;
             ShowCpuTemp = true;

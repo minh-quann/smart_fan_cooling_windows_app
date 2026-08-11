@@ -148,12 +148,78 @@ namespace SmartFanCooling.ViewModels
             return parts.Count > 0 ? string.Join(" | ", parts) : "LLANO SMART FAN";
         }
 
+        // Firmware Default Display Layout Properties (Matching firmware oled_display.cpp)
+        public string Oled1DefaultHeader => "LLANO SMART FAN";
+        public string Oled1DefaultFanStatus => FanPwm > 0 ? $"{FanPwm}%" : "OFF";
+        public string Oled1DefaultRpmText => $"{FanRpm}";
+        public string Oled1DefaultLedModeText => $"LED: {GetLedModeName(SelectedLedMode)}";
+
+        public string Oled2DefaultRpmHeader => $"{((FanRpm > 0) ? (((FanRpm + 49) / 100) * 100) : 0)} RPM";
+        public string Oled2DefaultCpuText => $"CPU: {CpuFanRpm} | {(CpuTemp > 0 ? $"{CpuTemp:F0}C" : "--C")}";
+        public string Oled2DefaultGpuText => $"GPU: {GpuFanRpm} | {(GpuTemp > 0 ? $"{GpuTemp:F0}C" : "--C")}";
+        public string Oled2DefaultPwmText => $"PWM: {FanPwm}%";
+        public string Oled2DefaultTransportText => IsConnected ? (ActiveConnectionType == "WIFI" ? "WiFi" : (ActiveConnectionType == "BLE" ? "BLE" : "USB")) : "USB";
+
+        public bool IsOled1TabActive => ActiveOledScreenTab == 0;
+        public bool IsOled2TabActive => ActiveOledScreenTab == 1;
+
+        public bool IsCurrentScreenCustomEnabled => ActiveOledScreenTab == 0 ? IsCustomOled1Enabled : IsCustomOled2Enabled;
+        public bool IsCurrentScreenDefaultEnabled => !IsCurrentScreenCustomEnabled;
+
+        private string GetLedModeName(int mode)
+        {
+            return mode switch
+            {
+                0 => "OFF",
+                1 => "STATIC",
+                2 => "RAINBOW",
+                3 => "BREATH",
+                4 => "SYNC",
+                5 => "WAVE",
+                6 => "FIRE",
+                7 => "COMET",
+                8 => "PULSE",
+                9 => "DUAL SPIN",
+                _ => "STATIC"
+            };
+        }
+
         private void NotifyOledEvaluatedTextChanges()
         {
             OnPropertyChanged(nameof(EvaluatedRow1Text));
             OnPropertyChanged(nameof(EvaluatedRow2Text));
             OnPropertyChanged(nameof(EvaluatedRow3Text));
             OnPropertyChanged(nameof(EvaluatedRow4Text));
+            OnPropertyChanged(nameof(Oled1DefaultHeader));
+            OnPropertyChanged(nameof(Oled1DefaultFanStatus));
+            OnPropertyChanged(nameof(Oled1DefaultRpmText));
+            OnPropertyChanged(nameof(Oled1DefaultLedModeText));
+            OnPropertyChanged(nameof(Oled2DefaultRpmHeader));
+            OnPropertyChanged(nameof(Oled2DefaultCpuText));
+            OnPropertyChanged(nameof(Oled2DefaultGpuText));
+            OnPropertyChanged(nameof(Oled2DefaultPwmText));
+            OnPropertyChanged(nameof(Oled2DefaultTransportText));
+            OnPropertyChanged(nameof(IsOled1TabActive));
+            OnPropertyChanged(nameof(IsOled2TabActive));
+            OnPropertyChanged(nameof(IsCurrentScreenCustomEnabled));
+            OnPropertyChanged(nameof(IsCurrentScreenDefaultEnabled));
+
+            AutoSyncOledCanvasToHardware();
+        }
+
+        private void AutoSyncOledCanvasToHardware()
+        {
+            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+            {
+                if (ActiveOledScreenTab == 0 && IsCustomOled1Enabled)
+                {
+                    SendCustomOled1Frame();
+                }
+                else if (ActiveOledScreenTab == 1 && IsCustomOled2Enabled)
+                {
+                    SendCustomOled2Frame();
+                }
+            }
         }
 
         partial void OnOledShowTopDividerChanged(bool value) => NotifyOledEvaluatedTextChanges();
@@ -182,6 +248,14 @@ namespace SmartFanCooling.ViewModels
         partial void OnOledRow3WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledRow4WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
 
+        partial void OnOled1CustomTitleChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled1CustomMainStatChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled1CustomSubStatChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled2CustomHeaderChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled2CustomCpuTextChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled2CustomGpuTextChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled2CustomFooterChanged(string value) => NotifyOledEvaluatedTextChanges();
+
         partial void OnIsCustomOled1EnabledChanged(bool value)
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
@@ -189,6 +263,7 @@ namespace SmartFanCooling.ViewModels
                 _serialService.SetCustomOledMode(1, value);
                 if (value) SendCustomOled1Frame();
             }
+            NotifyOledEvaluatedTextChanges();
         }
 
         partial void OnIsCustomOled2EnabledChanged(bool value)
@@ -198,6 +273,7 @@ namespace SmartFanCooling.ViewModels
                 _serialService.SetCustomOledMode(2, value);
                 if (value) SendCustomOled2Frame();
             }
+            NotifyOledEvaluatedTextChanges();
         }
 
         [RelayCommand]
@@ -251,6 +327,9 @@ namespace SmartFanCooling.ViewModels
                     OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
                 );
                 int targetDisp = ActiveOledScreenTab == 0 ? 1 : 2;
+                if (targetDisp == 1) IsCustomOled1Enabled = true;
+                else IsCustomOled2Enabled = true;
+
                 _serialService.SetCustomOledMode(targetDisp, true);
                 _serialService.SendOledBitmap(targetDisp, hex);
                 StatusMessage = $"⚡ Đã render & nạp khung hình Hex lên Màn hình OLED {targetDisp} thành công!";
@@ -262,6 +341,7 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
+                _serialService.SetCustomOledMode(1, true);
                 string hex = _oledCanvasService.GenerateDynamicOledCanvas(
                     EvaluatedRow1Text, EvaluatedRow2Text, EvaluatedRow3Text, EvaluatedRow4Text,
                     OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
@@ -275,6 +355,7 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
+                _serialService.SetCustomOledMode(2, true);
                 string hex = _oledCanvasService.GenerateDynamicOledCanvas(
                     EvaluatedRow1Text, EvaluatedRow2Text, EvaluatedRow3Text, EvaluatedRow4Text,
                     OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm

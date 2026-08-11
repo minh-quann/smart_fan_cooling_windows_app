@@ -11,6 +11,7 @@ static uint8_t _staticR = 0, _staticG = 120, _staticB = 255;
 static uint8_t _brightness = 180;
 static uint8_t _speed = 50;
 static bool _reverse = false;
+static uint8_t _rainbowColorCount = 0; // 0 = continuous 360°, 2, 3, 5, 7 colors
 static bool _ledOn = true;
 static bool _userLedOn = true;
 static uint8_t _fanPercent = 0;
@@ -39,6 +40,7 @@ void flushLedPrefs() {
   _prefs.putUChar("led_spd", _speed);
   _prefs.putUChar("led_bri", _brightness);
   _prefs.putBool("led_dir", _reverse);
+  _prefs.putUChar("rb_cnt", _rainbowColorCount);
   _prefs.putBool("led_on", _ledOn);
   _prefs.end();
   _nvsDirty = false;
@@ -93,6 +95,7 @@ void initLeds() {
   _brightness = _prefs.getUChar("led_bri", 180);
   if (_brightness == 0) _brightness = 180;
   _reverse = _prefs.getBool("led_dir", false);
+  _rainbowColorCount = _prefs.getUChar("rb_cnt", 0);
   _userLedOn = _prefs.getBool("led_on", true);
   _ledOn = _userLedOn;
   _prefs.end();
@@ -162,6 +165,13 @@ void setLedDirection(bool reverse) {
 
 bool getLedDirection() { return _reverse; }
 
+void setRainbowColorCount(uint8_t count) {
+  _rainbowColorCount = count;
+  markDirty();
+}
+
+uint8_t getRainbowColorCount() { return _rainbowColorCount; }
+
 void setLedOn(bool on) {
   _userLedOn = on;
   _ledOn = on;
@@ -201,7 +211,12 @@ static void effectRainbow() {
 
   for (uint16_t i = 0; i < _numLeds; i++) {
     uint16_t idx = _reverse ? (_numLeds - 1 - i) : i;
-    uint32_t hue = _hueStep + (idx * 65536L / _numLeds);
+    uint32_t rawHue = _hueStep + (idx * 65536L / _numLeds);
+    uint32_t hue = rawHue;
+    if (_rainbowColorCount > 0) {
+      uint32_t bandSize = 65536L / _rainbowColorCount;
+      hue = (rawHue / bandSize) * bandSize;
+    }
     uint32_t c = _strip.gamma32(_strip.ColorHSV(hue));
     _strip.setPixelColor(i, scaleColor32(c, _brightness));
   }
@@ -229,7 +244,12 @@ static void effectWave() {
 
   for (uint16_t i = 0; i < _numLeds; i++) {
     uint16_t idx = _reverse ? (_numLeds - 1 - i) : i;
-    uint32_t hue = _hueStep + (idx * 65536L / _numLeds);
+    uint32_t rawHue = _hueStep + (idx * 65536L / _numLeds);
+    uint32_t hue = rawHue;
+    if (_rainbowColorCount > 0) {
+      uint32_t bandSize = 65536L / _rainbowColorCount;
+      hue = (rawHue / bandSize) * bandSize;
+    }
     uint32_t c = _strip.ColorHSV(hue, 255, 255);
     _strip.setPixelColor(i, scaleColor32(c, _brightness));
   }
@@ -268,24 +288,6 @@ static void effectComet() {
   }
 }
 
-static void effectColorWipe() {
-  static uint16_t wipePos = 0;
-  static uint32_t wipeColor = 0;
-  static uint32_t lastWipe = 0;
-  uint16_t speedDelay = map(_speed, 1, 100, 60, 10);
-
-  if (millis() - lastWipe > speedDelay) {
-    wipePos++;
-    if (wipePos >= _numLeds) {
-      wipePos = 0;
-      wipeColor = _strip.ColorHSV(random(0, 65535), 255, 255);
-      _strip.clear();
-    }
-    lastWipe = millis();
-  }
-  uint16_t pos = _reverse ? (_numLeds - 1 - wipePos) : wipePos;
-  _strip.setPixelColor(pos, scaleColor32(wipeColor, _brightness));
-}
 
 static void effectPulse() {
   float speedF = map(_speed, 1, 100, 20, 100) / 1000.0f;
@@ -345,7 +347,6 @@ void updateLeds() {
     case LED_WAVE:       effectWave();      break;
     case LED_FIRE:       effectFire();      break;
     case LED_COMET:      effectComet();     break;
-    case LED_COLOR_WIPE: effectColorWipe(); break;
     case LED_PULSE:      effectPulse();     break;
     case LED_DUAL_SPIN:  effectDualSpin();  break;
     default:             break;
