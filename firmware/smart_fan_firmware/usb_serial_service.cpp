@@ -13,6 +13,17 @@ static float _cpuTemp = 0;
 static float _gpuTemp = 0;
 static uint16_t _cpuFanRpm = 0;
 static uint16_t _gpuFanRpm = 0;
+
+// Extended telemetry from PC app
+static float _cpuUsage = 0;
+static float _gpuUsage = 0;
+static float _cpuPower = 0;
+static float _gpuPower = 0;
+static float _cpuClock = 0;
+static float _gpuClock = 0;
+static float _ramUsed = 0;
+static float _ramTotal = 0;
+
 static String _rxBuffer = "";
 
 // USB connection timeout — if no ping received within this period, consider disconnected
@@ -106,11 +117,73 @@ static void handleUSBCommand(const char* payload) {
     Serial.printf("USB: LED count -> %u\n", val);
   }
   else if (strcmp(cmd, "temp") == 0) {
+    // Core telemetry: CPU/GPU temps and fan RPMs
     _cpuTemp = doc["cpu"] | 0.0f;
     _gpuTemp = doc["gpu"] | 0.0f;
     _cpuFanRpm = doc["cpu_fan"] | 0;
     _gpuFanRpm = doc["gpu_fan"] | 0;
+    
+    // Extended telemetry: usage, power, clocks, RAM
+    _cpuUsage = doc["cpu_usage"] | _cpuUsage;
+    _gpuUsage = doc["gpu_usage"] | _gpuUsage;
+    _cpuPower = doc["cpu_power"] | _cpuPower;
+    _gpuPower = doc["gpu_power"] | _gpuPower;
+    _cpuClock = doc["cpu_clock"] | _cpuClock;
+    _gpuClock = doc["gpu_clock"] | _gpuClock;
+    _ramUsed  = doc["ram_used"]  | _ramUsed;
+    _ramTotal = doc["ram_total"] | _ramTotal;
+    
     Serial.printf("USB: Temps CPU=%.1f GPU=%.1f CPU_FAN=%u GPU_FAN=%u\n", _cpuTemp, _gpuTemp, _cpuFanRpm, _gpuFanRpm);
+  }
+  else if (strcmp(cmd, "oled_config") == 0) {
+    // Configurable OLED layout command from PC app
+    uint8_t disp = doc["disp"] | 1;
+    OledLayoutConfig cfg;
+    
+    cfg.rowCount = doc["row_count"] | 4;
+    cfg.rows[0] = (OledWidget)(doc["row1"] | (int)WIDGET_HEADER_TITLE);
+    cfg.rows[1] = (OledWidget)(doc["row2"] | (int)WIDGET_CPU_TELEMETRY);
+    cfg.rows[2] = (OledWidget)(doc["row3"] | (int)WIDGET_GPU_TELEMETRY);
+    cfg.rows[3] = (OledWidget)(doc["row4"] | (int)WIDGET_FAN_TELEMETRY);
+    cfg.showTopDivider = doc["top_div"] | true;
+    cfg.showBottomDivider = doc["bot_div"] | true;
+    cfg.showPwmBar = doc["pwm_bar"] | true;
+    
+    const char* title = doc["title"];
+    if (title) {
+      strncpy(cfg.customTitle, title, sizeof(cfg.customTitle) - 1);
+      cfg.customTitle[sizeof(cfg.customTitle) - 1] = '\0';
+    } else {
+      strncpy(cfg.customTitle, "LLANO SMART FAN", sizeof(cfg.customTitle) - 1);
+      cfg.customTitle[sizeof(cfg.customTitle) - 1] = '\0';
+    }
+    
+    setOledLayoutConfig(disp, cfg);
+    saveOledLayoutToNVS(disp);
+    
+    Serial.printf("USB: OLED config disp=%u rows=%u [%d,%d,%d,%d] topDiv=%d botDiv=%d bar=%d title=%s\n",
+      disp, cfg.rowCount, cfg.rows[0], cfg.rows[1], cfg.rows[2], cfg.rows[3],
+      cfg.showTopDivider, cfg.showBottomDivider, cfg.showPwmBar, cfg.customTitle);
+  }
+  else if (strcmp(cmd, "oled_config_reset") == 0) {
+    // Reset OLED config mode to firmware default layout
+    uint8_t disp = doc["disp"] | 1;
+    setCustomDisplayMode(disp, false);
+    // Reset config mode — firmware will use default layout
+    OledLayoutConfig& cfg = getOledLayoutConfig(disp);
+    if (disp == 1) {
+      cfg.rowCount = 4;
+      cfg.rows[0] = WIDGET_HEADER_TITLE;
+      cfg.rows[1] = WIDGET_CPU_TELEMETRY;
+      cfg.rows[2] = WIDGET_GPU_TELEMETRY;
+      cfg.rows[3] = WIDGET_FAN_TELEMETRY;
+      cfg.showTopDivider = true;
+      cfg.showBottomDivider = true;
+      cfg.showPwmBar = true;
+      strncpy(cfg.customTitle, "LLANO SMART FAN", sizeof(cfg.customTitle) - 1);
+    }
+    saveOledLayoutToNVS(disp);
+    Serial.printf("USB: OLED config reset disp=%u\n", disp);
   }
   else if (strcmp(cmd, "draw_bitmap") == 0) {
     uint8_t disp = doc["disp"] | 1;
@@ -170,10 +243,8 @@ static void handleUSBCommand(const char* payload) {
     Serial.println(resp);
   }
   else if (strcmp(cmd, "pin_test") == 0) {
-    // Read raw GPIO pin states for encoder 1 and buttons
     int encA = digitalRead(PIN_ENC_A);
     int encB = digitalRead(PIN_ENC_B);
-    // Enc2: only use interrupt count (analogRead/digitalRead breaks interrupts!)
     int64_t enc2Count = getEncoder2Count();
     int btnPsh = digitalRead(PIN_BTN_PSH);
     int btnCon = digitalRead(PIN_BTN_CON);
@@ -264,6 +335,15 @@ uint16_t getUSBCpuFanRpm() {
 uint16_t getUSBGpuFanRpm() {
   return _gpuFanRpm;
 }
+
+float getUSBCpuUsage() { return _cpuUsage; }
+float getUSBGpuUsage() { return _gpuUsage; }
+float getUSBCpuPower() { return _cpuPower; }
+float getUSBGpuPower() { return _gpuPower; }
+float getUSBCpuClock() { return _cpuClock; }
+float getUSBGpuClock() { return _gpuClock; }
+float getUSBRamUsed()  { return _ramUsed; }
+float getUSBRamTotal() { return _ramTotal; }
 
 void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn,
                      float cpuTemp, float gpuTemp) {

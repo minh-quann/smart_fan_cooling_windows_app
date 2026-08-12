@@ -6,8 +6,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace SmartFanCooling.ViewModels
 {
     /// <summary>
-    /// Partial class for Independent Dual OLED Custom Canvas controls (Screen 1 & Screen 2)
-    /// with interactive multi-row layout, granular metric toggles, divider lines & live ESP32 sync.
+    /// Partial class for OLED Studio configurator — lightweight config-based layout system.
+    /// Instead of rendering bitmaps on PC and sending heavy hex data, this sends a compact
+    /// JSON config to ESP32 which renders text locally using its own Adafruit GFX library.
     /// </summary>
     public partial class MainViewModel
     {
@@ -73,7 +74,9 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private bool _oledShowSmartFanPwm = true;
         [ObservableProperty] private bool _oledShowRamUsage = false;
 
-        // Row Widget Selections (HEADER_TITLE, CPU_TELEMETRY, GPU_TELEMETRY, FAN_TELEMETRY, RAM_TELEMETRY, POWER_TELEMETRY, CLOCK_TELEMETRY, PWM_PCT)
+        // Row Widget Selections — maps to firmware OledWidget enum values
+        // 0=HEADER_TITLE, 1=CPU_TELEMETRY, 2=GPU_TELEMETRY, 3=FAN_TELEMETRY,
+        // 4=PWM_PCT, 5=RAM_TELEMETRY, 6=POWER, 7=CLOCK
         [ObservableProperty] private string _oledRow1Widget = "HEADER_TITLE";
         [ObservableProperty] private string _oledRow2Widget = "CPU_TELEMETRY";
         [ObservableProperty] private string _oledRow3Widget = "GPU_TELEMETRY";
@@ -184,6 +187,25 @@ namespace SmartFanCooling.ViewModels
             };
         }
 
+        /// <summary>
+        /// Convert widget string key to firmware OledWidget enum integer value
+        /// </summary>
+        private int WidgetKeyToEnumValue(string widgetKey)
+        {
+            return widgetKey switch
+            {
+                "HEADER_TITLE" => 0,
+                "CPU_TELEMETRY" => 1,
+                "GPU_TELEMETRY" => 2,
+                "FAN_TELEMETRY" => 3,
+                "PWM_PCT" => 4,
+                "RAM_TELEMETRY" => 5,
+                "POWER_TELEMETRY" => 6,
+                "CLOCK_TELEMETRY" => 7,
+                _ => 0
+            };
+        }
+
         private void NotifyOledEvaluatedTextChanges()
         {
             OnPropertyChanged(nameof(EvaluatedRow1Text));
@@ -203,28 +225,34 @@ namespace SmartFanCooling.ViewModels
             OnPropertyChanged(nameof(IsOled2TabActive));
             OnPropertyChanged(nameof(IsCurrentScreenCustomEnabled));
             OnPropertyChanged(nameof(IsCurrentScreenDefaultEnabled));
-
-            AutoSyncOledCanvasToHardware();
         }
 
-        private void AutoSyncOledCanvasToHardware()
+        /// <summary>
+        /// Send lightweight layout config to ESP32 firmware — firmware renders text locally.
+        /// This replaces the heavy bitmap-based approach (no more 2KB hex per frame).
+        /// </summary>
+        private void SendOledConfigToEsp32()
         {
-            if (IsConnected && ActiveConnectionType == "USB_SERIAL")
-            {
-                if (ActiveOledScreenTab == 0 && IsCustomOled1Enabled)
-                {
-                    SendCustomOled1Frame();
-                }
-                else if (ActiveOledScreenTab == 1 && IsCustomOled2Enabled)
-                {
-                    SendCustomOled2Frame();
-                }
-            }
+            if (!IsConnected || ActiveConnectionType != "USB_SERIAL") return;
+
+            int targetDisp = ActiveOledScreenTab == 0 ? 1 : 2;
+            _serialService.SendOledConfig(
+                targetDisp,
+                OledRowCount,
+                WidgetKeyToEnumValue(OledRow1Widget),
+                WidgetKeyToEnumValue(OledRow2Widget),
+                WidgetKeyToEnumValue(OledRow3Widget),
+                WidgetKeyToEnumValue(OledRow4Widget),
+                OledShowTopDivider,
+                OledShowBottomDivider,
+                OledShowPwmBar,
+                Oled1CustomTitle
+            );
         }
 
-        partial void OnOledShowTopDividerChanged(bool value) => NotifyOledEvaluatedTextChanges();
-        partial void OnOledShowBottomDividerChanged(bool value) => NotifyOledEvaluatedTextChanges();
-        partial void OnOledShowPwmBarChanged(bool value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOledShowTopDividerChanged(bool value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
+        partial void OnOledShowBottomDividerChanged(bool value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
+        partial void OnOledShowPwmBarChanged(bool value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
 
         partial void OnOledShowCpuTempChanged(bool value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledShowCpuUsageChanged(bool value) => NotifyOledEvaluatedTextChanges();
@@ -243,12 +271,12 @@ namespace SmartFanCooling.ViewModels
         partial void OnOledShowSmartFanPwmChanged(bool value) => NotifyOledEvaluatedTextChanges();
         partial void OnOledShowRamUsageChanged(bool value) => NotifyOledEvaluatedTextChanges();
 
-        partial void OnOledRow1WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
-        partial void OnOledRow2WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
-        partial void OnOledRow3WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
-        partial void OnOledRow4WidgetChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOledRow1WidgetChanged(string value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
+        partial void OnOledRow2WidgetChanged(string value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
+        partial void OnOledRow3WidgetChanged(string value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
+        partial void OnOledRow4WidgetChanged(string value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
 
-        partial void OnOled1CustomTitleChanged(string value) => NotifyOledEvaluatedTextChanges();
+        partial void OnOled1CustomTitleChanged(string value) { NotifyOledEvaluatedTextChanges(); SendOledConfigToEsp32(); }
         partial void OnOled1CustomMainStatChanged(string value) => NotifyOledEvaluatedTextChanges();
         partial void OnOled1CustomSubStatChanged(string value) => NotifyOledEvaluatedTextChanges();
         partial void OnOled2CustomHeaderChanged(string value) => NotifyOledEvaluatedTextChanges();
@@ -260,8 +288,16 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
-                _serialService.SetCustomOledMode(1, value);
-                if (value) SendCustomOled1Frame();
+                if (value)
+                {
+                    // Send config to ESP32 — firmware renders locally
+                    SendOledConfigToEsp32();
+                }
+                else
+                {
+                    // Reset to firmware default layout
+                    _serialService.SendOledConfigReset(1);
+                }
             }
             NotifyOledEvaluatedTextChanges();
         }
@@ -270,8 +306,14 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
-                _serialService.SetCustomOledMode(2, value);
-                if (value) SendCustomOled2Frame();
+                if (value)
+                {
+                    SendOledConfigToEsp32();
+                }
+                else
+                {
+                    _serialService.SendOledConfigReset(2);
+                }
             }
             NotifyOledEvaluatedTextChanges();
         }
@@ -292,6 +334,7 @@ namespace SmartFanCooling.ViewModels
             {
                 OledRowCount = rows;
                 StatusMessage = $"Đã thay đổi cấu trúc layout màn hình thành {rows} dòng.";
+                SendOledConfigToEsp32();
             }
         }
 
@@ -312,7 +355,6 @@ namespace SmartFanCooling.ViewModels
                         case 4: OledRow4Widget = widgetKey; break;
                     }
                     StatusMessage = $"Đã gán widget '{widgetKey}' vào Dòng {row}.";
-                    SendCurrentOledFrameToEsp32();
                 }
             }
         }
@@ -322,17 +364,13 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
-                string hex = _oledCanvasService.GenerateDynamicOledCanvas(
-                    EvaluatedRow1Text, EvaluatedRow2Text, EvaluatedRow3Text, EvaluatedRow4Text,
-                    OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
-                );
                 int targetDisp = ActiveOledScreenTab == 0 ? 1 : 2;
                 if (targetDisp == 1) IsCustomOled1Enabled = true;
                 else IsCustomOled2Enabled = true;
 
-                _serialService.SetCustomOledMode(targetDisp, true);
-                _serialService.SendOledBitmap(targetDisp, hex);
-                StatusMessage = $"⚡ Đã render & nạp khung hình Hex lên Màn hình OLED {targetDisp} thành công!";
+                // Send config — firmware will render locally in real-time
+                SendOledConfigToEsp32();
+                StatusMessage = $"⚡ Đã gửi cấu hình layout lên Màn hình OLED {targetDisp} — firmware tự render!";
             }
         }
 
@@ -341,12 +379,10 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
-                _serialService.SetCustomOledMode(1, true);
-                string hex = _oledCanvasService.GenerateDynamicOledCanvas(
-                    EvaluatedRow1Text, EvaluatedRow2Text, EvaluatedRow3Text, EvaluatedRow4Text,
-                    OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
-                );
-                _serialService.SendOledBitmap(1, hex);
+                // Send lightweight config instead of bitmap
+                ActiveOledScreenTab = 0;
+                IsCustomOled1Enabled = true;
+                SendOledConfigToEsp32();
             }
         }
 
@@ -355,12 +391,9 @@ namespace SmartFanCooling.ViewModels
         {
             if (IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
-                _serialService.SetCustomOledMode(2, true);
-                string hex = _oledCanvasService.GenerateDynamicOledCanvas(
-                    EvaluatedRow1Text, EvaluatedRow2Text, EvaluatedRow3Text, EvaluatedRow4Text,
-                    OledRowCount, OledShowTopDivider, OledShowBottomDivider, OledShowPwmBar, FanPwm
-                );
-                _serialService.SendOledBitmap(2, hex);
+                ActiveOledScreenTab = 1;
+                IsCustomOled2Enabled = true;
+                SendOledConfigToEsp32();
             }
         }
     }

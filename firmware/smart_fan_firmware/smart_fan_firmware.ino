@@ -125,7 +125,20 @@ void loop() {
     uint16_t cpuFan = getUSBCpuFanRpm();
     uint16_t gpuFan = getUSBGpuFanRpm();
 
-    updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn());
+    // Extended telemetry for configurable OLED layout
+    float cpuUsage = getUSBCpuUsage();
+    float gpuUsage = getUSBGpuUsage();
+    float cpuPower = getUSBCpuPower();
+    float gpuPower = getUSBGpuPower();
+    float cpuClock = getUSBCpuClock();
+    float gpuClock = getUSBGpuClock();
+    float ramUsed  = getUSBRamUsed();
+    float ramTotal = getUSBRamTotal();
+
+    updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn(),
+                      cpuT, gpuT, cpuFan, gpuFan,
+                      cpuUsage, gpuUsage, cpuPower, gpuPower,
+                      cpuClock, gpuClock, ramUsed, ramTotal);
     updateSecondaryDisplay(getFanRPM(), getFanPercent(), cpuT, gpuT, cpuFan, gpuFan,
                            isBLEConnected(), isWiFiConnected(),
                            isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str());

@@ -14,17 +14,26 @@ namespace SmartFanCooling.ViewModels
     public partial class MainViewModel
     {
         // Llano Smart Fan Speed & PWM
-        [ObservableProperty] private int _fanPwm = 50;
+        [ObservableProperty] private int _fanPwm = 43;
         [ObservableProperty] private int _targetRpm = 1200;
-        [ObservableProperty] private int _fanRpm = 0;
+        [ObservableProperty] private int _fanRpm = 1200;
         [ObservableProperty] private bool _isFanStateOn = true;
         private bool _isSyncingFromHardware = false;
 
         partial void OnFanPwmChanged(int value)
         {
-            if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
+            if (!_isSyncingFromHardware)
             {
-                _serialService.SetFanSpeed(value);
+                int calculatedRpm = value > 0 ? (int)(Math.Round((value * 28.0) / 100.0) * 100) : 0;
+                _isSyncingFromHardware = true;
+                if (TargetRpm != calculatedRpm) TargetRpm = calculatedRpm;
+                if (FanRpm != calculatedRpm) FanRpm = calculatedRpm;
+                _isSyncingFromHardware = false;
+
+                if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+                {
+                    _serialService.SetFanSpeed(value);
+                }
             }
         }
 
@@ -40,7 +49,11 @@ namespace SmartFanCooling.ViewModels
             if (!_isSyncingFromHardware)
             {
                 int pct = value > 0 ? Math.Clamp((int)Math.Round(value / 28.0), 0, 100) : 0;
+                _isSyncingFromHardware = true;
                 FanPwm = pct;
+                FanRpm = value;
+                _isSyncingFromHardware = false;
+
                 if (IsConnected && ActiveConnectionType == "USB_SERIAL")
                 {
                     _serialService.SetTargetRpm(value);

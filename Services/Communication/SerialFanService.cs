@@ -122,11 +122,12 @@ namespace SmartFanCooling.Services
             SendRawText($"{{\"cmd\":\"rainbow_count\",\"value\":{count}}}");
         }
 
-        public void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0)
+        public void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0,
+            float cpuUsage = 0, float gpuUsage = 0, float cpuPower = 0, float gpuPower = 0,
+            float cpuClock = 0, float gpuClock = 0, float ramUsed = 0, float ramTotal = 0)
         {
-            string cpuStr = cpuTemp.ToString("F1", CultureInfo.InvariantCulture);
-            string gpuStr = gpuTemp.ToString("F1", CultureInfo.InvariantCulture);
-            SendRawText($"{{\"cmd\":\"temp\",\"cpu\":{cpuStr},\"gpu\":{gpuStr},\"cpu_fan\":{cpuFanRpm},\"gpu_fan\":{gpuFanRpm}}}");
+            var inv = CultureInfo.InvariantCulture;
+            SendRawText($"{{\"cmd\":\"temp\",\"cpu\":{cpuTemp.ToString("F1", inv)},\"gpu\":{gpuTemp.ToString("F1", inv)},\"cpu_fan\":{cpuFanRpm},\"gpu_fan\":{gpuFanRpm},\"cpu_usage\":{cpuUsage.ToString("F1", inv)},\"gpu_usage\":{gpuUsage.ToString("F1", inv)},\"cpu_power\":{cpuPower.ToString("F1", inv)},\"gpu_power\":{gpuPower.ToString("F1", inv)},\"cpu_clock\":{cpuClock.ToString("F2", inv)},\"gpu_clock\":{gpuClock.ToString("F0", inv)},\"ram_used\":{ramUsed.ToString("F1", inv)},\"ram_total\":{ramTotal.ToString("F1", inv)}}}");
         }
 
         public void SendOledBitmap(int dispIndex, string hexData)
@@ -137,6 +138,19 @@ namespace SmartFanCooling.Services
         public void SetCustomOledMode(int dispIndex, bool enable)
         {
             SendRawText($"{{\"cmd\":\"custom_oled\",\"disp\":{dispIndex},\"enable\":{(enable ? "true" : "false")}}}");
+        }
+
+        public void SendOledConfig(int dispIndex, int rowCount, int row1, int row2, int row3, int row4,
+            bool topDiv, bool botDiv, bool pwmBar, string customTitle)
+        {
+            // Escape title for JSON safety
+            string safeTitle = customTitle.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            SendRawText($"{{\"cmd\":\"oled_config\",\"disp\":{dispIndex},\"row_count\":{rowCount},\"row1\":{row1},\"row2\":{row2},\"row3\":{row3},\"row4\":{row4},\"top_div\":{(topDiv ? "true" : "false")},\"bot_div\":{(botDiv ? "true" : "false")},\"pwm_bar\":{(pwmBar ? "true" : "false")},\"title\":\"{safeTitle}\"}}");
+        }
+
+        public void SendOledConfigReset(int dispIndex)
+        {
+            SendRawText($"{{\"cmd\":\"oled_config_reset\",\"disp\":{dispIndex}}}");
         }
 
         public void SendControl(int pwmPercent, int ledMode, float cpuTemp, float gpuTemp = 0f, int cpuFanRpm = 0, int gpuFanRpm = 0)

@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
 #include <Adafruit_SSD1306.h>
+#include <Preferences.h>
 
 // I2C buses
 static TwoWire I2C1 = TwoWire(0);
@@ -21,10 +22,136 @@ static bool _oled2Ok = false;
 static bool _customOled1Active = false;
 static bool _customOled2Active = false;
 
+// Configurable layout configs (per display)
+// Helper to create OledLayoutConfig without C99 designated initializers
+static OledLayoutConfig makeOledConfig(uint8_t rows, OledWidget r0, OledWidget r1, OledWidget r2, OledWidget r3,
+                                       bool topDiv, bool botDiv, bool pwmBar, const char* title) {
+  OledLayoutConfig cfg;
+  cfg.rowCount = rows;
+  cfg.rows[0] = r0;
+  cfg.rows[1] = r1;
+  cfg.rows[2] = r2;
+  cfg.rows[3] = r3;
+  cfg.showTopDivider = topDiv;
+  cfg.showBottomDivider = botDiv;
+  cfg.showPwmBar = pwmBar;
+  strncpy(cfg.customTitle, title, sizeof(cfg.customTitle) - 1);
+  cfg.customTitle[sizeof(cfg.customTitle) - 1] = '\0';
+  return cfg;
+}
+
+static OledLayoutConfig _oled1Config;
+static OledLayoutConfig _oled2Config;
+static bool _oled1ConfigInited = false;
+
+// Whether each display is in config mode (true) or firmware default mode (false)
+static bool _oled1ConfigMode = false;
+static bool _oled2ConfigMode = false;
+
 // LED mode names for display
 static const char* LED_MODE_NAMES[] = {
   "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE", "COMET", "PULSE", "DUAL SPIN"
 };
+
+// ---- NVS Persistence ----
+static Preferences _oledPrefs;
+
+void saveOledLayoutToNVS(uint8_t dispIndex) {
+  _oledPrefs.begin("oled_cfg", false);
+  char key[16];
+  OledLayoutConfig& cfg = (dispIndex == 1) ? _oled1Config : _oled2Config;
+  
+  snprintf(key, sizeof(key), "d%u_rows", dispIndex);
+  _oledPrefs.putUChar(key, cfg.rowCount);
+  
+  snprintf(key, sizeof(key), "d%u_r0", dispIndex);
+  _oledPrefs.putUChar(key, cfg.rows[0]);
+  snprintf(key, sizeof(key), "d%u_r1", dispIndex);
+  _oledPrefs.putUChar(key, cfg.rows[1]);
+  snprintf(key, sizeof(key), "d%u_r2", dispIndex);
+  _oledPrefs.putUChar(key, cfg.rows[2]);
+  snprintf(key, sizeof(key), "d%u_r3", dispIndex);
+  _oledPrefs.putUChar(key, cfg.rows[3]);
+  
+  snprintf(key, sizeof(key), "d%u_tdiv", dispIndex);
+  _oledPrefs.putBool(key, cfg.showTopDivider);
+  snprintf(key, sizeof(key), "d%u_bdiv", dispIndex);
+  _oledPrefs.putBool(key, cfg.showBottomDivider);
+  snprintf(key, sizeof(key), "d%u_bar", dispIndex);
+  _oledPrefs.putBool(key, cfg.showPwmBar);
+  
+  snprintf(key, sizeof(key), "d%u_title", dispIndex);
+  _oledPrefs.putString(key, cfg.customTitle);
+  
+  // Save config mode state
+  snprintf(key, sizeof(key), "d%u_cfgon", dispIndex);
+  _oledPrefs.putBool(key, (dispIndex == 1) ? _oled1ConfigMode : _oled2ConfigMode);
+  
+  _oledPrefs.end();
+  Serial.printf("OLED: Layout config %u saved to NVS\n", dispIndex);
+}
+
+void loadOledLayoutFromNVS(uint8_t dispIndex) {
+  _oledPrefs.begin("oled_cfg", true);
+  char key[16];
+  OledLayoutConfig& cfg = (dispIndex == 1) ? _oled1Config : _oled2Config;
+  
+  snprintf(key, sizeof(key), "d%u_rows", dispIndex);
+  if (_oledPrefs.isKey(key)) {
+    cfg.rowCount = _oledPrefs.getUChar(key, cfg.rowCount);
+    
+    snprintf(key, sizeof(key), "d%u_r0", dispIndex);
+    cfg.rows[0] = (OledWidget)_oledPrefs.getUChar(key, cfg.rows[0]);
+    snprintf(key, sizeof(key), "d%u_r1", dispIndex);
+    cfg.rows[1] = (OledWidget)_oledPrefs.getUChar(key, cfg.rows[1]);
+    snprintf(key, sizeof(key), "d%u_r2", dispIndex);
+    cfg.rows[2] = (OledWidget)_oledPrefs.getUChar(key, cfg.rows[2]);
+    snprintf(key, sizeof(key), "d%u_r3", dispIndex);
+    cfg.rows[3] = (OledWidget)_oledPrefs.getUChar(key, cfg.rows[3]);
+    
+    snprintf(key, sizeof(key), "d%u_tdiv", dispIndex);
+    cfg.showTopDivider = _oledPrefs.getBool(key, cfg.showTopDivider);
+    snprintf(key, sizeof(key), "d%u_bdiv", dispIndex);
+    cfg.showBottomDivider = _oledPrefs.getBool(key, cfg.showBottomDivider);
+    snprintf(key, sizeof(key), "d%u_bar", dispIndex);
+    cfg.showPwmBar = _oledPrefs.getBool(key, cfg.showPwmBar);
+    
+    snprintf(key, sizeof(key), "d%u_title", dispIndex);
+    String title = _oledPrefs.getString(key, cfg.customTitle);
+    strncpy(cfg.customTitle, title.c_str(), sizeof(cfg.customTitle) - 1);
+    cfg.customTitle[sizeof(cfg.customTitle) - 1] = '\0';
+    
+    snprintf(key, sizeof(key), "d%u_cfgon", dispIndex);
+    bool cfgMode = _oledPrefs.getBool(key, false);
+    if (dispIndex == 1) _oled1ConfigMode = cfgMode;
+    else _oled2ConfigMode = cfgMode;
+    
+    Serial.printf("OLED: Layout config %u loaded from NVS (rows=%u, cfgMode=%d)\n", dispIndex, cfg.rowCount, cfgMode);
+  } else {
+    Serial.printf("OLED: No saved config for display %u, using defaults\n", dispIndex);
+  }
+  
+  _oledPrefs.end();
+}
+
+// ---- Config Accessors ----
+void setOledLayoutConfig(uint8_t dispIndex, const OledLayoutConfig& config) {
+  if (dispIndex == 1) {
+    _oled1Config = config;
+    _oled1ConfigMode = true;
+  } else if (dispIndex == 2) {
+    _oled2Config = config;
+    _oled2ConfigMode = true;
+  }
+}
+
+OledLayoutConfig& getOledLayoutConfig(uint8_t dispIndex) {
+  return (dispIndex == 1) ? _oled1Config : _oled2Config;
+}
+
+bool isOledConfigMode(uint8_t dispIndex) {
+  return (dispIndex == 1) ? _oled1ConfigMode : _oled2ConfigMode;
+}
 
 void setCustomDisplayMode(uint8_t dispIndex, bool enable) {
   if (dispIndex == 1) _customOled1Active = enable;
@@ -54,6 +181,15 @@ void drawCustomBitmap(uint8_t dispIndex, const uint8_t* bitmapData) {
 }
 
 void initDisplays() {
+  // Initialize default layout configs (can't use C99 designated initializers in C++)
+  if (!_oled1ConfigInited) {
+    _oled1Config = makeOledConfig(4, WIDGET_HEADER_TITLE, WIDGET_CPU_TELEMETRY, WIDGET_GPU_TELEMETRY, WIDGET_FAN_TELEMETRY,
+                                  true, true, true, "LLANO SMART FAN");
+    _oled2Config = makeOledConfig(4, WIDGET_FAN_TELEMETRY, WIDGET_CPU_TELEMETRY, WIDGET_GPU_TELEMETRY, WIDGET_PWM_PCT,
+                                  false, false, false, "LLANO SMART FAN");
+    _oled1ConfigInited = true;
+  }
+
   // Init I2C buses with standard 100kHz clock for maximum stability over dupont wires
   I2C1.begin(PIN_OLED1_SDA, PIN_OLED1_SCL, 100000);
   I2C2.begin(PIN_OLED2_SDA, PIN_OLED2_SCL, 100000);
@@ -72,8 +208,6 @@ void initDisplays() {
     }
   }
 
-  // NOTE: Fallback I2C on GPIO 47/48 removed — GPIO 47 is used for PSH button
-
   // 3. Scan I2C2 (Secondary bus: GPIO 17 / 18)
   Serial.printf("  Scanning I2C2 Bus (SDA=GPIO %d, SCL=GPIO %d)...\n", PIN_OLED2_SDA, PIN_OLED2_SCL);
   uint8_t i2c2Addr1 = 0, i2c2Addr2 = 0;
@@ -86,7 +220,7 @@ void initDisplays() {
     }
   }
 
-  // 4. Initialize BOTH SH1106 and SSD1306 drivers for 1.3" OLED to guarantee display activation regardless of chip model!
+  // 4. Initialize BOTH SH1106 and SSD1306 drivers for 1.3" OLED
   uint8_t addr1 = i2c1Addr ? i2c1Addr : OLED_ADDR;
   
   bool ok1_sh = oled1_sh.begin(addr1, true);
@@ -101,7 +235,6 @@ void initDisplays() {
   Serial.printf("  [RESULT] OLED1 (1.3\" Display) Init: SH1106=%d, SSD1306=%d at Address 0x%02X\n", ok1_sh, ok1_ssd, addr1);
 
   if (_oled1Ok) {
-    // Render splash screen on SH1106 driver
     oled1_sh.clearDisplay();
     oled1_sh.setTextColor(SH110X_WHITE);
     oled1_sh.setTextSize(2);
@@ -114,7 +247,6 @@ void initDisplays() {
     oled1_sh.print("SH1106 Active!");
     oled1_sh.display();
 
-    // Render splash screen on SSD1306 driver
     oled1_ssd.clearDisplay();
     oled1_ssd.setTextColor(SSD1306_WHITE);
     oled1_ssd.setTextSize(2);
@@ -150,87 +282,248 @@ void initDisplays() {
     Serial.println("  [ERROR] OLED2 (0.96\" Display) FAILED!");
   }
   Serial.println("==================================================");
+
+  // Load saved layout configs from NVS
+  loadOledLayoutFromNVS(1);
+  loadOledLayoutFromNVS(2);
 }
 
-void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn) {
-  if (!_oled1Ok || _customOled1Active) return;
-
-  if (_oled1IsSsd) {
-    // SSD1306 driver update only (0 column offset)
-    oled1_ssd.clearDisplay();
-    oled1_ssd.setTextSize(1);
-    oled1_ssd.setCursor(0, 0);
-    oled1_ssd.print("LLANO SMART FAN");
-    oled1_ssd.drawLine(0, 10, 127, 10, SSD1306_WHITE);
-
-    oled1_ssd.setTextSize(2);
-    oled1_ssd.setCursor(0, 14);
-    if (fanOn) {
-      oled1_ssd.print(fanPercent);
-      oled1_ssd.print("%");
-    } else {
-      oled1_ssd.print("OFF");
+// ---- Helper: Build widget text into a char buffer ----
+static void buildWidgetText(char* out, size_t outLen, OledWidget widget,
+                            const char* customTitle,
+                            uint16_t rpm, uint8_t fanPercent,
+                            float cpuTemp, float gpuTemp,
+                            uint16_t cpuFanRpm, uint16_t gpuFanRpm,
+                            float cpuUsage, float gpuUsage,
+                            float cpuPower, float gpuPower,
+                            float cpuClock, float gpuClock,
+                            float ramUsed, float ramTotal) {
+  switch (widget) {
+    case WIDGET_HEADER_TITLE:
+      snprintf(out, outLen, "%s", customTitle);
+      break;
+    case WIDGET_CPU_TELEMETRY:
+      if (cpuTemp > 0) {
+        snprintf(out, outLen, "CPU: %.0fC | %.0f%%", cpuTemp, cpuUsage);
+      } else {
+        snprintf(out, outLen, "CPU: --C | %.0f%%", cpuUsage);
+      }
+      break;
+    case WIDGET_GPU_TELEMETRY:
+      if (gpuTemp > 0) {
+        snprintf(out, outLen, "GPU: %.0fC | %.0f%%", gpuTemp, gpuUsage);
+      } else {
+        snprintf(out, outLen, "GPU: --C | %.0f%%", gpuUsage);
+      }
+      break;
+    case WIDGET_FAN_TELEMETRY: {
+      uint16_t cleanRpm = (rpm > 0) ? (((rpm + 49) / 100) * 100) : 0;
+      if (cleanRpm > 2800) cleanRpm = 2800;
+      snprintf(out, outLen, "%u RPM | PWM %u%%", cleanRpm, fanPercent);
+      break;
     }
+    case WIDGET_PWM_PCT:
+      snprintf(out, outLen, "PWM: %u%%", fanPercent);
+      break;
+    case WIDGET_RAM_TELEMETRY:
+      if (ramTotal > 0) {
+        snprintf(out, outLen, "RAM: %.1f/%.1fGB", ramUsed, ramTotal);
+      } else {
+        snprintf(out, outLen, "RAM: --/--GB");
+      }
+      break;
+    case WIDGET_POWER:
+      snprintf(out, outLen, "PWR: %.0fW/%.0fW", cpuPower, gpuPower);
+      break;
+    case WIDGET_CLOCK:
+      snprintf(out, outLen, "CLK: %.1fG/%.0fM", cpuClock, gpuClock);
+      break;
+    default:
+      snprintf(out, outLen, "---");
+      break;
+  }
+}
 
-    oled1_ssd.setTextSize(1);
-    oled1_ssd.setCursor(75, 14);
-    oled1_ssd.print("RPM");
-    oled1_ssd.setTextSize(2);
-    oled1_ssd.setCursor(75, 24);
-    oled1_ssd.print(rpm);
-
-    oled1_ssd.drawLine(0, 42, 127, 42, SSD1306_WHITE);
-    oled1_ssd.setTextSize(1);
-    oled1_ssd.setCursor(0, 46);
-    oled1_ssd.print("PWM:");
-    int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
-    oled1_ssd.drawRect(30, 45, 82, 8, SSD1306_WHITE);
-    oled1_ssd.fillRect(31, 46, barWidth, 6, SSD1306_WHITE);
-
-    oled1_ssd.setCursor(0, 56);
-    oled1_ssd.print("LED: ");
-    if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
-      oled1_ssd.print(LED_MODE_NAMES[ledMode]);
-    }
-    oled1_ssd.display();
+// ---- Render configurable 4-row layout on a given GFX display ----
+// Template to avoid duplicating for SH1106 and SSD1306 drivers
+template<typename Display>
+static void renderConfigLayout(Display& disp, uint16_t whiteColor,
+                               const OledLayoutConfig& cfg,
+                               uint16_t rpm, uint8_t fanPercent,
+                               float cpuTemp, float gpuTemp,
+                               uint16_t cpuFanRpm, uint16_t gpuFanRpm,
+                               float cpuUsage, float gpuUsage,
+                               float cpuPower, float gpuPower,
+                               float cpuClock, float gpuClock,
+                               float ramUsed, float ramTotal) {
+  disp.clearDisplay();
+  disp.setTextColor(whiteColor);
+  
+  char lineBuf[32];
+  
+  if (cfg.rowCount <= 2) {
+    // ---- 2-Row Layout: Large text (Size 2) ----
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(2);
+    disp.setCursor(0, 2);
+    disp.print(lineBuf);
+    
+    if (cfg.showTopDivider) disp.drawLine(0, 20, 127, 20, whiteColor);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(2);
+    disp.setCursor(0, 26);
+    disp.print(lineBuf);
+    
+    if (cfg.showBottomDivider) disp.drawLine(0, 48, 127, 48, whiteColor);
+    
+  } else if (cfg.rowCount == 3) {
+    // ---- 3-Row Layout: Header Size 2 + 2 rows Size 1 ----
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(2);
+    disp.setCursor(0, 2);
+    disp.print(lineBuf);
+    
+    if (cfg.showTopDivider) disp.drawLine(0, 20, 127, 20, whiteColor);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 24);
+    disp.print(lineBuf);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[2], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 36);
+    disp.print(lineBuf);
+    
+    if (cfg.showBottomDivider) disp.drawLine(0, 48, 127, 48, whiteColor);
+    
   } else {
-    // SH1106 driver update only (standard SH1106 offset)
-    oled1_sh.clearDisplay();
-    oled1_sh.setTextSize(1);
-    oled1_sh.setCursor(0, 0);
-    oled1_sh.print("LLANO SMART FAN");
-    oled1_sh.drawLine(0, 10, 127, 10, SH110X_WHITE);
+    // ---- 4-Row Layout: All Size 1, compact detail view ----
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 0);
+    disp.print(lineBuf);
+    
+    if (cfg.showTopDivider) disp.drawLine(0, 10, 127, 10, whiteColor);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 14);
+    disp.print(lineBuf);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[2], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 28);
+    disp.print(lineBuf);
+    
+    if (cfg.showBottomDivider) disp.drawLine(0, 42, 127, 42, whiteColor);
+    
+    buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[3], cfg.customTitle,
+                    rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+    disp.setTextSize(1);
+    disp.setCursor(0, 46);
+    disp.print(lineBuf);
+  }
+  
+  // PWM Progress Bar at bottom
+  if (cfg.showPwmBar) {
+    int yPos = (cfg.rowCount >= 4) ? 55 : 52;
+    disp.setTextSize(1);
+    disp.setCursor(0, yPos);
+    disp.print("PWM:");
+    int barWidth = map(fanPercent, 0, 100, 0, 80);
+    disp.drawRect(30, yPos - 1, 82, 8, whiteColor);
+    disp.fillRect(31, yPos, barWidth, 6, whiteColor);
+  }
+  
+  disp.display();
+}
 
-    oled1_sh.setTextSize(2);
-    oled1_sh.setCursor(0, 14);
-    if (fanOn) {
-      oled1_sh.print(fanPercent);
-      oled1_sh.print("%");
+// ---- Firmware default layout for OLED 1 (legacy — used when config mode is OFF) ----
+template<typename Display>
+static void renderDefaultOled1(Display& disp, uint16_t whiteColor,
+                               uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn) {
+  disp.clearDisplay();
+  disp.setTextColor(whiteColor);
+  disp.setTextSize(1);
+  disp.setCursor(0, 0);
+  disp.print("LLANO SMART FAN");
+  disp.drawLine(0, 10, 127, 10, whiteColor);
+
+  disp.setTextSize(2);
+  disp.setCursor(0, 14);
+  if (fanOn) {
+    disp.print(fanPercent);
+    disp.print("%");
+  } else {
+    disp.print("OFF");
+  }
+
+  disp.setTextSize(1);
+  disp.setCursor(75, 14);
+  disp.print("RPM");
+  disp.setTextSize(2);
+  disp.setCursor(75, 24);
+  disp.print(rpm);
+
+  disp.drawLine(0, 42, 127, 42, whiteColor);
+  disp.setTextSize(1);
+  disp.setCursor(0, 46);
+  disp.print("PWM:");
+  int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
+  disp.drawRect(30, 45, 82, 8, whiteColor);
+  disp.fillRect(31, 46, barWidth, 6, whiteColor);
+
+  disp.setCursor(0, 56);
+  disp.print("LED: ");
+  if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
+    disp.print(LED_MODE_NAMES[ledMode]);
+  }
+  disp.display();
+}
+
+void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn,
+                       float cpuTemp, float gpuTemp, uint16_t cpuFanRpm, uint16_t gpuFanRpm,
+                       float cpuUsage, float gpuUsage, float cpuPower, float gpuPower,
+                       float cpuClock, float gpuClock, float ramUsed, float ramTotal) {
+  if (!_oled1Ok || _customOled1Active) return;
+  
+  if (_oled1ConfigMode) {
+    // Render using configurable layout
+    if (_oled1IsSsd) {
+      renderConfigLayout(oled1_ssd, SSD1306_WHITE, _oled1Config,
+                        rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
     } else {
-      oled1_sh.print("OFF");
+      renderConfigLayout(oled1_sh, SH110X_WHITE, _oled1Config,
+                        rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
+                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
     }
-
-    oled1_sh.setTextSize(1);
-    oled1_sh.setCursor(75, 14);
-    oled1_sh.print("RPM");
-    oled1_sh.setTextSize(2);
-    oled1_sh.setCursor(75, 24);
-    oled1_sh.print(rpm);
-
-    oled1_sh.drawLine(0, 42, 127, 42, SH110X_WHITE);
-    oled1_sh.setTextSize(1);
-    oled1_sh.setCursor(0, 46);
-    oled1_sh.print("PWM:");
-    int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
-    oled1_sh.drawRect(30, 45, 82, 8, SH110X_WHITE);
-    oled1_sh.fillRect(31, 46, barWidth, 6, SH110X_WHITE);
-
-    oled1_sh.setCursor(0, 56);
-    oled1_sh.print("LED: ");
-    if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
-      oled1_sh.print(LED_MODE_NAMES[ledMode]);
+  } else {
+    // Render firmware default layout
+    if (_oled1IsSsd) {
+      renderDefaultOled1(oled1_ssd, SSD1306_WHITE, rpm, fanPercent, ledMode, fanOn);
+    } else {
+      renderDefaultOled1(oled1_sh, SH110X_WHITE, rpm, fanPercent, ledMode, fanOn);
     }
-    oled1_sh.display();
   }
 }
 
@@ -240,10 +533,10 @@ void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
                             bool bleConnected, bool wifiConnected, const char* wifiIP) {
   if (!_oled2Ok || _customOled2Active) return;
 
+  // OLED 2 always uses its firmware default bicolor layout (no config mode for 0.96" screen)
   oled2.clearDisplay();
 
   // ---- Yellow zone (Y 0-15): Smart Fan RPM (Large Text Size 2) ----
-  // Always display completely rounded even 100 RPM numbers (300, 400, 500 ... 2800 RPM)
   uint16_t cleanRpm = (smartFanRpm > 0) ? (((smartFanRpm + 49) / 100) * 100) : 0;
   if (cleanRpm > 2800) cleanRpm = 2800;
 

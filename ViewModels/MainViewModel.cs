@@ -64,16 +64,20 @@ namespace SmartFanCooling.ViewModels
             {
                 App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
                 {
+                    _isSyncingFromHardware = true;
                     // Llano Laptop Fan max physical speed is ~2800 RPM.
-                    // 9990 RPM is an ESP32 hardware noise artifact (PC817 TACH debounce limit).
                     if (rpm > 0 && rpm <= 3500)
                     {
                         FanRpm = rpm;
+                        TargetRpm = (int)(Math.Round(rpm / 100.0) * 100);
+                        FanPwm = Math.Clamp((int)Math.Round(rpm / 28.0), 0, 100);
                     }
                     else
                     {
-                        FanRpm = (int)((FanPwm / 100.0) * 2800);
+                        FanRpm = (int)(Math.Round((FanPwm * 28.0) / 100.0) * 100);
+                        TargetRpm = FanRpm;
                     }
+                    _isSyncingFromHardware = false;
                 });
             };
             _serialService.OnFanPctReceived += fanPct =>
@@ -85,6 +89,9 @@ namespace SmartFanCooling.ViewModels
                         _isSyncingFromHardware = true;
                         FanPwm = Math.Clamp(fanPct, 0, 100);
                         IsFanStateOn = FanPwm > 0;
+                        int calculatedRpm = FanPwm > 0 ? (int)(Math.Round((FanPwm * 28.0) / 100.0) * 100) : 0;
+                        TargetRpm = calculatedRpm;
+                        FanRpm = calculatedRpm;
                         _isSyncingFromHardware = false;
                     }
                 });
@@ -184,16 +191,10 @@ namespace SmartFanCooling.ViewModels
 
                 if (IsConnected && ActiveConnectionType == "USB_SERIAL")
                 {
-                    _serialService.SendControl(FanPwm, SelectedLedMode, CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm);
-
-                    if (IsCustomOled1Enabled)
-                    {
-                        SendCustomOled1Frame();
-                    }
-                    if (IsCustomOled2Enabled)
-                    {
-                        SendCustomOled2Frame();
-                    }
+                    // Send full telemetry including extended data for configurable OLED layout
+                    _serialService.SendTemperature(CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm,
+                        CpuUsage, GpuUsage, CpuPowerW, GpuPowerW,
+                        CpuMaxClockGHz, GpuClockMHz, RamUsedGB, RamTotalGB);
                 }
 
                 // Update Native Floating OSD Overlay Window
