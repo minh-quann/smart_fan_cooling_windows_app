@@ -6,6 +6,7 @@
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+OutputInstaller/
 
 # Visual Studio & IDE temporary files
 .vs/

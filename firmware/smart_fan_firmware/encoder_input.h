@@ -1,5 +1,13 @@
 #pragma once
+
+#if __has_include(<Arduino.h>)
 #include <Arduino.h>
+#else
+#include <cstdint>
+#include <cstring>
+#include <string>
+using String = std::string;
+#endif
 
 // Button event types
 enum ButtonEvent : uint8_t {
