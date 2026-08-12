@@ -5,6 +5,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SmartFanCooling.Models;
+using SmartFanCooling.Styles;
 
 namespace SmartFanCooling.ViewModels
 {
@@ -20,8 +21,34 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private bool _isFanStateOn = true;
         private bool _isSyncingFromHardware = false;
 
+        public string FanAirflowCfmText => FanRpm > 0 ? $"{ (FanRpm * 0.0243f):F1} CFM" : "0.0 CFM";
+
+        public string FormattedFanRpmDisplay => FanRpm > 0 ? FanRpm.ToString() : "0000";
+
+        public string FanRpmTextColor => FanRpm > 0 ? AppColors.Gray50Hex : AppColors.Gray500Hex;
+
+        public string FanStatusTitle
+        {
+            get
+            {
+                if (FanRpm <= 0) return "OFF / DỪNG QUẠT";
+                if (FanPwm <= 35) return "SILENT / ÊM ÁI";
+                if (FanPwm <= 65) return "BALANCED / CÂN BẰNG";
+                if (FanPwm <= 85) return "PERFORMANCE / CAO";
+                return "TURBO EXTREME";
+            }
+        }
+
+        public string FanStatusColor => AppColors.GetFanStatusColorHex(FanRpm, FanPwm);
+
+        partial void OnFanRpmChanged(int value)
+        {
+            NotifyFanStatsChanged();
+        }
+
         partial void OnFanPwmChanged(int value)
         {
+            NotifyFanStatsChanged();
             if (!_isSyncingFromHardware)
             {
                 int calculatedRpm = value > 0 ? (int)(Math.Round((value * 28.0) / 100.0) * 100) : 0;
@@ -35,6 +62,15 @@ namespace SmartFanCooling.ViewModels
                     _serialService.SetFanSpeed(value);
                 }
             }
+        }
+
+        private void NotifyFanStatsChanged()
+        {
+            OnPropertyChanged(nameof(FanAirflowCfmText));
+            OnPropertyChanged(nameof(FanStatusTitle));
+            OnPropertyChanged(nameof(FanStatusColor));
+            OnPropertyChanged(nameof(FormattedFanRpmDisplay));
+            OnPropertyChanged(nameof(FanRpmTextColor));
         }
 
         partial void OnTargetRpmChanged(int value)
@@ -134,7 +170,7 @@ namespace SmartFanCooling.ViewModels
             {
                 Name = "Quiet",
                 Description = "Chế độ yên tĩnh cho công việc văn phòng",
-                ColorHex = "#4CAF50",
+                ColorHex = AppColors.Emerald500Hex,
                 IconGlyph = "\uE706",
                 MaxFanPwm = 50,
                 CurvePoints = new Dictionary<int, int> { { 30, 15 }, { 40, 25 }, { 50, 35 }, { 60, 45 }, { 70, 60 }, { 80, 75 }, { 90, 85 } }
@@ -144,7 +180,7 @@ namespace SmartFanCooling.ViewModels
             {
                 Name = "Balanced",
                 Description = "Chế độ cân bằng giữa độ ồn và hiệu năng tản nhiệt",
-                ColorHex = "#00BCD4",
+                ColorHex = AppColors.Cyan500Hex,
                 IconGlyph = "\uE9CA",
                 MaxFanPwm = 75,
                 CurvePoints = new Dictionary<int, int> { { 30, 20 }, { 40, 30 }, { 50, 45 }, { 60, 60 }, { 70, 75 }, { 80, 90 }, { 90, 100 } }
@@ -154,7 +190,7 @@ namespace SmartFanCooling.ViewModels
             {
                 Name = "Turbo",
                 Description = "Chế độ tối đa công suất quạt khi chơi game nặng / Render",
-                ColorHex = "#FF5722",
+                ColorHex = AppColors.Orange500Hex,
                 IconGlyph = "\uEBA3",
                 MaxFanPwm = 100,
                 CurvePoints = new Dictionary<int, int> { { 30, 40 }, { 40, 60 }, { 50, 75 }, { 60, 85 }, { 70, 95 }, { 80, 100 }, { 90, 100 } }
@@ -215,7 +251,7 @@ namespace SmartFanCooling.ViewModels
             {
                 Name = $"Custom {nextNum}",
                 Description = "Đường cong tùy chỉnh cá nhân",
-                ColorHex = "#9C27B0",
+                ColorHex = AppColors.Violet500Hex,
                 IconGlyph = "\uE9CA",
                 MaxFanPwm = 100,
                 CurvePoints = new Dictionary<int, int>

@@ -60,7 +60,7 @@
             </Grid>
         </Border>
 
-        <!-- Responsive 2-Column Dashboard Grid -->
+        <!-- Overview Dashboard View (Cyber Tachometer Gauge Enabled) -->
         <Grid ColumnSpacing="18">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="5*"/>
@@ -70,33 +70,60 @@
             <!-- LEFT COLUMN: RPM Gauge Widget & Quick Fan Control Widget -->
             <StackPanel Grid.Column="0" Spacing="16">
                 
-                <!-- RPM Radial Gauge Card Widget -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="16" HorizontalAlignment="Center">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE9CA;" Foreground="{ThemeResource SystemAccentColor}" FontSize="18"/>
-                                <TextBlock Text="LLANO SMART FAN HUB" FontWeight="Bold" FontSize="14"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,3">
-                                <TextBlock Text="{Binding ConnectionStatusText}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
-                            </Border>
-                        </Grid>
+                <!-- RPM Radial Cyber Gauge Card Widget (Sci-Fi Futuristic HUD Design) -->
+                <Border Background="{StaticResource Gray900Brush}" BorderBrush="{StaticResource Gray700Brush}" BorderThickness="1" CornerRadius="16" Padding="20">
+                    <Grid>
+                        <StackPanel Spacing="0" HorizontalAlignment="Center">
+                            <!-- Circular Sci-Fi Cyber Tachometer Gauge Display -->
+                            <Grid Width="250" Height="250" HorizontalAlignment="Center" Margin="0,2">
 
-                        <!-- Circular RPM Display Box -->
-                        <Border Width="190" Height="190" CornerRadius="95" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource SystemAccentColor}" BorderThickness="3" HorizontalAlignment="Center">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
-                                <FontIcon Glyph="&#xE9CA;" Foreground="{ThemeResource SystemAccentColor}" FontSize="28"/>
-                                <TextBlock Text="{Binding FanRpm}" FontSize="38" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{ThemeResource SystemAccentColor}"/>
-                                <TextBlock Text="RPM" FontSize="12" FontWeight="Bold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}PWM: {0}%'}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                                <!-- Sci-Fi HUD Outer Reticle Box / Corner Marks -->
+                                <Canvas Width="250" Height="250">
+                                    <Path Data="M 10,25 L 10,10 L 25,10" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                    <Path Data="M 225,10 L 240,10 L 240,25" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                    <Path Data="M 10,225 L 10,240 L 25,240" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                    <Path Data="M 225,240 L 240,240 L 240,225" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+
+                                    <Ellipse Canvas.Left="10" Canvas.Top="10" Width="230" Height="230" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1"/>
+                                    <Ellipse Canvas.Left="18" Canvas.Top="18" Width="214" Height="214" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1" Opacity="0.5"/>
+
+                                    <!-- Tachometer Scale Labels (Positioned Outside Arc) -->
+                                    <TextBlock Text="0%" Canvas.Left="30" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                    <TextBlock Text="25%" Canvas.Left="4" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                    <TextBlock Text="50%" Canvas.Left="112" Canvas.Top="2" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Cyan500Brush}"/>
+                                    <TextBlock Text="75%" Canvas.Left="220" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                    <TextBlock Text="100%" Canvas.Left="194" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                </Canvas>
+
+                                <!-- LAYER 1: Animated 6-Blade Fan Rotor Visualizer -->
+                                <Canvas x:Name="FanRotorCanvas" Width="240" Height="240" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                <!-- LAYER 2 & 3: Gauge Track & Dynamic Progress Arc Path -->
+                                <Canvas x:Name="GaugeArcCanvas" Width="240" Height="240">
+                                    <Ellipse Canvas.Left="34" Canvas.Top="34" Width="172" Height="172" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
+                                </Canvas>
+
+                                <!-- LAYER 4: Solid Cyber Core Center Hub Disc (Hides blade overlap) -->
+                                <Grid Width="136" Height="136" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Ellipse Width="136" Height="136" Fill="{StaticResource Gray950Brush}" Stroke="{StaticResource Gray700Brush}" StrokeThickness="2"/>
+                                    <Ellipse Width="124" Height="124" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
+                                    
+                                    <!-- Center Telemetry Readout -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
+                                        <FontIcon Glyph="&#xE9CA;" Foreground="{StaticResource Cyan500Brush}" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,1"/>
+                                        <TextBlock Text="{Binding FormattedFanRpmDisplay}" FontSize="32" FontWeight="ExtraBold" HorizontalAlignment="Center" Foreground="{Binding FanRpmTextColor}" CharacterSpacing="50"/>
+                                        <TextBlock Text="RPM" FontSize="10" FontWeight="ExtraBold" Foreground="{StaticResource Cyan500Brush}" HorizontalAlignment="Center" Margin="0,-2,0,4"/>
+
+                                        <!-- Live Telemetry Badge (PWM Only) -->
+                                        <Border Background="{StaticResource Gray800Brush}" CornerRadius="6" Padding="8,3" Margin="0,2,0,0" BorderBrush="{StaticResource Gray600Brush}" BorderThickness="1" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}PWM: {0}%'}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Green500Brush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- Dashboard Telemetry Refresh Rate Card Widget -->

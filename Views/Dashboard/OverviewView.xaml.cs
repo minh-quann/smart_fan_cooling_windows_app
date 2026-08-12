@@ -1,5 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using SmartFanCooling.ViewModels;
 using SmartFanCooling.Models;
 using System;
@@ -9,26 +11,195 @@ namespace SmartFanCooling.Views.Dashboard
     public sealed partial class OverviewView : UserControl
     {
         private int _draggingNodeIndex = -1;
+        private Storyboard? _rotorStoryboard;
+        private DoubleAnimation? _rotorAnimation;
+        private RotateTransform? _rotorTransform;
+        private ArcSegment? _fanArcSegment;
 
         public OverviewView()
         {
             this.InitializeComponent();
+
+            this.Loaded += (s, e) =>
+            {
+                InitializeGaugeArcs();
+                SetupGPUFanAnimation();
+            };
+
             this.DataContextChanged += (s, e) =>
             {
                 if (DataContext is MainViewModel vm)
                 {
                     vm.PropertyChanged += (sender, args) =>
                     {
-                        if (args.PropertyName != null && (args.PropertyName.StartsWith("CurveP") || args.PropertyName == nameof(MainViewModel.ActiveProfile)))
+                        if (args.PropertyName == null) return;
+
+                        if (args.PropertyName.StartsWith("CurveP") || args.PropertyName == nameof(MainViewModel.ActiveProfile))
                         {
                             RedrawOverviewFanCurveGraph();
                         }
+                        else if (args.PropertyName == nameof(MainViewModel.FanPwm) || args.PropertyName == nameof(MainViewModel.FanRpm))
+                        {
+                            UpdateFanGaugeArc();
+                            UpdateFanRotorSpeed();
+                        }
                     };
+
+                    UpdateFanGaugeArc();
+                    UpdateFanRotorSpeed();
                 }
             };
         }
 
         private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+        private Microsoft.UI.Xaml.Shapes.Path? _fanTrackArcPath;
+        private Microsoft.UI.Xaml.Shapes.Path? _fanArcPath;
+
+        private void InitializeGaugeArcs()
+        {
+            if (GaugeArcCanvas != null && _fanTrackArcPath == null)
+            {
+                _fanTrackArcPath = new Microsoft.UI.Xaml.Shapes.Path
+                {
+                    Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 26, 36, 54)),
+                    StrokeThickness = 10,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                    Data = Microsoft.UI.Xaml.Markup.XamlBindingHelper.ConvertValue(
+                        typeof(Geometry),
+                        "M 52,188 A 96 96 0 1 1 188,188"
+                    ) as Geometry
+                };
+                GaugeArcCanvas.Children.Add(_fanTrackArcPath);
+
+                _fanArcSegment = new ArcSegment
+                {
+                    Point = new Windows.Foundation.Point(52, 188),
+                    Size = new Windows.Foundation.Size(96, 96),
+                    SweepDirection = SweepDirection.Clockwise,
+                    IsLargeArc = false
+                };
+
+                var figure = new PathFigure
+                {
+                    StartPoint = new Windows.Foundation.Point(52, 188),
+                    IsClosed = false
+                };
+                figure.Segments.Add(_fanArcSegment);
+
+                var geometry = new PathGeometry();
+                geometry.Figures.Add(figure);
+
+                _fanArcPath = new Microsoft.UI.Xaml.Shapes.Path
+                {
+                    Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 240, 255)),
+                    StrokeThickness = 10,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                    Data = geometry
+                };
+                GaugeArcCanvas.Children.Add(_fanArcPath);
+            }
+
+            if (FanRotorCanvas != null && FanRotorCanvas.Children.Count == 0)
+            {
+                int bladeCount = 7;
+                double angleStep = 360.0 / bladeCount;
+                for (int i = 0; i < bladeCount; i++)
+                {
+                    var bladePath = new Microsoft.UI.Xaml.Shapes.Path
+                    {
+                        Data = Microsoft.UI.Xaml.Markup.XamlBindingHelper.ConvertValue(
+                            typeof(Geometry),
+                            "M 120,55 C 102,20 128,4 148,2 C 142,28 130,46 120,55 Z"
+                        ) as Geometry,
+                        Fill = new SolidColorBrush(Windows.UI.Color.FromArgb(90, 0, 240, 255)),
+                        Stroke = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 240, 255)),
+                        StrokeThickness = 1.5,
+                        RenderTransform = new RotateTransform { Angle = i * angleStep, CenterX = 120, CenterY = 120 }
+                    };
+                    FanRotorCanvas.Children.Add(bladePath);
+                }
+            }
+
+            UpdateFanGaugeArc();
+        }
+
+        private void SetupGPUFanAnimation()
+        {
+            if (FanRotorCanvas == null || _rotorStoryboard != null) return;
+
+            _rotorTransform = new RotateTransform { CenterX = 120, CenterY = 120 };
+            FanRotorCanvas.RenderTransform = _rotorTransform;
+
+            _rotorAnimation = new DoubleAnimation
+            {
+                From = 0,
+                To = 360,
+                Duration = new Duration(TimeSpan.FromSeconds(1.5)),
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+
+            Storyboard.SetTarget(_rotorAnimation, _rotorTransform);
+            Storyboard.SetTargetProperty(_rotorAnimation, "Angle");
+
+            _rotorStoryboard = new Storyboard();
+            _rotorStoryboard.Children.Add(_rotorAnimation);
+            _rotorStoryboard.Begin();
+
+            UpdateFanRotorSpeed();
+        }
+
+        private void UpdateFanRotorSpeed()
+        {
+            if (_rotorStoryboard == null) return;
+
+            int rpm = ViewModel?.FanRpm ?? 0;
+            int pwm = ViewModel?.FanPwm ?? 0;
+
+            double ratio = 0.0;
+            if (rpm > 0)
+            {
+                ratio = rpm / 2800.0;
+            }
+            else if (pwm > 0)
+            {
+                ratio = pwm / 100.0;
+            }
+
+            if (_rotorStoryboard.GetCurrentState() == ClockState.Stopped || _rotorStoryboard.GetCurrentState() == ClockState.Filling)
+            {
+                _rotorStoryboard.Begin();
+            }
+
+            // Smooth GPU animation speed ratio based on fan speed (0.0 stops, >0 scales speed)
+            _rotorStoryboard.SpeedRatio = ratio < 0.01 ? 0.0 : Math.Max(0.15, ratio * 2.5);
+        }
+
+        public void UpdateFanGaugeArc()
+        {
+            if (_fanArcSegment == null) return;
+
+            int pwm = Math.Clamp(ViewModel?.FanPwm ?? 0, 0, 100);
+
+            // Arc sweep from 135 deg to 405 deg (270 deg total range)
+            double startAngleDeg = 135.0;
+            double sweepRangeDeg = 270.0;
+            double currentAngleDeg = startAngleDeg + (pwm / 100.0 * sweepRangeDeg);
+            double currentAngleRad = currentAngleDeg * Math.PI / 180.0;
+
+            double centerX = 120.0;
+            double centerY = 120.0;
+            double radius = 96.0;
+
+            double endX = centerX + radius * Math.Cos(currentAngleRad);
+            double endY = centerY + radius * Math.Sin(currentAngleRad);
+
+            // Direct property update on ArcSegment (Zero Allocation, Direct GPU Render)
+            _fanArcSegment.Point = new Windows.Foundation.Point(endX, endY);
+            _fanArcSegment.IsLargeArc = (pwm / 100.0 * sweepRangeDeg) > 180.0;
+        }
 
         private void ProfileBtn_Click(object sender, RoutedEventArgs e)
         {

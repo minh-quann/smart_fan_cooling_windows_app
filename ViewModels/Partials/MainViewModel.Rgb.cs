@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SmartFanCooling.Styles;
 
 namespace SmartFanCooling.ViewModels
 {
@@ -12,7 +13,7 @@ namespace SmartFanCooling.ViewModels
     {
         // RGB Lighting
         [ObservableProperty] private int _selectedLedMode = 1;
-        [ObservableProperty] private string _selectedRgbColorHex = "#00BCD4";
+        [ObservableProperty] private string _selectedRgbColorHex = AppColors.Cyan500Hex;
         [ObservableProperty] private int _rgbBrightness = 80;
         [ObservableProperty] private int _rgbSpeed = 50;
         [ObservableProperty] private bool _isLedReverse = false;

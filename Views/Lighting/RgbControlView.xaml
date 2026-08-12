@@ -60,31 +60,31 @@
                     <ComboBox SelectedIndex="{Binding RainbowColorCountIndex, Mode=TwoWay}" HorizontalAlignment="Stretch">
                         <ComboBoxItem>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE790;" Foreground="#00BCD4" FontSize="13"/>
+                                <FontIcon Glyph="&#xE790;" Foreground="{StaticResource Cyan500Brush}" FontSize="13"/>
                                 <TextBlock Text="Vô cực / 360° Mượt (Full Continuous Spectrum)"/>
                             </StackPanel>
                         </ComboBoxItem>
                         <ComboBoxItem>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE71B;" Foreground="#FF5722" FontSize="13"/>
+                                <FontIcon Glyph="&#xE71B;" Foreground="{StaticResource Orange500Brush}" FontSize="13"/>
                                 <TextBlock Text="7 Sắc Cầu Vồng (Đỏ, Cam, Vàng, Lục, Lam, Chàm, Tím)"/>
                             </StackPanel>
                         </ComboBoxItem>
                         <ComboBoxItem>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE790;" Foreground="#FF9800" FontSize="13"/>
+                                <FontIcon Glyph="&#xE790;" Foreground="{StaticResource Amber500Brush}" FontSize="13"/>
                                 <TextBlock Text="5 Dải Màu Nổi Bật (5-Color Spectrum)"/>
                             </StackPanel>
                         </ComboBoxItem>
                         <ComboBoxItem>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE8D6;" Foreground="#4CAF50" FontSize="13"/>
+                                <FontIcon Glyph="&#xE8D6;" Foreground="{StaticResource Green500Brush}" FontSize="13"/>
                                 <TextBlock Text="3 Màu Cơ Bản (Tri-Color RGB)"/>
                             </StackPanel>
                         </ComboBoxItem>
                         <ComboBoxItem>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <FontIcon Glyph="&#xE9D9;" Foreground="#9C27B0" FontSize="13"/>
+                                <FontIcon Glyph="&#xE9D9;" Foreground="{StaticResource Violet500Brush}" FontSize="13"/>
                                 <TextBlock Text="2 Màu Đôi (Dual Tone)"/>
                             </StackPanel>
                         </ComboBoxItem>
@@ -102,23 +102,23 @@
                     <TextBlock Text="Bảng Màu Nhanh (Dùng cho Màu Cố Định / Nhịp Thở):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     <StackPanel Spacing="8">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Cyan" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#00BCD4" Background="#00BCD4" Foreground="Black"/>
-                            <Button Content="Red" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF5722" Background="#FF5722" Foreground="White"/>
-                            <Button Content="Green" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#4CAF50" Background="#4CAF50" Foreground="Black"/>
-                            <Button Content="Blue" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#2196F3" Background="#2196F3" Foreground="White"/>
-                            <Button Content="Yellow" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FFEB3B" Background="#FFEB3B" Foreground="Black"/>
+                            <Button Content="Cyan" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#00F0FF" Background="{StaticResource Cyan500Brush}" Foreground="Black"/>
+                            <Button Content="Red" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EF4444" Background="{StaticResource Red500Brush}" Foreground="White"/>
+                            <Button Content="Green" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#22C55E" Background="{StaticResource Green500Brush}" Foreground="Black"/>
+                            <Button Content="Blue" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#3B82F6" Background="{StaticResource Blue500Brush}" Foreground="White"/>
+                            <Button Content="Yellow" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EAB308" Background="{StaticResource Yellow500Brush}" Foreground="Black"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Purple" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#9C27B0" Background="#9C27B0" Foreground="White"/>
-                            <Button Content="Orange" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FF9800" Background="#FF9800" Foreground="Black"/>
-                            <Button Content="Pink" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#E91E63" Background="#E91E63" Foreground="White"/>
-                            <Button Content="White" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FFFFFF" Background="#FFFFFF" Foreground="Black"/>
+                            <Button Content="Purple" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#8B5CF6" Background="{StaticResource Violet500Brush}" Foreground="White"/>
+                            <Button Content="Orange" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#F97316" Background="{StaticResource Orange500Brush}" Foreground="Black"/>
+                            <Button Content="Pink" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EC4899" Background="{StaticResource Pink500Brush}" Foreground="White"/>
+                            <Button Content="White" Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FFFFFF" Background="{StaticResource Gray50Brush}" Foreground="Black"/>
                         </StackPanel>
                     </StackPanel>
 
                     <Grid Margin="0,4,0,0">
                         <TextBlock Text="Mã Màu HEX Tùy Chỉnh (#RRGGBB):" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBox Text="{Binding SelectedRgbColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="140" HorizontalAlignment="Right" PlaceholderText="#00BCD4"/>
+                        <TextBox Text="{Binding SelectedRgbColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="140" HorizontalAlignment="Right" PlaceholderText="#00F0FF"/>
                     </Grid>
                 </StackPanel>
 
