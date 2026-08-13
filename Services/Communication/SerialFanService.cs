@@ -127,7 +127,7 @@ namespace SmartFanCooling.Services
             float cpuClock = 0, float gpuClock = 0, float ramUsed = 0, float ramTotal = 0)
         {
             var inv = CultureInfo.InvariantCulture;
-            SendRawText($"{{\"cmd\":\"temp\",\"cpu\":{cpuTemp.ToString("F1", inv)},\"gpu\":{gpuTemp.ToString("F1", inv)},\"cpu_fan\":{cpuFanRpm},\"gpu_fan\":{gpuFanRpm},\"cpu_usage\":{cpuUsage.ToString("F1", inv)},\"gpu_usage\":{gpuUsage.ToString("F1", inv)},\"cpu_power\":{cpuPower.ToString("F1", inv)},\"gpu_power\":{gpuPower.ToString("F1", inv)},\"cpu_clock\":{cpuClock.ToString("F2", inv)},\"gpu_clock\":{gpuClock.ToString("F0", inv)},\"ram_used\":{ramUsed.ToString("F1", inv)},\"ram_total\":{ramTotal.ToString("F1", inv)}}}");
+            SendRawText($"{{\"cmd\":\"temp\",\"cpu\":{cpuTemp.ToString("F1", inv)},\"gpu\":{gpuTemp.ToString("F1", inv)},\"cpu_fan\":{cpuFanRpm},\"gpu_fan\":{gpuFanRpm},\"cpu_usage\":{cpuUsage.ToString("F1", inv)},\"gpu_usage\":{gpuUsage.ToString("F1", inv)},\"cpu_power\":{cpuPower.ToString("F1", inv)},\"gpu_power\":{gpuPower.ToString("F1", inv)},\"cpu_clock\":{cpuClock.ToString("F2", inv)},\"gpu_clock\":{gpuClock.ToString("F0", inv)},\"ram_used\":{ramUsed.ToString("F1", inv)},\"ram_total\":{ramTotal.ToString("F1", inv)},\"time\":\"{DateTime.Now:HH:mm}\"}}");
         }
 
         public void SendOledBitmap(int dispIndex, string hexData)

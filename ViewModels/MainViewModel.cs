@@ -120,6 +120,7 @@ namespace SmartFanCooling.ViewModels
             LoadRpmPresets();
             RefreshComPorts();
             CheckAndAutoConnectDevices();
+            InitializeSystemSettings();
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DashboardRefreshIntervalMs) };
             _timer.Tick += Timer_Tick;

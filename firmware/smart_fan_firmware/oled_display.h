@@ -11,7 +11,8 @@ enum OledWidget : uint8_t {
   WIDGET_RAM_TELEMETRY = 5,  // RAM: 8.2/16.0GB
   WIDGET_POWER         = 6,  // PWR: 28W / 65W
   WIDGET_CLOCK         = 7,  // CLK: 4.2G / 1850M
-  WIDGET_COUNT         = 8
+  WIDGET_TIME          = 8,  // TIME: 19:33
+  WIDGET_COUNT         = 9
 };
 
 // ---- OLED Layout Configuration (per display) ----
@@ -31,7 +32,8 @@ void initDisplays();
 void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn,
                        float cpuTemp, float gpuTemp, uint16_t cpuFanRpm, uint16_t gpuFanRpm,
                        float cpuUsage, float gpuUsage, float cpuPower, float gpuPower,
-                       float cpuClock, float gpuClock, float ramUsed, float ramTotal);
+                       float cpuClock, float gpuClock, float ramUsed, float ramTotal,
+                       const char* timeStr = "00:00");
 
 void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
                             float cpuTemp, float gpuTemp,

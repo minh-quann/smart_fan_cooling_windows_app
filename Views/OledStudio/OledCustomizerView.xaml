@@ -119,29 +119,21 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <!-- Layout Screen 1 (SH1106) -->
-                                            <StackPanel Grid.Row="0" Visibility="{Binding IsOled1TabActive, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                <TextBlock Text="{Binding Oled1DefaultHeader}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="13" FontWeight="Bold"/>
-                                                <Border Height="1" Background="#00E5FF" Margin="0,4,0,4"/>
-                                                <Grid Margin="0,2,0,2">
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Oled1DefaultFanStatus}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="20" FontWeight="Bold"/>
-                                                    </StackPanel>
-                                                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                        <TextBlock Text="RPM" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold" HorizontalAlignment="Right"/>
-                                                        <TextBlock Text="{Binding Oled1DefaultRpmText}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                                <Border Height="1" Background="#00E5FF" Margin="0,4,0,4"/>
-                                                <Grid Margin="0,2,0,2">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="PWM: " Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="Bold"/>
-                                                    <ProgressBar Grid.Column="1" Value="{Binding FanPwm}" Maximum="100" Height="6" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#00E5FF" Background="#2200E5FF"/>
-                                                </Grid>
-                                                <TextBlock Text="{Binding Oled1DefaultLedModeText}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            <!-- Layout Screen 1 (1.3" SH1106/SSD1306) -->
+                                            <StackPanel Grid.Row="0" Visibility="{Binding IsOled1TabActive, Converter={StaticResource BoolToVisibilityConverter}}" Spacing="2">
+                                                <!-- Dòng 1: Fan RPM & Fan % -->
+                                                <TextBlock Text="{Binding Oled1DefaultFanLine}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="Bold"/>
+                                                <Border Height="1" Background="#00E5FF" Margin="0,2,0,2"/>
+
+                                                <!-- Khung dưới: CPU, GPU, RAM (User %, Temp, Speed GHz) -->
+                                                <TextBlock Text="{Binding Oled1DefaultCpuText}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Oled1DefaultGpuText}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Oled1DefaultRamText}" Foreground="#FFFFFF" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="SemiBold"/>
+
+                                                <Border Height="1" Background="#00E5FF" Margin="0,2,0,2"/>
+
+                                                <!-- Dưới cùng: Thời gian hiện tại (Giờ:Phút) & Mode LED -->
+                                                <TextBlock Text="{Binding Oled1DefaultTimeText}" Foreground="#FFB74D" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
                                             </StackPanel>
 
                                             <!-- Layout Screen 2 (0.96" SSD1306 Bicolor Yellow/Blue - updateSecondaryDisplay) -->
@@ -361,6 +353,12 @@
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE8B9;" Foreground="#E91E63" FontSize="13"/>
                                         <TextBlock Text="Bộ nhớ RAM System"/>
+                                    </StackPanel>
+                                </ComboBoxItem>
+                                <ComboBoxItem Tag="TIME_TELEMETRY">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE815;" Foreground="#FFB74D" FontSize="13"/>
+                                        <TextBlock Text="Thời gian hệ thống (Giờ:Phút)"/>
                                     </StackPanel>
                                 </ComboBoxItem>
                                 <ComboBoxItem Tag="HEADER_TITLE">

@@ -297,23 +297,36 @@ static void buildWidgetText(char* out, size_t outLen, OledWidget widget,
                             float cpuUsage, float gpuUsage,
                             float cpuPower, float gpuPower,
                             float cpuClock, float gpuClock,
-                            float ramUsed, float ramTotal) {
+                            float ramUsed, float ramTotal,
+                            const char* timeStr) {
   switch (widget) {
     case WIDGET_HEADER_TITLE:
       snprintf(out, outLen, "%s", customTitle);
       break;
     case WIDGET_CPU_TELEMETRY:
-      if (cpuTemp > 0) {
-        snprintf(out, outLen, "CPU: %.0fC | %.0f%%", cpuTemp, cpuUsage);
+      if (cpuPower > 0 && cpuClock > 0) {
+        snprintf(out, outLen, "CPU:%.0f%% %.0fC %.1fG %.0fW", cpuUsage, cpuTemp > 0 ? cpuTemp : 0, cpuClock, cpuPower);
+      } else if (cpuClock > 0) {
+        snprintf(out, outLen, "CPU:%.0f%% %.0fC %.1fG", cpuUsage, cpuTemp > 0 ? cpuTemp : 0, cpuClock);
+      } else if (cpuTemp > 0) {
+        snprintf(out, outLen, "CPU:%.0f%% %.0fC", cpuUsage, cpuTemp);
       } else {
-        snprintf(out, outLen, "CPU: --C | %.0f%%", cpuUsage);
+        snprintf(out, outLen, "CPU:%.0f%% --C", cpuUsage);
       }
       break;
     case WIDGET_GPU_TELEMETRY:
-      if (gpuTemp > 0) {
-        snprintf(out, outLen, "GPU: %.0fC | %.0f%%", gpuTemp, gpuUsage);
+      if (gpuPower > 0 && gpuClock >= 1000) {
+        snprintf(out, outLen, "GPU:%.0f%% %.0fC %.1fG %.0fW", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock / 1000.0f, gpuPower);
+      } else if (gpuPower > 0 && gpuClock > 0) {
+        snprintf(out, outLen, "GPU:%.0f%% %.0fC %.0fM %.0fW", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock, gpuPower);
+      } else if (gpuClock >= 1000) {
+        snprintf(out, outLen, "GPU:%.0f%% %.0fC %.1fG", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock / 1000.0f);
+      } else if (gpuClock > 0) {
+        snprintf(out, outLen, "GPU:%.0f%% %.0fC %.0fM", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock);
+      } else if (gpuTemp > 0) {
+        snprintf(out, outLen, "GPU:%.0f%% %.0fC", gpuUsage, gpuTemp);
       } else {
-        snprintf(out, outLen, "GPU: --C | %.0f%%", gpuUsage);
+        snprintf(out, outLen, "GPU:%.0f%% --C", gpuUsage);
       }
       break;
     case WIDGET_FAN_TELEMETRY: {
@@ -327,7 +340,8 @@ static void buildWidgetText(char* out, size_t outLen, OledWidget widget,
       break;
     case WIDGET_RAM_TELEMETRY:
       if (ramTotal > 0) {
-        snprintf(out, outLen, "RAM: %.1f/%.1fGB", ramUsed, ramTotal);
+        float pct = (ramUsed / ramTotal) * 100.0f;
+        snprintf(out, outLen, "RAM: %.0f%% %.1f/%.1fG", pct, ramUsed, ramTotal);
       } else {
         snprintf(out, outLen, "RAM: --/--GB");
       }
@@ -337,6 +351,9 @@ static void buildWidgetText(char* out, size_t outLen, OledWidget widget,
       break;
     case WIDGET_CLOCK:
       snprintf(out, outLen, "CLK: %.1fG/%.0fM", cpuClock, gpuClock);
+      break;
+    case WIDGET_TIME:
+      snprintf(out, outLen, "TIME: %s", (timeStr && timeStr[0]) ? timeStr : "--:--");
       break;
     default:
       snprintf(out, outLen, "---");
@@ -355,7 +372,8 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
                                float cpuUsage, float gpuUsage,
                                float cpuPower, float gpuPower,
                                float cpuClock, float gpuClock,
-                               float ramUsed, float ramTotal) {
+                               float ramUsed, float ramTotal,
+                               const char* timeStr) {
   disp.clearDisplay();
   disp.setTextColor(whiteColor);
   
@@ -365,7 +383,7 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     // ---- 2-Row Layout: Large text (Size 2) ----
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(2);
     disp.setCursor(0, 2);
     disp.print(lineBuf);
@@ -374,7 +392,7 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(2);
     disp.setCursor(0, 26);
     disp.print(lineBuf);
@@ -385,7 +403,7 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     // ---- 3-Row Layout: Header Size 2 + 2 rows Size 1 ----
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(2);
     disp.setCursor(0, 2);
     disp.print(lineBuf);
@@ -394,14 +412,14 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 24);
     disp.print(lineBuf);
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[2], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 36);
     disp.print(lineBuf);
@@ -412,7 +430,7 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     // ---- 4-Row Layout: All Size 1, compact detail view ----
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[0], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 0);
     disp.print(lineBuf);
@@ -421,14 +439,14 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[1], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 14);
     disp.print(lineBuf);
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[2], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 28);
     disp.print(lineBuf);
@@ -437,7 +455,7 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
     
     buildWidgetText(lineBuf, sizeof(lineBuf), cfg.rows[3], cfg.customTitle,
                     rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                    cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     disp.setTextSize(1);
     disp.setCursor(0, 46);
     disp.print(lineBuf);
@@ -457,53 +475,85 @@ static void renderConfigLayout(Display& disp, uint16_t whiteColor,
   disp.display();
 }
 
-// ---- Firmware default layout for OLED 1 (legacy — used when config mode is OFF) ----
+// ---- Firmware default layout for OLED 1 (1.3" display) ----
 template<typename Display>
 static void renderDefaultOled1(Display& disp, uint16_t whiteColor,
-                               uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn) {
+                               uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn,
+                               float cpuTemp, float gpuTemp, float cpuUsage, float gpuUsage,
+                               float cpuPower, float gpuPower,
+                               float cpuClock, float gpuClock, float ramUsed, float ramTotal,
+                               const char* timeStr) {
   disp.clearDisplay();
   disp.setTextColor(whiteColor);
   disp.setTextSize(1);
+
+  // ---- Dòng 1 (Y=0): RPM Fan & % Fan ----
   disp.setCursor(0, 0);
-  disp.print("LLANO SMART FAN");
+  uint16_t cleanRpm = (rpm > 0) ? (((rpm + 49) / 100) * 100) : 0;
+  if (cleanRpm > 2800) cleanRpm = 2800;
+  if (fanOn) {
+    disp.printf("%u RPM | PWM %u%%", cleanRpm, fanPercent);
+  } else {
+    disp.print("FAN: OFF | 0 RPM");
+  }
+
   disp.drawLine(0, 10, 127, 10, whiteColor);
 
-  disp.setTextSize(2);
+  // ---- Khung dưới: CPU, GPU, RAM ----
+  // Line 2 (Y=14): CPU Usage %, Temp, Speed (GHz), Power (W)
   disp.setCursor(0, 14);
-  if (fanOn) {
-    disp.print(fanPercent);
-    disp.print("%");
+  if (cpuPower > 0 && cpuClock > 0) {
+    disp.printf("CPU:%.0f%% %.0fC %.1fG %.0fW", cpuUsage, cpuTemp > 0 ? cpuTemp : 0, cpuClock, cpuPower);
+  } else if (cpuClock > 0) {
+    disp.printf("CPU:%.0f%% %.0fC %.1fG", cpuUsage, cpuTemp > 0 ? cpuTemp : 0, cpuClock);
+  } else if (cpuTemp > 0) {
+    disp.printf("CPU:%.0f%% %.0fC", cpuUsage, cpuTemp);
   } else {
-    disp.print("OFF");
+    disp.printf("CPU:%.0f%% --C", cpuUsage);
   }
 
-  disp.setTextSize(1);
-  disp.setCursor(75, 14);
-  disp.print("RPM");
-  disp.setTextSize(2);
-  disp.setCursor(75, 24);
-  disp.print(rpm);
+  // Line 3 (Y=26): GPU Usage %, Temp, Speed (GHz/MHz), Power (W)
+  disp.setCursor(0, 26);
+  if (gpuPower > 0 && gpuClock >= 1000) {
+    disp.printf("GPU:%.0f%% %.0fC %.1fG %.0fW", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock / 1000.0f, gpuPower);
+  } else if (gpuPower > 0 && gpuClock > 0) {
+    disp.printf("GPU:%.0f%% %.0fC %.0fM %.0fW", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock, gpuPower);
+  } else if (gpuClock >= 1000) {
+    disp.printf("GPU:%.0f%% %.0fC %.1fG", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock / 1000.0f);
+  } else if (gpuClock > 0) {
+    disp.printf("GPU:%.0f%% %.0fC %.0fM", gpuUsage, gpuTemp > 0 ? gpuTemp : 0, gpuClock);
+  } else if (gpuTemp > 0) {
+    disp.printf("GPU:%.0f%% %.0fC", gpuUsage, gpuTemp);
+  } else {
+    disp.printf("GPU:%.0f%% --C", gpuUsage);
+  }
 
-  disp.drawLine(0, 42, 127, 42, whiteColor);
-  disp.setTextSize(1);
-  disp.setCursor(0, 46);
-  disp.print("PWM:");
-  int barWidth = map(fanOn ? fanPercent : 0, 0, 100, 0, 80);
-  disp.drawRect(30, 45, 82, 8, whiteColor);
-  disp.fillRect(31, 46, barWidth, 6, whiteColor);
+  // Line 4 (Y=38): RAM Usage % & GB
+  disp.setCursor(0, 38);
+  if (ramTotal > 0) {
+    float ramPct = (ramUsed / ramTotal) * 100.0f;
+    disp.printf("RAM: %.0f%% %.1f/%.1fG", ramPct, ramUsed, ramTotal);
+  } else {
+    disp.print("RAM: --/--GB");
+  }
 
-  disp.setCursor(0, 56);
-  disp.print("LED: ");
+  disp.drawLine(0, 49, 127, 49, whiteColor);
+
+  // ---- Dưới cùng (Y=53): Thời gian hiện tại (Giờ:Phút) ----
+  disp.setCursor(0, 53);
+  disp.printf("TIME: %s", (timeStr && timeStr[0]) ? timeStr : "--:--");
   if (ledMode < sizeof(LED_MODE_NAMES) / sizeof(LED_MODE_NAMES[0])) {
-    disp.print(LED_MODE_NAMES[ledMode]);
+    disp.printf(" | %s", LED_MODE_NAMES[ledMode]);
   }
+
   disp.display();
 }
 
 void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool fanOn,
                        float cpuTemp, float gpuTemp, uint16_t cpuFanRpm, uint16_t gpuFanRpm,
                        float cpuUsage, float gpuUsage, float cpuPower, float gpuPower,
-                       float cpuClock, float gpuClock, float ramUsed, float ramTotal) {
+                       float cpuClock, float gpuClock, float ramUsed, float ramTotal,
+                       const char* timeStr) {
   if (!_oled1Ok || _customOled1Active) return;
   
   if (_oled1ConfigMode) {
@@ -511,18 +561,20 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
     if (_oled1IsSsd) {
       renderConfigLayout(oled1_ssd, SSD1306_WHITE, _oled1Config,
                         rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     } else {
       renderConfigLayout(oled1_sh, SH110X_WHITE, _oled1Config,
                         rpm, fanPercent, cpuTemp, gpuTemp, cpuFanRpm, gpuFanRpm,
-                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal);
+                        cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     }
   } else {
     // Render firmware default layout
     if (_oled1IsSsd) {
-      renderDefaultOled1(oled1_ssd, SSD1306_WHITE, rpm, fanPercent, ledMode, fanOn);
+      renderDefaultOled1(oled1_ssd, SSD1306_WHITE, rpm, fanPercent, ledMode, fanOn,
+                         cpuTemp, gpuTemp, cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     } else {
-      renderDefaultOled1(oled1_sh, SH110X_WHITE, rpm, fanPercent, ledMode, fanOn);
+      renderDefaultOled1(oled1_sh, SH110X_WHITE, rpm, fanPercent, ledMode, fanOn,
+                         cpuTemp, gpuTemp, cpuUsage, gpuUsage, cpuPower, gpuPower, cpuClock, gpuClock, ramUsed, ramTotal, timeStr);
     }
   }
 }

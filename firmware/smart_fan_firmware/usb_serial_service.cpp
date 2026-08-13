@@ -23,6 +23,7 @@ static float _cpuClock = 0;
 static float _gpuClock = 0;
 static float _ramUsed = 0;
 static float _ramTotal = 0;
+static char _timeStr[8] = "00:00";
 
 static String _rxBuffer = "";
 
@@ -123,7 +124,7 @@ static void handleUSBCommand(const char* payload) {
     _cpuFanRpm = doc["cpu_fan"] | 0;
     _gpuFanRpm = doc["gpu_fan"] | 0;
     
-    // Extended telemetry: usage, power, clocks, RAM
+    // Extended telemetry: usage, power, clocks, RAM, time
     _cpuUsage = doc["cpu_usage"] | _cpuUsage;
     _gpuUsage = doc["gpu_usage"] | _gpuUsage;
     _cpuPower = doc["cpu_power"] | _cpuPower;
@@ -132,6 +133,11 @@ static void handleUSBCommand(const char* payload) {
     _gpuClock = doc["gpu_clock"] | _gpuClock;
     _ramUsed  = doc["ram_used"]  | _ramUsed;
     _ramTotal = doc["ram_total"] | _ramTotal;
+    if (doc.containsKey("time")) {
+      const char* t = doc["time"] | "00:00";
+      strncpy(_timeStr, t, sizeof(_timeStr) - 1);
+      _timeStr[sizeof(_timeStr) - 1] = '\0';
+    }
     
     Serial.printf("USB: Temps CPU=%.1f GPU=%.1f CPU_FAN=%u GPU_FAN=%u\n", _cpuTemp, _gpuTemp, _cpuFanRpm, _gpuFanRpm);
   }
@@ -344,6 +350,7 @@ float getUSBCpuClock() { return _cpuClock; }
 float getUSBGpuClock() { return _gpuClock; }
 float getUSBRamUsed()  { return _ramUsed; }
 float getUSBRamTotal() { return _ramTotal; }
+const char* getUSBTimeStr() { return _timeStr; }
 
 void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn,
                      float cpuTemp, float gpuTemp) {

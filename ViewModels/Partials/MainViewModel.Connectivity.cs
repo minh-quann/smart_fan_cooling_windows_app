@@ -3,6 +3,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SmartFanCooling.Models;
+using SmartFanCooling.Services;
 
 namespace SmartFanCooling.ViewModels
 {
@@ -24,6 +25,72 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private bool _minimizeToTray = true;
         [ObservableProperty] private int _refreshIntervalMs = 1000;
         [ObservableProperty] private string _selectedBaudRate = "115200";
+
+        // Process Priority Setting (Normal, High, AboveNormal, BelowNormal, Realtime, Idle)
+        [ObservableProperty] private string _selectedProcessPriority = "Normal";
+
+        /// <summary>
+        /// Available process priority options for the ComboBox.
+        /// </summary>
+        public ObservableCollection<string> ProcessPriorityOptions { get; } = new()
+        {
+            "Realtime",
+            "High",
+            "AboveNormal",
+            "Normal",
+            "BelowNormal",
+            "Idle"
+        };
+
+        /// <summary>
+        /// Reads the actual system state for auto-start and process priority on app launch.
+        /// Called from constructor to ensure UI reflects the real system state.
+        /// </summary>
+        private void InitializeSystemSettings()
+        {
+            // Sync StartWithWindows toggle with actual Task Scheduler state (bypass OnChanged handler via SetProperty)
+            bool isRegistered = StartupService.IsStartupTaskRegistered();
+            SetProperty(ref _startWithWindows, isRegistered, nameof(StartWithWindows));
+
+            // Sync process priority with current process state
+            string currentPriority = ProcessPriorityService.GetCurrentPriority();
+            SetProperty(ref _selectedProcessPriority, currentPriority, nameof(SelectedProcessPriority));
+        }
+
+        /// <summary>
+        /// Handles StartWithWindows toggle change — registers or removes the scheduled task.
+        /// </summary>
+        partial void OnStartWithWindowsChanged(bool value)
+        {
+            if (value)
+            {
+                bool ok = StartupService.EnableStartup();
+                StatusMessage = ok
+                    ? "✅ Đã bật khởi động cùng Windows (Task Scheduler - Admin Elevation)."
+                    : "❌ Không thể đăng ký tác vụ khởi động cùng Windows. Hãy kiểm tra quyền Admin.";
+            }
+            else
+            {
+                StartupService.DisableStartup();
+                StatusMessage = "🔕 Đã tắt khởi động cùng Windows.";
+            }
+        }
+
+        /// <summary>
+        /// Handles process priority selection change — applies new priority immediately.
+        /// </summary>
+        partial void OnSelectedProcessPriorityChanged(string value)
+        {
+            bool ok = ProcessPriorityService.SetPriority(value);
+            if (ok)
+            {
+                StatusMessage = $"⚡ Đã thay đổi mức ưu tiên tiến trình: {value}";
+            }
+            else
+            {
+                StatusMessage = $"❌ Không thể đặt mức ưu tiên: {value}. Hãy kiểm tra quyền hệ thống.";
+            }
+        }
 
         [ObservableProperty] private bool _isAutoConnectEnabled = true;
         [ObservableProperty] private string _activeConnectionType = "DISCONNECTED";

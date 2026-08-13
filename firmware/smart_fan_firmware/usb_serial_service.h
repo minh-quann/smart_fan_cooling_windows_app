@@ -20,6 +20,7 @@ float getUSBCpuClock();
 float getUSBGpuClock();
 float getUSBRamUsed();
 float getUSBRamTotal();
+const char* getUSBTimeStr();
 
 // Notify app with current hardware state (newline-delimited JSON)
 void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn,

@@ -138,7 +138,7 @@ void loop() {
     updateMainDisplay(getFanRPM(), getFanPercent(), getLedMode(), isFanOn(),
                       cpuT, gpuT, cpuFan, gpuFan,
                       cpuUsage, gpuUsage, cpuPower, gpuPower,
-                      cpuClock, gpuClock, ramUsed, ramTotal);
+                      cpuClock, gpuClock, ramUsed, ramTotal, getUSBTimeStr());
     updateSecondaryDisplay(getFanRPM(), getFanPercent(), cpuT, gpuT, cpuFan, gpuFan,
                            isBLEConnected(), isWiFiConnected(),
                            isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str());

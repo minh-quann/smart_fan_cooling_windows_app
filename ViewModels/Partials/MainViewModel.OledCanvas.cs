@@ -112,6 +112,7 @@ namespace SmartFanCooling.ViewModels
                 "RAM_TELEMETRY" => $"RAM: {RamUsedGB.ToString("F1", inv)}/{RamTotalGB.ToString("F1", inv)}GB",
                 "POWER_TELEMETRY" => $"PWR: {CpuPowerW.ToString("F0", inv)}W/{GpuPowerW.ToString("F0", inv)}W",
                 "CLOCK_TELEMETRY" => $"CLK: {CpuMaxClockGHz.ToString("F1", inv)}G/{GpuClockMHz.ToString("F0", inv)}M",
+                "TIME_TELEMETRY" => $"TIME: {DateTime.Now:HH:mm}",
                 _ => fallbackText
             };
         }
@@ -120,25 +121,27 @@ namespace SmartFanCooling.ViewModels
         {
             var inv = System.Globalization.CultureInfo.InvariantCulture;
             var parts = new List<string>();
-            if (OledShowCpuTemp) parts.Add($"{CpuTemp.ToString("F0", inv)}C");
             if (OledShowCpuUsage) parts.Add($"{CpuUsage.ToString("F0", inv)}%");
+            if (OledShowCpuTemp) parts.Add($"{CpuTemp.ToString("F0", inv)}C");
             if (OledShowCpuClock) parts.Add($"{CpuMaxClockGHz.ToString("0.0", inv)}G");
             if (OledShowCpuPower) parts.Add($"{CpuPowerW.ToString("F0", inv)}W");
             if (OledShowCpuFan && CpuFanRpm > 0) parts.Add($"{CpuFanRpm}RPM");
-            return parts.Count > 0 ? "CPU: " + string.Join(" | ", parts) : "CPU: --";
+            string sep = parts.Count >= 4 ? " " : " | ";
+            return parts.Count > 0 ? "CPU:" + string.Join(sep, parts) : "CPU: --";
         }
 
         private string BuildGpuLineText()
         {
             var inv = System.Globalization.CultureInfo.InvariantCulture;
             var parts = new List<string>();
-            if (OledShowGpuTemp) parts.Add($"{GpuTemp.ToString("F0", inv)}C");
             if (OledShowGpuUsage) parts.Add($"{GpuUsage.ToString("F0", inv)}%");
-            if (OledShowGpuClock) parts.Add($"{GpuClockMHz.ToString("F0", inv)}M");
+            if (OledShowGpuTemp) parts.Add($"{GpuTemp.ToString("F0", inv)}C");
+            if (OledShowGpuClock) parts.Add(GpuClockMHz >= 1000 ? $"{(GpuClockMHz / 1000.0).ToString("0.1", inv)}G" : $"{GpuClockMHz.ToString("F0", inv)}M");
             if (OledShowGpuPower) parts.Add($"{GpuPowerW.ToString("F0", inv)}W");
             if (OledShowGpuVram) parts.Add($"{GpuVramUsedGB.ToString("F1", inv)}GB");
             if (OledShowGpuFan && GpuFanRpm > 0) parts.Add($"{GpuFanRpm}RPM");
-            return parts.Count > 0 ? "GPU: " + string.Join(" | ", parts) : "GPU: --";
+            string sep = parts.Count >= 4 ? " " : " | ";
+            return parts.Count > 0 ? "GPU:" + string.Join(sep, parts) : "GPU: --";
         }
 
         private string BuildFanLineText()
@@ -151,11 +154,18 @@ namespace SmartFanCooling.ViewModels
             return parts.Count > 0 ? string.Join(" | ", parts) : "LLANO SMART FAN";
         }
 
-        // Firmware Default Display Layout Properties (Matching firmware oled_display.cpp)
+        // Firmware Default Display Layout Properties (Matching firmware oled_display.cpp for OLED 1 1.3")
         public string Oled1DefaultHeader => "LLANO SMART FAN";
         public string Oled1DefaultFanStatus => FanPwm > 0 ? $"{FanPwm}%" : "OFF";
         public string Oled1DefaultRpmText => $"{FanRpm}";
         public string Oled1DefaultLedModeText => $"LED: {GetLedModeName(SelectedLedMode)}";
+
+        // New OLED 1.3" Layout Properties
+        public string Oled1DefaultFanLine => FanPwm > 0 ? $"{FanRpm} RPM | PWM: {FanPwm}%" : "FAN: OFF | 0 RPM";
+        public string Oled1DefaultCpuText => $"CPU:{CpuUsage:F0}% {(CpuTemp > 0 ? $"{CpuTemp:F0}C" : "--C")} {CpuMaxClockGHz:0.0}G {(CpuPowerW > 0 ? $"{CpuPowerW:F0}W" : "")}".TrimEnd();
+        public string Oled1DefaultGpuText => $"GPU:{GpuUsage:F0}% {(GpuTemp > 0 ? $"{GpuTemp:F0}C" : "--C")} {(GpuClockMHz >= 1000 ? $"{GpuClockMHz / 1000.0:0.1}G" : $"{GpuClockMHz:F0}M")} {(GpuPowerW > 0 ? $"{GpuPowerW:F0}W" : "")}".TrimEnd();
+        public string Oled1DefaultRamText => $"RAM: {(RamTotalGB > 0 ? (RamUsedGB / RamTotalGB * 100) : 0):F0}% | {RamUsedGB:F1}/{RamTotalGB:F1}GB";
+        public string Oled1DefaultTimeText => $"TIME: {DateTime.Now:HH:mm} | LED: {GetLedModeName(SelectedLedMode)}";
 
         public string Oled2DefaultRpmHeader => $"{((FanRpm > 0) ? (((FanRpm + 49) / 100) * 100) : 0)} RPM";
         public string Oled2DefaultCpuText => $"CPU: {CpuFanRpm} | {(CpuTemp > 0 ? $"{CpuTemp:F0}C" : "--C")}";
@@ -202,6 +212,7 @@ namespace SmartFanCooling.ViewModels
                 "RAM_TELEMETRY" => 5,
                 "POWER_TELEMETRY" => 6,
                 "CLOCK_TELEMETRY" => 7,
+                "TIME_TELEMETRY" => 8,
                 _ => 0
             };
         }
@@ -216,6 +227,11 @@ namespace SmartFanCooling.ViewModels
             OnPropertyChanged(nameof(Oled1DefaultFanStatus));
             OnPropertyChanged(nameof(Oled1DefaultRpmText));
             OnPropertyChanged(nameof(Oled1DefaultLedModeText));
+            OnPropertyChanged(nameof(Oled1DefaultFanLine));
+            OnPropertyChanged(nameof(Oled1DefaultCpuText));
+            OnPropertyChanged(nameof(Oled1DefaultGpuText));
+            OnPropertyChanged(nameof(Oled1DefaultRamText));
+            OnPropertyChanged(nameof(Oled1DefaultTimeText));
             OnPropertyChanged(nameof(Oled2DefaultRpmHeader));
             OnPropertyChanged(nameof(Oled2DefaultCpuText));
             OnPropertyChanged(nameof(Oled2DefaultGpuText));
