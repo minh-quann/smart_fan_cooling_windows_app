@@ -26,6 +26,7 @@ namespace SmartFanCooling.ViewModels
         private readonly IBleFanService _bleService;
         private readonly DispatcherTimer _timer;
         private bool _isUpdatingHardware = false;
+        private bool _staticInfoLoaded = false;
 
         // Selected Navigation Tab Index (0: Overview, 1: Fan Curve, 2: RGB, 3: App Profiles, 4: Hardware, 5: GPIO & Mouse Test, 6: HUD Overlay, 7: Settings)
         [ObservableProperty]
@@ -121,6 +122,7 @@ namespace SmartFanCooling.ViewModels
             RefreshComPorts();
             CheckAndAutoConnectDevices();
             InitializeSystemSettings();
+            LoadStaticHardwareInfo();
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DashboardRefreshIntervalMs) };
             _timer.Tick += Timer_Tick;
@@ -153,6 +155,8 @@ namespace SmartFanCooling.ViewModels
                 GpuPowerW = _hardwareService.GpuPowerW;
                 GpuClockMHz = _hardwareService.GpuClockMHz;
                 GpuVramUsedGB = _hardwareService.GpuVramUsedGB;
+                GpuHotSpotTemp = _hardwareService.GpuHotSpotTemp;
+                GpuMemoryTemp = _hardwareService.GpuMemoryTemp;
                 if (!string.IsNullOrEmpty(_hardwareService.GpuName) && _hardwareService.GpuName != "GPU")
                 {
                     GpuName = _hardwareService.GpuName;
@@ -163,6 +167,20 @@ namespace SmartFanCooling.ViewModels
                 RamUsedGB = _hardwareService.RamUsedGB;
                 if (_hardwareService.RamTotalGB > 0) RamTotalGB = _hardwareService.RamTotalGB;
                 RamStatusText = $"Bộ nhớ đã dùng: {RamUsedGB:F1} GB / {RamTotalGB:F1} GB";
+
+                // Motherboard / VRM Telemetry
+                MotherboardTemp = _hardwareService.MotherboardTemp;
+                VrmTemp = _hardwareService.VrmTemp;
+
+                // SSD / Storage Telemetry
+                SsdTempC = _hardwareService.SsdTempC;
+                SsdName = _hardwareService.SsdName;
+                DiskUsageInfo = _hardwareService.DiskUsageInfo;
+
+                // Network Adapters
+                NetworkAdaptersInfo = _hardwareService.NetworkAdaptersInfo;
+                WifiCardName = _hardwareService.WifiCardName;
+                EthernetCardName = _hardwareService.EthernetCardName;
 
                 // Laptop Fans
                 CpuFanRpm = _hardwareService.HardwareCpuFanRpm;
@@ -224,6 +242,29 @@ namespace SmartFanCooling.ViewModels
             {
                 _isUpdatingHardware = false;
             }
+        }
+        /// <summary>
+        /// Load static hardware information from the service (called once at startup).
+        /// Maps: Motherboard, BIOS, Windows Version, CPU cores/threads/base clock,
+        /// RAM type/speed/slots, GPU VRAM total, Storage info.
+        /// </summary>
+        private void LoadStaticHardwareInfo()
+        {
+            if (_staticInfoLoaded) return;
+            _staticInfoLoaded = true;
+
+            MotherboardName = _hardwareService.MotherboardName;
+            BiosVersion = _hardwareService.BiosVersion;
+            WindowsVersion = _hardwareService.WindowsVersion;
+            CpuCoreCount = _hardwareService.CpuCoreCount;
+            CpuThreadCount = _hardwareService.CpuThreadCount;
+            CpuBaseClockText = _hardwareService.CpuBaseClockText;
+            RamType = _hardwareService.RamType;
+            RamSpeed = _hardwareService.RamSpeed;
+            RamSlotCount = _hardwareService.RamSlotCount;
+            RamSlotUsed = _hardwareService.RamSlotUsed;
+            GpuVramTotalGB = _hardwareService.GpuVramTotalGB;
+            StorageInfo = _hardwareService.StorageInfo;
         }
     }
 }

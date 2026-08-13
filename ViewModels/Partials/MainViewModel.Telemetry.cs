@@ -23,6 +23,8 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private float _gpuClockMHz = 0f;
         [ObservableProperty] private float _gpuVramUsedGB = 0f;
         [ObservableProperty] private int _gpuFanRpm = 0;
+        [ObservableProperty] private float _gpuHotSpotTemp = 0f;
+        [ObservableProperty] private float _gpuMemoryTemp = 0f;
 
         // System RAM Telemetry
         [ObservableProperty] private float _ramUsagePercent = 0f;
@@ -32,5 +34,30 @@ namespace SmartFanCooling.ViewModels
 
         // Motherboard Telemetry
         [ObservableProperty] private float _motherboardTemp = 0f;
+        [ObservableProperty] private float _vrmTemp = 0f;
+
+        // SSD / Storage Telemetry
+        [ObservableProperty] private float _ssdTempC = 0f;
+        [ObservableProperty] private string _ssdName = "—";
+        [ObservableProperty] private string _diskUsageInfo = "—";
+
+        // Network Adapters
+        [ObservableProperty] private string _networkAdaptersInfo = "—";
+        [ObservableProperty] private string _wifiCardName = "—";
+        [ObservableProperty] private string _ethernetCardName = "—";
+
+        // Static System Info (loaded once at startup from HardwareMonitorService)
+        [ObservableProperty] private string _motherboardName = "—";
+        [ObservableProperty] private string _biosVersion = "—";
+        [ObservableProperty] private string _windowsVersion = "—";
+        [ObservableProperty] private int _cpuCoreCount = 0;
+        [ObservableProperty] private int _cpuThreadCount = 0;
+        [ObservableProperty] private string _cpuBaseClockText = "—";
+        [ObservableProperty] private string _ramType = "—";
+        [ObservableProperty] private int _ramSpeed = 0;
+        [ObservableProperty] private int _ramSlotCount = 0;
+        [ObservableProperty] private int _ramSlotUsed = 0;
+        [ObservableProperty] private float _gpuVramTotalGB = 0f;
+        [ObservableProperty] private string _storageInfo = "—";
     }
 }

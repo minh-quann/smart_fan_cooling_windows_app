@@ -8,34 +8,310 @@
         <converters:FloatFormatConverter x:Key="FloatFormatConverter"/>
     </UserControl.Resources>
 
-    <StackPanel Spacing="18">
-        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
-            <StackPanel Spacing="14">
-                <TextBlock Text="Thông Số Cảm Biến Phần Cứng Chi Tiết" FontSize="16" FontWeight="Bold"/>
-                <Grid RowSpacing="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Nhiệt Độ CPU Package:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16" Padding="0,0,0,24">
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Nhiệt Độ GPU Core:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
+            <!-- ============================================================ -->
+            <!-- SECTION 1: SYSTEM OVERVIEW                                   -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE770;" FontSize="18" Foreground="{StaticResource Cyan500Brush}"/>
+                        <TextBlock Text="Hệ Thống" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="RAM Hệ Thống Đã Dùng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamStatusText}" FontWeight="Bold"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Hệ điều hành:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding WindowsVersion}" FontWeight="SemiBold" TextWrapping="Wrap"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Nhiệt Độ Bo Mạch Chủ:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MotherboardTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold"/>
-                </Grid>
-            </StackPanel>
-        </Border>
-    </StackPanel>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Bo mạch chủ:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MotherboardName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Phiên bản BIOS:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding BiosVersion}" FontWeight="SemiBold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 2: CPU INFO                                          -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE950;" FontSize="18" Foreground="{StaticResource Cyan500Brush}"/>
+                        <TextBlock Text="Bộ Xử Lý (CPU)" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tên CPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Số nhân / luồng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding CpuCoreCount}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Cores /" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding CpuThreadCount}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Threads" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Xung nhịp cơ bản:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding CpuBaseClockText}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Xung nhịp hiện tại:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding CpuMaxClockGHz, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F2}'}" FontWeight="Bold" Foreground="{StaticResource Cyan500Brush}"/>
+                            <TextBlock Text="GHz" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Nhiệt độ Package:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold" Foreground="{StaticResource Cyan500Brush}"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Công suất (TDP):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} W'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Tải CPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding CpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} %'}" FontWeight="SemiBold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 3: GPU INFO                                          -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE7F4;" FontSize="18" Foreground="{StaticResource Emerald500Brush}"/>
+                        <TextBlock Text="Card Đồ Họa (GPU)" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tên GPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding GpuName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="VRAM (Tổng):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding GpuVramTotalGB, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1}'}" FontWeight="SemiBold"/>
+                            <TextBlock Text="GB" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="VRAM đang dùng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GpuVramUsedGB, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} GB'}" FontWeight="Bold" Foreground="{StaticResource Emerald500Brush}"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Nhiệt độ GPU Core:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding GpuTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold" Foreground="{StaticResource Emerald500Brush}"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="GPU Hot Spot:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding GpuHotSpotTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="GPU Memory Junc.:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding GpuMemoryTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Xung nhịp GPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding GpuClockMHz, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} MHz'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Công suất GPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding GpuPowerW, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} W'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Tải GPU:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding GpuUsage, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} %'}" FontWeight="SemiBold"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 4: RAM INFO                                          -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xEDA2;" FontSize="18" Foreground="{StaticResource Amber500Brush}"/>
+                        <TextBlock Text="Bộ Nhớ RAM" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Loại RAM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding RamType}" FontWeight="SemiBold"/>
+                            <TextBlock Text="-" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding RamSpeed}" FontWeight="SemiBold"/>
+                            <TextBlock Text="MHz" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Khe RAM (Slot):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding RamSlotUsed}" FontWeight="SemiBold"/>
+                            <TextBlock Text="/" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding RamSlotCount}" FontWeight="SemiBold"/>
+                            <TextBlock Text="khe đã sử dụng" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tổng dung lượng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamTotalGB, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1} GB'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Đang sử dụng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding RamUsedGB, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F1}'}" FontWeight="Bold" Foreground="{StaticResource Amber500Brush}"/>
+                            <TextBlock Text="GB" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="(" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding RamUsagePercent, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontWeight="Bold" Foreground="{StaticResource Amber500Brush}"/>
+                            <TextBlock Text="%)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 5: MOTHERBOARD SENSORS                               -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE9D9;" FontSize="18" Foreground="{StaticResource Red500Brush}"/>
+                        <TextBlock Text="Bo Mạch Chủ (Mainboard)" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Nhiệt độ Mainboard:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MotherboardTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="Bold" Foreground="{StaticResource Red500Brush}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nhiệt độ VRM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding VrmTemp, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0} °C'}" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Fan CPU (Laptop):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding CpuFanRpm}" FontWeight="Bold" Foreground="{StaticResource Red500Brush}"/>
+                            <TextBlock Text="RPM" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Fan GPU (Laptop):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="{Binding GpuFanRpm}" FontWeight="Bold" Foreground="{StaticResource Red500Brush}"/>
+                            <TextBlock Text="RPM" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 6: STORAGE & SSD                                     -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xEDA2;" FontSize="18" Foreground="{StaticResource Violet500Brush}"/>
+                        <TextBlock Text="Ổ Cứng (Storage)" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Ổ cứng vật lý:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StorageInfo}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Nhiệt độ SSD:" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SsdName}" FontWeight="Bold" Foreground="{StaticResource Violet500Brush}" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Dung lượng:" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Top"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DiskUsageInfo}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============================================================ -->
+            <!-- SECTION 7: NETWORK ADAPTERS                                  -->
+            <!-- ============================================================ -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="18">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE839;" FontSize="18" Foreground="{StaticResource Sky500Brush}"/>
+                        <TextBlock Text="Mạng (Network)" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                    <Grid RowSpacing="8" ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Card WiFi:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding WifiCardName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Card Ethernet:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding EthernetCardName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
