@@ -40,35 +40,47 @@
     <Watch Include="**\*.xaml" Exclude="obj\**\*;bin\**\*" />
   </ItemGroup>
 
+  <!-- Centralized Version Management -->
+  <!-- Pass version via: dotnet build -t:Installer -p:AppVersion=1.0.1 -->
+  <PropertyGroup>
+    <AppVersion Condition="'$(AppVersion)' == ''">1.0.0</AppVersion>
+    <Version>$(AppVersion)</Version>
+    <AssemblyVersion>$(AppVersion).0</AssemblyVersion>
+    <FileVersion>$(AppVersion).0</FileVersion>
+    <InformationalVersion>$(AppVersion)</InformationalVersion>
+  </PropertyGroup>
+
   <!-- Custom MSBuild Target for Inno Setup Installer Generation -->
-  <!-- Command to run: dotnet build -t:Installer  OR  dotnet build /t:Installer -->
+  <!-- Command: .\installer 1.0.1  OR  dotnet build -t:Installer -p:AppVersion=1.0.1 -->
   <Target Name="Installer">
+    <Message Text="=================================================================" Importance="high" />
+    <Message Text=" SMART FAN COOLING HUB - INSTALLER BUILD v$(AppVersion)          " Importance="high" />
     <Message Text="=================================================================" Importance="high" />
     <Message Text=" [1/2] PUBLISHING RELEASE BINARIES (win-x64)...                  " Importance="high" />
     <Message Text="=================================================================" Importance="high" />
     
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="Publish"
-             Properties="Configuration=Release;Platform=x64;RuntimeIdentifier=win-x64;SelfContained=true;WindowsAppSDKSelfContained=true" />
+             Properties="Configuration=Release;Platform=x64;RuntimeIdentifier=win-x64;SelfContained=true;WindowsAppSDKSelfContained=true;AppVersion=$(AppVersion)" />
 
     <Message Text="=================================================================" Importance="high" />
-    <Message Text=" [2/2] COMPILING INNO SETUP EXE INSTALLER...                     " Importance="high" />
+    <Message Text=" [2/2] COMPILING INNO SETUP EXE INSTALLER v$(AppVersion)...      " Importance="high" />
     <Message Text="=================================================================" Importance="high" />
 
-    <Exec Command="&quot;C:\Program Files\Inno Setup 7\ISCC.exe&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
+    <Exec Command="&quot;C:\Program Files\Inno Setup 7\ISCC.exe&quot; /DMyAppVersion=&quot;$(AppVersion)&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
           Condition="Exists('C:\Program Files\Inno Setup 7\ISCC.exe')" />
           
-    <Exec Command="&quot;C:\Program Files (x86)\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
+    <Exec Command="&quot;C:\Program Files (x86)\Inno Setup 6\ISCC.exe&quot; /DMyAppVersion=&quot;$(AppVersion)&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
           Condition="!Exists('C:\Program Files\Inno Setup 7\ISCC.exe') And Exists('C:\Program Files (x86)\Inno Setup 6\ISCC.exe')" />
 
-    <Exec Command="&quot;C:\Program Files\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
+    <Exec Command="&quot;C:\Program Files\Inno Setup 6\ISCC.exe&quot; /DMyAppVersion=&quot;$(AppVersion)&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
           Condition="!Exists('C:\Program Files\Inno Setup 7\ISCC.exe') And !Exists('C:\Program Files (x86)\Inno Setup 6\ISCC.exe') And Exists('C:\Program Files\Inno Setup 6\ISCC.exe')" />
 
-    <Exec Command="&quot;$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
+    <Exec Command="&quot;$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe&quot; /DMyAppVersion=&quot;$(AppVersion)&quot; &quot;$(MSBuildProjectDirectory)\build\installer.iss&quot;"
           Condition="!Exists('C:\Program Files\Inno Setup 7\ISCC.exe') And !Exists('C:\Program Files (x86)\Inno Setup 6\ISCC.exe') And !Exists('C:\Program Files\Inno Setup 6\ISCC.exe') And Exists('$(LocalAppData)\Programs\Inno Setup 6\ISCC.exe')" />
 
     <Message Text="=================================================================" Importance="high" />
-    <Message Text=" SUCCESS! Inno Setup Installer generated in OutputInstaller\      " Importance="high" />
+    <Message Text=" SUCCESS! v$(AppVersion) Installer => OutputInstaller\            " Importance="high" />
     <Message Text="=================================================================" Importance="high" />
   </Target>
 </Project>

@@ -282,7 +282,7 @@
 
                         <!-- Target RPM Slider -->
                         <TextBlock Text="Tốc Độ Quạt Mục Tiêu (RPM):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
-                        <Slider Minimum="0" Maximum="2800" StepFrequency="100" Value="{Binding TargetRpm, Mode=TwoWay}" IsEnabled="{Binding IsAutoMode, Converter={StaticResource InverseBoolConverter}}"/>
+                        <Slider Minimum="0" Maximum="2800" StepFrequency="100" Value="{Binding TargetRpm, Mode=TwoWay}" IsEnabled="{Binding CanControlFanSpeed}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>

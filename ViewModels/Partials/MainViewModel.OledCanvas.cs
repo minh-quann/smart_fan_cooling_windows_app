@@ -109,7 +109,7 @@ namespace SmartFanCooling.ViewModels
                 "GPU_TELEMETRY" => BuildGpuLineText(),
                 "FAN_TELEMETRY" => BuildFanLineText(),
                 "PWM_PCT" => $"PWM: {FanPwm}%",
-                "RAM_TELEMETRY" => $"RAM: {RamUsedGB.ToString("F1", inv)}/{RamTotalGB.ToString("F1", inv)}GB",
+                "RAM_TELEMETRY" => $"RAM: {RamUsedGB.ToString("F1", inv)}G | VRAM: {GpuVramUsedGB.ToString("F1", inv)}G",
                 "POWER_TELEMETRY" => $"PWR: {CpuPowerW.ToString("F0", inv)}W/{GpuPowerW.ToString("F0", inv)}W",
                 "CLOCK_TELEMETRY" => $"CLK: {CpuMaxClockGHz.ToString("F1", inv)}G/{GpuClockMHz.ToString("F0", inv)}M",
                 "TIME_TELEMETRY" => $"TIME: {DateTime.Now:HH:mm}",
@@ -164,7 +164,7 @@ namespace SmartFanCooling.ViewModels
         public string Oled1DefaultFanLine => FanPwm > 0 ? $"{FanRpm} RPM | PWM: {FanPwm}%" : "FAN: OFF | 0 RPM";
         public string Oled1DefaultCpuText => $"CPU:{CpuUsage:F0}% {(CpuTemp > 0 ? $"{CpuTemp:F0}C" : "--C")} {CpuMaxClockGHz:0.0}G {(CpuPowerW > 0 ? $"{CpuPowerW:F0}W" : "")}".TrimEnd();
         public string Oled1DefaultGpuText => $"GPU:{GpuUsage:F0}% {(GpuTemp > 0 ? $"{GpuTemp:F0}C" : "--C")} {(GpuClockMHz >= 1000 ? $"{GpuClockMHz / 1000.0:0.1}G" : $"{GpuClockMHz:F0}M")} {(GpuPowerW > 0 ? $"{GpuPowerW:F0}W" : "")}".TrimEnd();
-        public string Oled1DefaultRamText => $"RAM: {(RamTotalGB > 0 ? (RamUsedGB / RamTotalGB * 100) : 0):F0}% | {RamUsedGB:F1}/{RamTotalGB:F1}GB";
+        public string Oled1DefaultRamText => $"RAM: {RamUsedGB:F1}G | VRAM: {GpuVramUsedGB:F1}G";
         public string Oled1DefaultTimeText => $"TIME: {DateTime.Now:HH:mm} | LED: {GetLedModeName(SelectedLedMode)}";
 
         public string Oled2DefaultRpmHeader => $"{((FanRpm > 0) ? (((FanRpm + 49) / 100) * 100) : 0)} RPM";

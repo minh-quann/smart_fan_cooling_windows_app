@@ -178,10 +178,15 @@ namespace SmartFanCooling.ViewModels
                 CheckAndAutoConnectDevices();
                 UpdateEspHardwareTelemetry(IsConnected);
 
-                // When offline, Llano Hub RPM is strictly 0!
+                // When offline, Llano Hub RPM is strictly 0 — sync all fan state
                 if (!IsConnected)
                 {
+                    _isSyncingFromHardware = true;
                     FanRpm = 0;
+                    TargetRpm = 0;
+                    FanPwm = 0;
+                    IsFanStateOn = false;
+                    _isSyncingFromHardware = false;
                 }
                 else if (FanRpm < 300 || FanRpm > 3500)
                 {

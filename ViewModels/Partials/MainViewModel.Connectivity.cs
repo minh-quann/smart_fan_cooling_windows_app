@@ -15,6 +15,11 @@ namespace SmartFanCooling.ViewModels
         // Connection State
         [ObservableProperty] private string _selectedComPort = "";
         [ObservableProperty] private bool _isConnected = false;
+
+        partial void OnIsConnectedChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanControlFanSpeed));
+        }
         [ObservableProperty] private string _connectionStatusText = "OFFLINE";
         [ObservableProperty] private string _statusMessage = "Hệ thống sẵn sàng. Vui lòng chọn cổng COM để kết nối ESP32-S3.";
 

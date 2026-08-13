@@ -419,4 +419,36 @@
     <StaticResource x:Key="TextSecondaryBrush" ResourceKey="Gray300Brush"/>
     <StaticResource x:Key="TextStandbyBrush" ResourceKey="Gray500Brush"/>
 
+    <!-- =================================================================== -->
+    <!-- HIGH-TECH RAZOR-SHARP CYBER NEON SLIDER DESIGN SYSTEM               -->
+    <!-- Crisp 2px Solid Border, Zero-Blur Thumb & Sleek 6px Capsule Track   -->
+    <!-- =================================================================== -->
+    <x:Double x:Key="SliderTrackThemeHeight">6</x:Double>
+    <CornerRadius x:Key="SliderTrackCornerRadius">3</CornerRadius>
+    <Thickness x:Key="SliderThumbBorderThickness">2</Thickness>
+
+    <!-- Track Background (Deep Dark Slate) -->
+    <SolidColorBrush x:Key="SliderTrackFill" Color="#0B101D"/>
+    <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#121A2E"/>
+    <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#121A2E"/>
+    <SolidColorBrush x:Key="SliderTrackFillDisabled" Color="#070A12"/>
+
+    <!-- Track Active Fill (Vivid Cyan Accent #00F0FF) -->
+    <SolidColorBrush x:Key="SliderTrackValueFill" Color="#00F0FF"/>
+    <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#33F5FF"/>
+    <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#00C4D4"/>
+    <SolidColorBrush x:Key="SliderTrackValueFillDisabled" Color="#1C273B"/>
+
+    <!-- Thumb Pill (Solid Glowing Cyber Cyan #00F0FF - Solid Floating Capsule) -->
+    <SolidColorBrush x:Key="SliderThumbBackground" Color="#00F0FF"/>
+    <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="#33F5FF"/>
+    <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#00C4D4"/>
+    <SolidColorBrush x:Key="SliderThumbBackgroundDisabled" Color="#1E273B"/>
+
+    <!-- Thumb Outer Border (Matches Fill for Seamless Crisp Edge) -->
+    <SolidColorBrush x:Key="SliderThumbBorderBrush" Color="#00F0FF"/>
+    <SolidColorBrush x:Key="SliderThumbBorderBrushPointerOver" Color="#33F5FF"/>
+    <SolidColorBrush x:Key="SliderThumbBorderBrushPressed" Color="#00C4D4"/>
+    <SolidColorBrush x:Key="SliderThumbBorderBrushDisabled" Color="#2A374E"/>
+
 </ResourceDictionary>

@@ -14,11 +14,11 @@ namespace SmartFanCooling.ViewModels
     /// </summary>
     public partial class MainViewModel
     {
-        // Llano Smart Fan Speed & PWM
-        [ObservableProperty] private int _fanPwm = 43;
-        [ObservableProperty] private int _targetRpm = 1200;
-        [ObservableProperty] private int _fanRpm = 1200;
-        [ObservableProperty] private bool _isFanStateOn = true;
+        // Llano Smart Fan Speed & PWM (Default = 0 when disconnected, synced from real hardware when online)
+        [ObservableProperty] private int _fanPwm = 0;
+        [ObservableProperty] private int _targetRpm = 0;
+        [ObservableProperty] private int _fanRpm = 0;
+        [ObservableProperty] private bool _isFanStateOn = false;
         private bool _isSyncingFromHardware = false;
 
         public string FanAirflowCfmText => FanRpm > 0 ? $"{ (FanRpm * 0.0243f):F1} CFM" : "0.0 CFM";
@@ -163,6 +163,17 @@ namespace SmartFanCooling.ViewModels
 
         [ObservableProperty] private bool _isAutoMode = false;
         [ObservableProperty] private string _selectedFanCurve = "Balanced";
+
+        /// <summary>
+        /// Controls whether manual fan speed slider and preset controls are enabled.
+        /// Disabled when app is disconnected from ESP32 or when Auto Fan Curve Mode is enabled.
+        /// </summary>
+        public bool CanControlFanSpeed => IsConnected && !IsAutoMode;
+
+        partial void OnIsAutoModeChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanControlFanSpeed));
+        }
 
         private void InitializeDefaultProfiles()
         {

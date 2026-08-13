@@ -146,8 +146,8 @@ namespace SmartFanCooling.Views.Dashboard
 
             _rotorStoryboard = new Storyboard();
             _rotorStoryboard.Children.Add(_rotorAnimation);
-            _rotorStoryboard.Begin();
 
+            // Don't auto-start — let UpdateFanRotorSpeed decide based on actual RPM/PWM
             UpdateFanRotorSpeed();
         }
 
@@ -168,13 +168,20 @@ namespace SmartFanCooling.Views.Dashboard
                 ratio = pwm / 100.0;
             }
 
+            // Fan is OFF — fully stop animation
+            if (ratio < 0.01)
+            {
+                _rotorStoryboard.Stop();
+                return;
+            }
+
+            // Fan is ON — start if not running, then set speed
             if (_rotorStoryboard.GetCurrentState() == ClockState.Stopped || _rotorStoryboard.GetCurrentState() == ClockState.Filling)
             {
                 _rotorStoryboard.Begin();
             }
 
-            // Smooth GPU animation speed ratio based on fan speed (0.0 stops, >0 scales speed)
-            _rotorStoryboard.SpeedRatio = ratio < 0.01 ? 0.0 : Math.Max(0.15, ratio * 2.5);
+            _rotorStoryboard.SpeedRatio = Math.Max(0.15, ratio * 2.5);
         }
 
         public void UpdateFanGaugeArc()

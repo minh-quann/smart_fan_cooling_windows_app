@@ -2,10 +2,15 @@
 ; Inno Setup Script for Universal Smart Fan Cooling Hub
 ; Generates a professional single-file Setup EXE installer with Wizard, 
 ; Desktop/Start Menu shortcuts, Auto-start with Windows, and Uninstaller.
+;
+; Version is passed from MSBuild via /DMyAppVersion="x.y.z"
 ; =====================================================================
 
 #define MyAppName "Smart Fan Cooling Hub"
-#define MyAppVersion "1.0.0"
+; Allow version override from command-line: ISCC /DMyAppVersion="1.0.1" installer.iss
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.0"
+#endif
 #define MyAppPublisher "Smart Cooling Technology"
 #define MyAppURL "https://github.com/minh-quann/smart_fan_cooling_windows_app"
 #define MyAppExeName "smart_fan_cooling_windows_app.exe"
@@ -22,7 +27,7 @@ DefaultDirName={autopf}\SmartFanCooling
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=..\OutputInstaller
-OutputBaseFilename=Smart_Fan_Cooling_Setup_v2.1_CustomPresets
+OutputBaseFilename=Smart_Fan_Cooling_Setup_v{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
