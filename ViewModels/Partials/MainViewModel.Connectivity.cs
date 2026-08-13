@@ -48,13 +48,16 @@ namespace SmartFanCooling.ViewModels
         /// </summary>
         private void InitializeSystemSettings()
         {
-            // Sync StartWithWindows toggle with actual Task Scheduler state (bypass OnChanged handler via SetProperty)
+            // Intentionally bypass generated property to avoid triggering OnChanged handlers during init
+#pragma warning disable MVVMTK0034
+            // Sync StartWithWindows toggle with actual Task Scheduler state
             bool isRegistered = StartupService.IsStartupTaskRegistered();
             SetProperty(ref _startWithWindows, isRegistered, nameof(StartWithWindows));
 
             // Sync process priority with current process state
             string currentPriority = ProcessPriorityService.GetCurrentPriority();
             SetProperty(ref _selectedProcessPriority, currentPriority, nameof(SelectedProcessPriority));
+#pragma warning restore MVVMTK0034
         }
 
         /// <summary>
