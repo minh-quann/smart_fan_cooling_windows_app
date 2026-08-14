@@ -20,6 +20,7 @@ float getUSBCpuClock();
 float getUSBGpuClock();
 float getUSBRamUsed();
 float getUSBRamTotal();
+float getUSBBoardTemp();
 const char* getUSBTimeStr();
 
 // Notify app with current hardware state (newline-delimited JSON)

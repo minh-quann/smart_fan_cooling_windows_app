@@ -138,28 +138,28 @@
 
                                             <!-- Layout Screen 2 (0.96" SSD1306 Bicolor Yellow/Blue - updateSecondaryDisplay) -->
                                             <StackPanel Grid.Row="0" Spacing="4" Visibility="{Binding IsOled2TabActive, Converter={StaticResource BoolToVisibilityConverter}}">
-                                                <!-- Top Yellow Header Zone (Y 0-15): Smart Fan RPM (Size 2) -->
-                                                <Border Background="#1A1F2C" CornerRadius="4" Padding="6,3" Margin="0,0,0,2" BorderBrush="#FFD700" BorderThickness="1">
-                                                    <Grid>
-                                                        <TextBlock Text="{Binding Oled2DefaultRpmHeader}" Foreground="#FFD700" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold" HorizontalAlignment="Left"/>
-                                                        <TextBlock Text="[YELLOW ZONE]" Foreground="#FFD700" FontSize="9" Opacity="0.7" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                                    </Grid>
-                                                </Border>
+                                                 <!-- Top Yellow Header Zone (Y 0-15): Smart Fan RPM (Size 2) + RPM label + PWM % (Size 2) -->
+                                                 <Border Background="#1A1F2C" CornerRadius="4" Padding="6,3" Margin="0,0,0,2" BorderBrush="#FFD700" BorderThickness="1">
+                                                     <Grid>
+                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                             <TextBlock Text="{Binding Oled2DefaultRpmNumber}" Foreground="#FFD700" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold"/>
+                                                             <TextBlock Text="RPM" Foreground="#FFD700" FontFamily="Consolas, Courier New, monospace" FontSize="10" FontWeight="SemiBold" Margin="4,4,0,0"/>
+                                                         </StackPanel>
+                                                         <TextBlock Text="{Binding Oled2DefaultPwmPctText}" Foreground="#FFD700" FontFamily="Consolas, Courier New, monospace" FontSize="18" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                     </Grid>
+                                                 </Border>
 
-                                                <!-- Blue Content Zone (Y 16-63) -->
-                                                <StackPanel Spacing="6" Margin="0,2,0,0">
-                                                    <!-- CPU Line (Y=20) -->
-                                                    <TextBlock Text="{Binding Oled2DefaultCpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
-                                                    
-                                                    <!-- GPU Line (Y=36) -->
-                                                    <TextBlock Text="{Binding Oled2DefaultGpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
+                                                 <!-- Blue Content Zone (Y 16-63) -->
+                                                 <StackPanel Spacing="6" Margin="0,2,0,0">
+                                                     <!-- CPU Line (Y=20) -->
+                                                     <TextBlock Text="{Binding Oled2DefaultCpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
+                                                     
+                                                     <!-- GPU Line (Y=36) -->
+                                                     <TextBlock Text="{Binding Oled2DefaultGpuText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="SemiBold"/>
 
-                                                    <!-- PWM & Transport Line (Y=52) -->
-                                                    <Grid Margin="0,4,0,0">
-                                                        <TextBlock Text="{Binding Oled2DefaultPwmText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold"/>
-                                                        <TextBlock Text="{Binding Oled2DefaultTransportText}" Foreground="#4CAF50" FontFamily="Consolas, Courier New, monospace" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"/>
-                                                    </Grid>
-                                                </StackPanel>
+                                                     <!-- Board Temp Line (Y=52) -->
+                                                     <TextBlock Text="{Binding Oled2DefaultBoardText}" Foreground="#00E5FF" FontFamily="Consolas, Courier New, monospace" FontSize="12" FontWeight="Bold" Margin="0,4,0,0"/>
+                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
                                     </Grid>

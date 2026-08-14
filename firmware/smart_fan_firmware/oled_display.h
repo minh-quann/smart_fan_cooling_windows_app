@@ -38,7 +38,8 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
 void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
                             float cpuTemp, float gpuTemp,
                             uint16_t cpuFanRpm, uint16_t gpuFanRpm,
-                            bool bleConnected, bool wifiConnected, const char* wifiIP);
+                            bool bleConnected, bool wifiConnected, const char* wifiIP,
+                            float boardTemp = 0.0f);
 
 // Custom bitmap mode (legacy — send pre-rendered 1024-byte bitmap from PC)
 void drawCustomBitmap(uint8_t dispIndex, const uint8_t* bitmapData);

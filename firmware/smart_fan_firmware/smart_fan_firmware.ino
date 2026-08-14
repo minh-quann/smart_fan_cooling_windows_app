@@ -121,6 +121,7 @@ void loop() {
                  getWiFiCpuTemp() > 0 ? getWiFiCpuTemp() : getBLECpuTemp();
     float gpuT = getUSBGpuTemp() > 0 ? getUSBGpuTemp() :
                  getWiFiGpuTemp() > 0 ? getWiFiGpuTemp() : getBLEGpuTemp();
+    float boardT = getUSBBoardTemp() > 0 ? getUSBBoardTemp() : getWiFiBoardTemp();
 
     uint16_t cpuFan = getUSBCpuFanRpm();
     uint16_t gpuFan = getUSBGpuFanRpm();
@@ -141,7 +142,8 @@ void loop() {
                       cpuClock, gpuClock, ramUsed, ramTotal, getUSBTimeStr());
     updateSecondaryDisplay(getFanRPM(), getFanPercent(), cpuT, gpuT, cpuFan, gpuFan,
                            isBLEConnected(), isWiFiConnected(),
-                           isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str());
+                           isSTAConnected() ? getSTAIP().c_str() : getAPIP().c_str(),
+                           boardT);
     lastDisplayUpdate = now;
   }
 

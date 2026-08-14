@@ -582,20 +582,44 @@ void updateMainDisplay(uint16_t rpm, uint8_t fanPercent, uint8_t ledMode, bool f
 void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
                             float cpuTemp, float gpuTemp,
                             uint16_t cpuFanRpm, uint16_t gpuFanRpm,
-                            bool bleConnected, bool wifiConnected, const char* wifiIP) {
+                            bool bleConnected, bool wifiConnected, const char* wifiIP,
+                            float boardTemp) {
   if (!_oled2Ok || _customOled2Active) return;
 
   // OLED 2 always uses its firmware default bicolor layout (no config mode for 0.96" screen)
   oled2.clearDisplay();
 
-  // ---- Yellow zone (Y 0-15): Smart Fan RPM (Large Text Size 2) ----
+  // ---- Yellow zone (Y 0-15): Smart Fan RPM (Size 2) + PWM % (Size 2) ----
   uint16_t cleanRpm = (smartFanRpm > 0) ? (((smartFanRpm + 49) / 100) * 100) : 0;
   if (cleanRpm > 2800) cleanRpm = 2800;
 
-  oled2.setTextSize(2);
   oled2.setTextColor(SSD1306_WHITE);
+
+  // 1. RPM number in LARGE text size 2 on the left
+  oled2.setTextSize(2);
   oled2.setCursor(0, 0);
-  oled2.printf("%u RPM", cleanRpm);
+  oled2.printf("%u", cleanRpm);
+
+  // Calculate width of RPM digits to place small "RPM" label right after it
+  char rpmBuf[8];
+  snprintf(rpmBuf, sizeof(rpmBuf), "%u", cleanRpm);
+  uint8_t rpmDigitsLen = strlen(rpmBuf);
+  uint8_t rpmWidth = rpmDigitsLen * 12;
+
+  // 2. Small "RPM" label in text size 1 in the middle
+  oled2.setTextSize(1);
+  oled2.setCursor(rpmWidth + 3, 4);
+  oled2.print("RPM");
+
+  // 3. PWM percentage number in LARGE text size 2 on the right
+  oled2.setTextSize(2);
+  char pctBuf[8];
+  snprintf(pctBuf, sizeof(pctBuf), "%u%%", fanPercent);
+  uint8_t pctLen = strlen(pctBuf);
+  int16_t pctX = 128 - (pctLen * 12);
+  if (pctX < (rpmWidth + 24)) pctX = rpmWidth + 24;
+  oled2.setCursor(pctX, 0);
+  oled2.print(pctBuf);
 
   // ---- Blue zone (Y 16-63): Content ----
   oled2.setTextSize(1);
@@ -620,16 +644,17 @@ void updateSecondaryDisplay(uint16_t smartFanRpm, uint8_t fanPercent,
     oled2.print("--C");
   }
 
-  // PWM & Transport Status (Y=52)
+  // Board Temperature (Y=52) — replaces old PWM & USB line
   oled2.setCursor(0, 52);
-  oled2.printf("PWM: %u%%", fanPercent);
-  oled2.setCursor(75, 52);
-  if (wifiConnected) {
-    oled2.print("WiFi");
-  } else if (bleConnected) {
-    oled2.print("BLE");
+  if (boardTemp > 0.0f) {
+    oled2.printf("BOARD: %.0fC", boardTemp);
   } else {
-    oled2.print("USB");
+    float chipTemp = temperatureRead();
+    if (chipTemp > 0.0f && !isnan(chipTemp)) {
+      oled2.printf("BOARD: %.0fC", chipTemp);
+    } else {
+      oled2.print("BOARD: --C");
+    }
   }
 
   oled2.display();

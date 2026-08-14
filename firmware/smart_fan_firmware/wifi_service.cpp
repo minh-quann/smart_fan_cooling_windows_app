@@ -17,6 +17,7 @@ static String _staSsid = "";
 static bool _staConnected = false;
 static float _cpuTemp = 0;
 static float _gpuTemp = 0;
+static float _boardTemp = 0;
 static Preferences preferences;
 
 
@@ -62,7 +63,8 @@ static void handleCommand(uint8_t clientNum, const char* payload) {
   else if (strcmp(cmd, "temp") == 0) {
     _cpuTemp = doc["cpu"] | 0.0f;
     _gpuTemp = doc["gpu"] | 0.0f;
-    Serial.printf("WS: Temps CPU=%.1f GPU=%.1f\n", _cpuTemp, _gpuTemp);
+    _boardTemp = doc["board"] | doc["board_temp"] | 0.0f;
+    Serial.printf("WS: Temps CPU=%.1f GPU=%.1f BOARD=%.1f\n", _cpuTemp, _gpuTemp, _boardTemp);
   }
   else if (strcmp(cmd, "wifi_config") == 0) {
     const char* ssid = doc["ssid"];
@@ -257,6 +259,10 @@ float getWiFiCpuTemp() {
 
 float getWiFiGpuTemp() {
   return _gpuTemp;
+}
+
+float getWiFiBoardTemp() {
+  return _boardTemp;
 }
 
 void wsNotifyRPM(uint16_t rpm) {

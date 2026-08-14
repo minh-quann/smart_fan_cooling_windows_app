@@ -167,11 +167,11 @@ namespace SmartFanCooling.ViewModels
         public string Oled1DefaultRamText => $"RAM: {RamUsedGB:F1}G | VRAM: {GpuVramUsedGB:F1}G";
         public string Oled1DefaultTimeText => $"TIME: {DateTime.Now:HH:mm} | LED: {GetLedModeName(SelectedLedMode)}";
 
-        public string Oled2DefaultRpmHeader => $"{((FanRpm > 0) ? (((FanRpm + 49) / 100) * 100) : 0)} RPM";
+        public string Oled2DefaultRpmNumber => $"{((FanRpm > 0) ? (((FanRpm + 49) / 100) * 100) : 0)}";
+        public string Oled2DefaultPwmPctText => $"{FanPwm}%";
         public string Oled2DefaultCpuText => $"CPU: {CpuFanRpm} | {(CpuTemp > 0 ? $"{CpuTemp:F0}C" : "--C")}";
         public string Oled2DefaultGpuText => $"GPU: {GpuFanRpm} | {(GpuTemp > 0 ? $"{GpuTemp:F0}C" : "--C")}";
-        public string Oled2DefaultPwmText => $"PWM: {FanPwm}%";
-        public string Oled2DefaultTransportText => IsConnected ? (ActiveConnectionType == "WIFI" ? "WiFi" : (ActiveConnectionType == "BLE" ? "BLE" : "USB")) : "USB";
+        public string Oled2DefaultBoardText => $"BOARD: {(MotherboardTemp > 0 ? $"{MotherboardTemp:F1}C" : "--C")}";
 
         public bool IsOled1TabActive => ActiveOledScreenTab == 0;
         public bool IsOled2TabActive => ActiveOledScreenTab == 1;
@@ -232,11 +232,11 @@ namespace SmartFanCooling.ViewModels
             OnPropertyChanged(nameof(Oled1DefaultGpuText));
             OnPropertyChanged(nameof(Oled1DefaultRamText));
             OnPropertyChanged(nameof(Oled1DefaultTimeText));
-            OnPropertyChanged(nameof(Oled2DefaultRpmHeader));
+            OnPropertyChanged(nameof(Oled2DefaultRpmNumber));
+            OnPropertyChanged(nameof(Oled2DefaultPwmPctText));
             OnPropertyChanged(nameof(Oled2DefaultCpuText));
             OnPropertyChanged(nameof(Oled2DefaultGpuText));
-            OnPropertyChanged(nameof(Oled2DefaultPwmText));
-            OnPropertyChanged(nameof(Oled2DefaultTransportText));
+            OnPropertyChanged(nameof(Oled2DefaultBoardText));
             OnPropertyChanged(nameof(IsOled1TabActive));
             OnPropertyChanged(nameof(IsOled2TabActive));
             OnPropertyChanged(nameof(IsCurrentScreenCustomEnabled));

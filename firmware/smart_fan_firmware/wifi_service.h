@@ -15,6 +15,7 @@ bool configureSTAWiFi(const char* ssid, const char* pass, String& outIP);
 // Getters for values received from Flutter app via WiFi
 float getWiFiCpuTemp();
 float getWiFiGpuTemp();
+float getWiFiBoardTemp();
 
 // Notify all connected WebSocket clients
 void wsNotifyRPM(uint16_t rpm);

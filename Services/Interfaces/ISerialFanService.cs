@@ -31,7 +31,8 @@ namespace SmartFanCooling.Services.Interfaces
         void SendShutdown();
         void SendTemperature(float cpuTemp, float gpuTemp, int cpuFanRpm = 0, int gpuFanRpm = 0,
             float cpuUsage = 0, float gpuUsage = 0, float cpuPower = 0, float gpuPower = 0,
-            float cpuClock = 0, float gpuClock = 0, float ramUsed = 0, float ramTotal = 0);
+            float cpuClock = 0, float gpuClock = 0, float ramUsed = 0, float ramTotal = 0,
+            float boardTemp = 0);
         void SendOledBitmap(int dispIndex, string hexData);
         void SetCustomOledMode(int dispIndex, bool enable);
         void SendOledConfig(int dispIndex, int rowCount, int row1, int row2, int row3, int row4,

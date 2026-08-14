@@ -218,7 +218,7 @@ namespace SmartFanCooling.ViewModels
                     // Send full telemetry including extended data for configurable OLED layout
                     _serialService.SendTemperature(CpuTemp, GpuTemp, CpuFanRpm, GpuFanRpm,
                         CpuUsage, GpuUsage, CpuPowerW, GpuPowerW,
-                        CpuMaxClockGHz, GpuClockMHz, RamUsedGB, RamTotalGB);
+                        CpuMaxClockGHz, GpuClockMHz, RamUsedGB, RamTotalGB, MotherboardTemp);
                 }
 
                 // Update Native Floating OSD Overlay Window

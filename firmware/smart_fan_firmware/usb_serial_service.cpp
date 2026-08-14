@@ -23,6 +23,7 @@ static float _cpuClock = 0;
 static float _gpuClock = 0;
 static float _ramUsed = 0;
 static float _ramTotal = 0;
+static float _boardTemp = 0;
 static char _timeStr[8] = "00:00";
 
 static String _rxBuffer = "";
@@ -133,8 +134,9 @@ static void handleUSBCommand(const char* payload) {
     _gpuClock = doc["gpu_clock"] | _gpuClock;
     _ramUsed  = doc["ram_used"]  | _ramUsed;
     _ramTotal = doc["ram_total"] | _ramTotal;
-    if (doc.containsKey("time")) {
-      const char* t = doc["time"] | "00:00";
+    _boardTemp = doc["board"] | doc["board_temp"] | _boardTemp;
+    if (doc["time"].is<const char*>()) {
+      const char* t = doc["time"];
       strncpy(_timeStr, t, sizeof(_timeStr) - 1);
       _timeStr[sizeof(_timeStr) - 1] = '\0';
     }
@@ -350,6 +352,7 @@ float getUSBCpuClock() { return _cpuClock; }
 float getUSBGpuClock() { return _gpuClock; }
 float getUSBRamUsed()  { return _ramUsed; }
 float getUSBRamTotal() { return _ramTotal; }
+float getUSBBoardTemp() { return _boardTemp; }
 const char* getUSBTimeStr() { return _timeStr; }
 
 void usbNotifyStatus(uint8_t fanPercent, bool fanOn, uint8_t ledMode, bool ledOn,
