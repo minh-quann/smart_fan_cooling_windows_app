@@ -15,6 +15,38 @@ namespace SmartFanCooling.Services
         public string SelectedStartupPriority { get; set; } = "Cao (Khởi động trước - High Priority)";
         public string SelectedBaudRate { get; set; } = "115200";
         public int RefreshIntervalMs { get; set; } = 1000;
+
+        // Sensor Monitoring Category Toggles (allows users to disable unused sensors to minimize CPU usage)
+        public bool EnableCpuMonitoring { get; set; } = true;
+        public bool EnableGpuMonitoring { get; set; } = true;
+        public bool EnableRamMonitoring { get; set; } = true;
+        public bool EnableMotherboardMonitoring { get; set; } = true;
+        public bool EnableStorageMonitoring { get; set; } = true;
+        public bool EnableLaptopFanMonitoring { get; set; } = true;
+
+        // Granular Sub-Metric Toggles
+        public bool EnableCpuTemp { get; set; } = true;
+        public bool EnableCpuUsage { get; set; } = true;
+        public bool EnableCpuClock { get; set; } = true;
+        public bool EnableCpuPower { get; set; } = true;
+        public bool EnableCpuFanRpm { get; set; } = true;
+
+        public bool EnableGpuTemp { get; set; } = true;
+        public bool EnableGpuHotSpotTemp { get; set; } = true;
+        public bool EnableGpuMemoryTemp { get; set; } = true;
+        public bool EnableGpuUsage { get; set; } = true;
+        public bool EnableGpuClock { get; set; } = true;
+        public bool EnableGpuPower { get; set; } = true;
+        public bool EnableGpuVramUsed { get; set; } = true;
+        public bool EnableGpuFanRpm { get; set; } = true;
+
+        public bool EnableRamUsagePercent { get; set; } = true;
+        public bool EnableRamUsedGB { get; set; } = true;
+
+        public bool EnableMotherboardTemp { get; set; } = true;
+        public bool EnableVrmTemp { get; set; } = true;
+
+        public bool EnableSsdTemp { get; set; } = true;
     }
 
     /// <summary>

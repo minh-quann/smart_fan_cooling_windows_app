@@ -59,6 +59,38 @@ namespace SmartFanCooling.Services.Interfaces
         string WifiCardName { get; }
         string EthernetCardName { get; }
 
+        // Sensor Category Monitoring Toggles
+        bool EnableCpuMonitoring { get; set; }
+        bool EnableGpuMonitoring { get; set; }
+        bool EnableRamMonitoring { get; set; }
+        bool EnableMotherboardMonitoring { get; set; }
+        bool EnableStorageMonitoring { get; set; }
+        bool EnableLaptopFanMonitoring { get; set; }
+
+        // Granular Sub-Metric Toggles
+        bool EnableCpuTemp { get; set; }
+        bool EnableCpuUsage { get; set; }
+        bool EnableCpuClock { get; set; }
+        bool EnableCpuPower { get; set; }
+        bool EnableCpuFanRpm { get; set; }
+
+        bool EnableGpuTemp { get; set; }
+        bool EnableGpuHotSpotTemp { get; set; }
+        bool EnableGpuMemoryTemp { get; set; }
+        bool EnableGpuUsage { get; set; }
+        bool EnableGpuClock { get; set; }
+        bool EnableGpuPower { get; set; }
+        bool EnableGpuVramUsed { get; set; }
+        bool EnableGpuFanRpm { get; set; }
+
+        bool EnableRamUsagePercent { get; set; }
+        bool EnableRamUsedGB { get; set; }
+
+        bool EnableMotherboardTemp { get; set; }
+        bool EnableVrmTemp { get; set; }
+
+        bool EnableSsdTemp { get; set; }
+
         void UpdateSensors();
     }
 }

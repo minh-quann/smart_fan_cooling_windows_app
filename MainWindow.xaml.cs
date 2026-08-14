@@ -289,7 +289,7 @@ namespace SmartFanCooling
         {
             if (args.IsSettingsSelected)
             {
-                ViewModel.SelectedTabIndex = 8; // Settings Tab
+                ViewModel.SelectedTabIndex = 9; // Settings Tab
             }
             else if (args.SelectedItem is NavigationViewItem item && item.Tag != null)
             {

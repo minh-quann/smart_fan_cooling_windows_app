@@ -1,8 +1,8 @@
-Build started 12/08/2026 4:57:51 CH.
+Build started 14/08/2026 8:36:58 SA.
 Logging verbosity is set to: Detailed.     0>Terminal Logger was not used because the output is being redirected to a file.
        Process = "C:\Program Files\dotnet\dotnet.exe"
        MSBuild executable path = "C:\Program Files\dotnet\sdk\10.0.302\MSBuild.exe"
-       Command line arguments = "C:\Program Files\dotnet\sdk\10.0.302\MSBuild.exe -maxcpucount --verbosity:m -tlp:default=auto --property:NuGetInteractive=false --restoreProperty:NuGetInteractive=false --restoreProperty:EnableDefaultCompileItems=false --restoreProperty:EnableDefaultEmbeddedResourceItems=false --restoreProperty:EnableDefaultNoneItems=false --nologo /fl -consoleloggerparameters:Summary -restore -distributedlogger:Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildLogger,C:\Program Files\dotnet\sdk\10.0.302\dotnet.dll*Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildForwardingLogger,C:\Program Files\dotnet\sdk\10.0.302\dotnet.dll"
+       Command line arguments = "C:\Program Files\dotnet\sdk\10.0.302\MSBuild.exe -maxcpucount --verbosity:m -tlp:default=auto --property:NuGetInteractive=false --restoreProperty:NuGetInteractive=false --restoreProperty:EnableDefaultCompileItems=false --restoreProperty:EnableDefaultEmbeddedResourceItems=false --restoreProperty:EnableDefaultNoneItems=false --nologo smart_fan_cooling_windows_app.csproj -fl -flp:logfile=msbuild.log -consoleloggerparameters:Summary -restore -distributedlogger:Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildLogger,C:\Program Files\dotnet\sdk\10.0.302\dotnet.dll*Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildForwardingLogger,C:\Program Files\dotnet\sdk\10.0.302\dotnet.dll"
        Current directory = "C:\Users\quan\Documents\smart_fan_cooling_windows_app"
        MSBuild version = "18.6.11+35b593beb"
        Based on the Windows registry key LongPathsEnabled, the LongPaths feature is enabled.
@@ -30,7 +30,7 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(6,5): message : Property reassignment: $(RootNamespace)="SmartFanCooling" (previous value: "smart_fan_cooling_windows_app") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (6,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(8,5): message : Property reassignment: $(Platforms)="x64;ARM64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (8,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(9,5): message : Property reassignment: $(Platform)="x64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (9,5)
-       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(18,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (18,5)
+       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(17,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (17,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets(28,5): message : Property reassignment: $(PublishProfileImported)="false" (previous value: "true") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets (28,5)
        Assembly loaded during Evaluation: NuGet.Frameworks, Version=7.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35 (location: C:\Program Files\dotnet\sdk\10.0.302\NuGet.Frameworks.dll, MVID: c8b2514d-8266-46e2-97cf-2b258b56265b, AssemblyLoadContext: Assembly.LoadFile(C:\Program Files\dotnet\sdk\10.0.302\NuGet.Frameworks.dll))
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(84,5): message : Property reassignment: $(TargetPlatformIdentifier)="Windows" (previous value: "windows") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets (84,5)
@@ -294,6 +294,7 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.targets(59,5): message : Property reassignment: $(_IsNotSetContainersTargetsDir)="true" (previous value: "false") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.targets (59,5)
        C:\Program Files\dotnet\sdk\10.0.302\Containers\build\Microsoft.NET.Build.Containers.targets(5,5): message : Property reassignment: $(_IsSDKContainerAllowedVersion)="true" (previous value: "false") at C:\Program Files\dotnet\sdk\10.0.302\Containers\build\Microsoft.NET.Build.Containers.targets (5,5)
        C:\Program Files\dotnet\sdk\10.0.302\Containers\build\Microsoft.NET.Build.Containers.targets(15,5): message : Property reassignment: $(_ContainerIsTargetingNet8TFM)="true" (previous value: "false") at C:\Program Files\dotnet\sdk\10.0.302\Containers\build\Microsoft.NET.Build.Containers.targets (15,5)
+       Assembly loaded during Evaluation: System.Collections.NonGeneric, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a (location: C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.10\System.Collections.NonGeneric.dll, MVID: 40865248-f046-4986-a11b-0d4857ef5462, AssemblyLoadContext: Default)
        Overriding target "ResolveFrameworkReferences" in project "C:\Program Files\dotnet\sdk\10.0.302\Microsoft.Common.CurrentVersion.targets" with target "ResolveFrameworkReferences" from project "C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.FrameworkReferenceResolution.targets".
        Overriding target "GenerateSupportedTargetFrameworkAlias" in project "C:\Program Files\dotnet\sdk\10.0.302\Microsoft.Common.CurrentVersion.targets" with target "GenerateSupportedTargetFrameworkAlias" from project "C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.targets".
        Overriding target "GetReferenceAssemblyPaths" in project "C:\Program Files\dotnet\sdk\10.0.302\Microsoft.Common.CurrentVersion.targets" with target "GetReferenceAssemblyPaths" from project "C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.DisableStandardFrameworkResolution.targets".
@@ -324,7 +325,7 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(6,5): message : Property reassignment: $(RootNamespace)="SmartFanCooling" (previous value: "smart_fan_cooling_windows_app") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (6,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(8,5): message : Property reassignment: $(Platforms)="x64;ARM64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (8,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(9,5): message : Property reassignment: $(Platform)="x64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (9,5)
-       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(18,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (18,5)
+       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(17,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (17,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets(28,5): message : Property reassignment: $(PublishProfileImported)="false" (previous value: "true") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets (28,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(84,5): message : Property reassignment: $(TargetPlatformIdentifier)="Windows" (previous value: "windows") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets (84,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.DefaultOutputPaths.targets(127,5): message : Property reassignment: $(DefaultItemExcludes)=";bin\x64\Debug\/**;obj\x64\Debug\/**" (previous value: ";bin\x64\Debug\/**") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.DefaultOutputPaths.targets (127,5)
@@ -861,7 +862,6 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
          Assembly loaded during TaskRun (NuGet.Build.Tasks.RestoreTask): NuGet.LibraryModel, Version=7.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35 (location: C:\Program Files\dotnet\sdk\10.0.302\NuGet.LibraryModel.dll, MVID: d15489dc-1b1d-40b8-87ad-8d265eb94dbd, AssemblyLoadContext: MSBuild plugin C:\Program Files\dotnet\sdk\10.0.302\NuGet.Build.Tasks.dll)
          Assembly loaded during TaskRun (NuGet.Build.Tasks.RestoreTask): NuGet.Protocol, Version=7.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35 (location: C:\Program Files\dotnet\sdk\10.0.302\NuGet.Protocol.dll, MVID: 3a4ae892-2faa-4624-bd8e-63efa2e7074f, AssemblyLoadContext: MSBuild plugin C:\Program Files\dotnet\sdk\10.0.302\NuGet.Build.Tasks.dll)
          Assembly loaded during TaskRun (NuGet.Build.Tasks.RestoreTask): NuGet.Credentials, Version=7.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35 (location: C:\Program Files\dotnet\sdk\10.0.302\NuGet.Credentials.dll, MVID: bc8d0130-50d6-4c02-ab11-9601e79aac05, AssemblyLoadContext: MSBuild plugin C:\Program Files\dotnet\sdk\10.0.302\NuGet.Build.Tasks.dll)
-         Assembly loaded during TaskRun (NuGet.Build.Tasks.RestoreTask): System.Collections.NonGeneric, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a (location: C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.10\System.Collections.NonGeneric.dll, MVID: 40865248-f046-4986-a11b-0d4857ef5462, AssemblyLoadContext: Default)
          X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
          X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
          Assembly loaded during TaskRun (NuGet.Build.Tasks.RestoreTask): NuGet.DependencyResolver.Core, Version=7.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35 (location: C:\Program Files\dotnet\sdk\10.0.302\NuGet.DependencyResolver.Core.dll, MVID: 8797b76a-b359-4ded-998b-b7df1f8cf214, AssemblyLoadContext: MSBuild plugin C:\Program Files\dotnet\sdk\10.0.302\NuGet.Build.Tasks.dll)
@@ -875,7 +875,7 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
          Committing restore...
          Assets file has not changed. Skipping assets file writing. Path: C:\Users\quan\Documents\smart_fan_cooling_windows_app\obj\project.assets.json
          No-Op restore. The cache will not be updated. Path: C:\Users\quan\Documents\smart_fan_cooling_windows_app\obj\project.nuget.cache
-         Restored C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (in 34 ms).
+         Restored C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (in 33 ms).
          
          NuGet Config files used:
              C:\Users\quan\AppData\Roaming\NuGet\NuGet.Config
@@ -904,7 +904,7 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(6,5): message : Property reassignment: $(RootNamespace)="SmartFanCooling" (previous value: "smart_fan_cooling_windows_app") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (6,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(8,5): message : Property reassignment: $(Platforms)="x64;ARM64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (8,5)
        C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(9,5): message : Property reassignment: $(Platform)="x64" (previous value: "AnyCPU") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (9,5)
-       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(18,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (18,5)
+       C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj(17,5): message : Property reassignment: $(AllowUnsafeBlocks)="true" (previous value: "false") at C:\Users\quan\Documents\smart_fan_cooling_windows_app\smart_fan_cooling_windows_app.csproj (17,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets(28,5): message : Property reassignment: $(PublishProfileImported)="false" (previous value: "true") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.Sdk.ImportPublishProfile.targets (28,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(84,5): message : Property reassignment: $(TargetPlatformIdentifier)="Windows" (previous value: "windows") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets (84,5)
        C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.DefaultOutputPaths.targets(127,5): message : Property reassignment: $(DefaultItemExcludes)=";bin\x64\Debug\/**;obj\x64\Debug\/**" (previous value: ";bin\x64\Debug\/**") at C:\Program Files\dotnet\sdk\10.0.302\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.DefaultOutputPaths.targets (127,5)
@@ -957,7 +957,6 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.WinUI.AppX.targets(29,5): message :        
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.WinUI.AppX.targets(29,5): message :        APPX1707;
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.WinUI.AppX.targets(29,5): message :     ") at C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.WinUI.AppX.targets (29,5)
-       C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.UI.Xaml.Markup.Compiler.interop.targets(27,9): message : Property reassignment: $(UseXamlCompilerExecutable)="true" (previous value: "false") at C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.UI.Xaml.Markup.Compiler.interop.targets (27,9)
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.UI.Xaml.Markup.Compiler.interop.targets(148,9): message : Property reassignment: $(PrepareResourcesDependsOn)="
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.UI.Xaml.Markup.Compiler.interop.targets(148,9): message :             ResolveKeySource;
        C:\Users\quan\.nuget\packages\microsoft.windowsappsdk\1.6.241114003\buildTransitive\Microsoft.UI.Xaml.Markup.Compiler.interop.targets(148,9): message :             AddImplicitDefineConstants;
@@ -2298,7 +2297,8 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
          AssemblyFiles:
          CandidateAssemblyFiles:
              C:\Users\quan\.nuget\packages\microsoft.web.webview2\1.0.2651.64\build\\..\runtimes\win-x64\native\WebView2Loader.dll
-             OutputInstaller\Smart_Fan_Cooling_Setup_v2.1_CustomPresets.exe
+             OutputInstaller\Smart_Fan_Cooling_Setup_v1.0.2.exe
+             OutputInstaller\Smart_Fan_Cooling_Setup_v1.0.3.exe
          TargetFrameworkDirectories:
              
          NonCultureResourceDirectories:
@@ -3319,8 +3319,11 @@ Logging verbosity is set to: Detailed.     0>Terminal Logger was not used becaus
                  Considered "C:\Users\quan\.nuget\packages\microsoft.web.webview2\1.0.2651.64\build\\..\runtimes\win-x64\native\WebView2Loader.dll",
          			but its name "WebView2Loader"
          			didn't match the expected name "System.Formats.Nrbf, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51".
-                 Considered "OutputInstaller\Smart_Fan_Cooling_Setup_v2.1_CustomPresets.exe",
-         			but its name "Smart_Fan_Cooling_Setup_v2.1_CustomPresets"
+                 Considered "OutputInstaller\Smart_Fan_Cooling_Setup_v1.0.2.exe",
+         			but its name "Smart_Fan_Cooling_Setup_v1.0.2"
+         			didn't match the expected name "System.Formats.Nrbf, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51".
+                 Considered "OutputInstaller\Smart_Fan_Cooling_Setup_v1.0.3.exe",
+         			but its name "Smart_Fan_Cooling_Setup_v1.0.3"
          			didn't match the expected name "System.Formats.Nrbf, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51".
              Required by "C:\Users\quan\.nuget\packages\system.drawing.common\9.0.0\lib\net9.0\System.Private.Windows.Core.dll".
              Required by "C:\Users\quan\.nuget\packages\system.drawing.common\9.0.0\lib\net9.0\System.Drawing.Common.dll".
@@ -3420,4 +3423,4 @@ Build FAILED.
     0 Warning(s)
     1 Error(s)
 
-Time Elapsed 00:00:03.29
+Time Elapsed 00:00:03.05

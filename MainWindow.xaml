@@ -12,6 +12,7 @@
     xmlns:oled="using:SmartFanCooling.Views.OledStudio"
     xmlns:osd="using:SmartFanCooling.Views.OsdHud"
     xmlns:esp="using:SmartFanCooling.Views.EspManager"
+    xmlns:sensors="using:SmartFanCooling.Views.Sensors"
     xmlns:settings="using:SmartFanCooling.Views.Settings"
     xmlns:dialogs="using:SmartFanCooling.Views.Dialogs">
 
@@ -67,6 +68,11 @@
                 <NavigationViewItem Content="Quản Lý Device ESP32" Tag="7">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE703;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Quản Lý Cảm Biến Sensor" Tag="8">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
@@ -182,8 +188,11 @@
                         <!-- TAB 7: QUẢN LÝ DEVICE ESP32 -->
                         <esp:EspManagerView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=7}"/>
 
-                        <!-- TAB 8: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
-                        <settings:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=8}"/>
+                        <!-- TAB 8: QUẢN LÝ CẢM BIẾN SENSOR -->
+                        <sensors:SensorManagementView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=8}"/>
+
+                        <!-- TAB 9: THIẾT LẬP HỆ THỐNG (SETTINGS) -->
+                        <settings:SettingsView Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=9}"/>
                     </Grid>
                 </ScrollViewer>
 

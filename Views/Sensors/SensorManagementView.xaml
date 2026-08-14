@@ -1,0 +1,118 @@
+<UserControl
+    x:Class="SmartFanCooling.Views.Sensors.SensorManagementView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="18">
+
+        <!-- 1. CPU SENSORS CARD -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE9E9;" FontSize="20" Foreground="#00BCD4"/>
+                        <TextBlock Text="CẢM BIẾN CPU (PROCESSOR TELEMETRY)" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" Header="Bật Đọc Danh Mục CPU" IsOn="{Binding EnableCpuMonitoring}" Margin="0,-6,0,0"/>
+                </Grid>
+                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,-4,0,0"/>
+
+                <!-- CPU Sub-Metrics Grid -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="12">
+                    <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="Nhiệt Độ CPU (°C)" IsOn="{Binding EnableCpuTemp}" IsEnabled="{Binding EnableCpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="1" Header="Tải CPU (%)" IsOn="{Binding EnableCpuUsage}" IsEnabled="{Binding EnableCpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="2" Header="Xung Nhịp CPU (GHz)" IsOn="{Binding EnableCpuClock}" IsEnabled="{Binding EnableCpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="1" Grid.Column="0" Header="Công Suất Tiêu Thụ CPU (W)" IsOn="{Binding EnableCpuPower}" IsEnabled="{Binding EnableCpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="1" Grid.Column="1" Header="Tốc Độ Quạt CPU Laptop (RPM)" IsOn="{Binding EnableCpuFanRpm}" IsEnabled="{Binding EnableCpuMonitoring}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 2. GPU SENSORS CARD -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE7B8;" FontSize="20" Foreground="#FF9800"/>
+                        <TextBlock Text="CẢM BIẾN GPU (GRAPHICS CARD TELEMETRY)" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" Header="Bật Đọc Danh Mục GPU" IsOn="{Binding EnableGpuMonitoring}" Margin="0,-6,0,0"/>
+                </Grid>
+                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,-4,0,0"/>
+
+                <!-- GPU Sub-Metrics Grid -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="20" RowSpacing="12">
+                    <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="Nhiệt Độ GPU Core (°C)" IsOn="{Binding EnableGpuTemp}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="1" Header="Nhiệt Độ GPU HotSpot (°C)" IsOn="{Binding EnableGpuHotSpotTemp}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="2" Header="Nhiệt Độ VRAM Memory (°C)" IsOn="{Binding EnableGpuMemoryTemp}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+
+                    <ToggleSwitch Grid.Row="1" Grid.Column="0" Header="Tải GPU 3D (%)" IsOn="{Binding EnableGpuUsage}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="1" Grid.Column="1" Header="Xung Nhịp GPU Core (MHz)" IsOn="{Binding EnableGpuClock}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="1" Grid.Column="2" Header="Công Suất Tiêu Thụ GPU (W)" IsOn="{Binding EnableGpuPower}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+
+                    <ToggleSwitch Grid.Row="2" Grid.Column="0" Header="Dung Lượng VRAM Đã Dùng (GB)" IsOn="{Binding EnableGpuVramUsed}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                    <ToggleSwitch Grid.Row="2" Grid.Column="1" Header="Tốc Độ Quạt GPU Laptop (RPM)" IsOn="{Binding EnableGpuFanRpm}" IsEnabled="{Binding EnableGpuMonitoring}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 3. RAM SENSORS CARD -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE9D9;" FontSize="20" Foreground="#4CAF50"/>
+                        <TextBlock Text="CẢM BIẾN BỘ NHỚ RAM (SYSTEM MEMORY)" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" Header="Bật Đọc Danh Mục RAM" IsOn="{Binding EnableRamMonitoring}" Margin="0,-6,0,0"/>
+                </Grid>
+                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,-4,0,0"/>
+
+                <!-- RAM Sub-Metrics Grid -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="20" RowSpacing="12">
+                    <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="Tải Sử Dụng RAM (%)" IsOn="{Binding EnableRamUsagePercent}" IsEnabled="{Binding EnableRamMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="1" Header="Dung Lượng RAM Đã Dùng (GB)" IsOn="{Binding EnableRamUsedGB}" IsEnabled="{Binding EnableRamMonitoring}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 4. MAINBOARD & VRM SENSORS CARD -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE8EA;" FontSize="20" Foreground="#E91E63"/>
+                        <TextBlock Text="CẢM BIẾN MAINBOARD &amp; VRM (SUPER I/O CHIPS)" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" Header="Bật Đọc Mainboard WMI" IsOn="{Binding EnableMotherboardMonitoring}" Margin="0,-6,0,0"/>
+                </Grid>
+                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,-4,0,0"/>
+
+                <!-- Mainboard Sub-Metrics Grid -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="20" RowSpacing="12">
+                    <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="Nhiệt Độ Mainboard / Board (°C)" IsOn="{Binding EnableMotherboardTemp}" IsEnabled="{Binding EnableMotherboardMonitoring}"/>
+                    <ToggleSwitch Grid.Row="0" Grid.Column="1" Header="Nhiệt Độ VRM / MOSFET (°C)" IsOn="{Binding EnableVrmTemp}" IsEnabled="{Binding EnableMotherboardMonitoring}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 5. STORAGE / SSD SENSORS CARD -->
+        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="18" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xE75D;" FontSize="20" Foreground="#9C27B0"/>
+                        <TextBlock Text="CẢM BIẾN Ổ CỨNG SSD / HDD (STORAGE NVMe SMART)" FontSize="15" FontWeight="Bold"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" Header="Bật Đọc SMART SSD" IsOn="{Binding EnableStorageMonitoring}" Margin="0,-6,0,0"/>
+                </Grid>
+                <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,-4,0,0"/>
+
+                <!-- Storage Sub-Metrics Grid -->
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto" ColumnSpacing="20" RowSpacing="12">
+                    <ToggleSwitch Grid.Row="0" Grid.Column="0" Header="Nhiệt Độ Ổ Cứng SSD (°C)" IsOn="{Binding EnableSsdTemp}" IsEnabled="{Binding EnableStorageMonitoring}"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

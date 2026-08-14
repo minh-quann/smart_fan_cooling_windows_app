@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StackPanel Spacing="18">
+        <!-- System & Startup Settings -->
         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
             <StackPanel Spacing="14">
                 <TextBlock Text="Thiết Lập Hệ Thống &amp; Cấu Hình Ứng Dụng" FontSize="16" FontWeight="Bold"/>

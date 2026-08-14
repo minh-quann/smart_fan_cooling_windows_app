@@ -61,11 +61,43 @@ namespace SmartFanCooling.ViewModels
             SetProperty(ref _selectedBaudRate, settings.SelectedBaudRate, nameof(SelectedBaudRate));
             SetProperty(ref _refreshIntervalMs, settings.RefreshIntervalMs, nameof(RefreshIntervalMs));
 
+            SetProperty(ref _enableCpuMonitoring, settings.EnableCpuMonitoring, nameof(EnableCpuMonitoring));
+            SetProperty(ref _enableGpuMonitoring, settings.EnableGpuMonitoring, nameof(EnableGpuMonitoring));
+            SetProperty(ref _enableRamMonitoring, settings.EnableRamMonitoring, nameof(EnableRamMonitoring));
+            SetProperty(ref _enableMotherboardMonitoring, settings.EnableMotherboardMonitoring, nameof(EnableMotherboardMonitoring));
+            SetProperty(ref _enableStorageMonitoring, settings.EnableStorageMonitoring, nameof(EnableStorageMonitoring));
+            SetProperty(ref _enableLaptopFanMonitoring, settings.EnableLaptopFanMonitoring, nameof(EnableLaptopFanMonitoring));
+
+            SetProperty(ref _enableCpuTemp, settings.EnableCpuTemp, nameof(EnableCpuTemp));
+            SetProperty(ref _enableCpuUsage, settings.EnableCpuUsage, nameof(EnableCpuUsage));
+            SetProperty(ref _enableCpuClock, settings.EnableCpuClock, nameof(EnableCpuClock));
+            SetProperty(ref _enableCpuPower, settings.EnableCpuPower, nameof(EnableCpuPower));
+            SetProperty(ref _enableCpuFanRpm, settings.EnableCpuFanRpm, nameof(EnableCpuFanRpm));
+
+            SetProperty(ref _enableGpuTemp, settings.EnableGpuTemp, nameof(EnableGpuTemp));
+            SetProperty(ref _enableGpuHotSpotTemp, settings.EnableGpuHotSpotTemp, nameof(EnableGpuHotSpotTemp));
+            SetProperty(ref _enableGpuMemoryTemp, settings.EnableGpuMemoryTemp, nameof(EnableGpuMemoryTemp));
+            SetProperty(ref _enableGpuUsage, settings.EnableGpuUsage, nameof(EnableGpuUsage));
+            SetProperty(ref _enableGpuClock, settings.EnableGpuClock, nameof(EnableGpuClock));
+            SetProperty(ref _enableGpuPower, settings.EnableGpuPower, nameof(EnableGpuPower));
+            SetProperty(ref _enableGpuVramUsed, settings.EnableGpuVramUsed, nameof(EnableGpuVramUsed));
+            SetProperty(ref _enableGpuFanRpm, settings.EnableGpuFanRpm, nameof(EnableGpuFanRpm));
+
+            SetProperty(ref _enableRamUsagePercent, settings.EnableRamUsagePercent, nameof(EnableRamUsagePercent));
+            SetProperty(ref _enableRamUsedGB, settings.EnableRamUsedGB, nameof(EnableRamUsedGB));
+
+            SetProperty(ref _enableMotherboardTemp, settings.EnableMotherboardTemp, nameof(EnableMotherboardTemp));
+            SetProperty(ref _enableVrmTemp, settings.EnableVrmTemp, nameof(EnableVrmTemp));
+
+            SetProperty(ref _enableSsdTemp, settings.EnableSsdTemp, nameof(EnableSsdTemp));
+
             if (!string.IsNullOrEmpty(settings.SelectedStartupPriority) && StartupPriorityOptions.Contains(settings.SelectedStartupPriority))
             {
                 SetProperty(ref _selectedStartupPriority, settings.SelectedStartupPriority, nameof(SelectedStartupPriority));
             }
 #pragma warning restore MVVMTK0034
+
+            SyncSensorTogglesToService();
         }
 
         /// <summary>
@@ -73,6 +105,7 @@ namespace SmartFanCooling.ViewModels
         /// </summary>
         private void SaveCurrentSystemSettings()
         {
+            SyncSensorTogglesToService();
             AppSettingsService.SaveSettings(new AppSettingsModel
             {
                 StartWithWindows = StartWithWindows,
@@ -80,7 +113,31 @@ namespace SmartFanCooling.ViewModels
                 MinimizeToTray = MinimizeToTray,
                 SelectedStartupPriority = SelectedStartupPriority,
                 SelectedBaudRate = SelectedBaudRate,
-                RefreshIntervalMs = RefreshIntervalMs
+                RefreshIntervalMs = RefreshIntervalMs,
+                EnableCpuMonitoring = EnableCpuMonitoring,
+                EnableGpuMonitoring = EnableGpuMonitoring,
+                EnableRamMonitoring = EnableRamMonitoring,
+                EnableMotherboardMonitoring = EnableMotherboardMonitoring,
+                EnableStorageMonitoring = EnableStorageMonitoring,
+                EnableLaptopFanMonitoring = EnableLaptopFanMonitoring,
+                EnableCpuTemp = EnableCpuTemp,
+                EnableCpuUsage = EnableCpuUsage,
+                EnableCpuClock = EnableCpuClock,
+                EnableCpuPower = EnableCpuPower,
+                EnableCpuFanRpm = EnableCpuFanRpm,
+                EnableGpuTemp = EnableGpuTemp,
+                EnableGpuHotSpotTemp = EnableGpuHotSpotTemp,
+                EnableGpuMemoryTemp = EnableGpuMemoryTemp,
+                EnableGpuUsage = EnableGpuUsage,
+                EnableGpuClock = EnableGpuClock,
+                EnableGpuPower = EnableGpuPower,
+                EnableGpuVramUsed = EnableGpuVramUsed,
+                EnableGpuFanRpm = EnableGpuFanRpm,
+                EnableRamUsagePercent = EnableRamUsagePercent,
+                EnableRamUsedGB = EnableRamUsedGB,
+                EnableMotherboardTemp = EnableMotherboardTemp,
+                EnableVrmTemp = EnableVrmTemp,
+                EnableSsdTemp = EnableSsdTemp
             });
         }
 

@@ -46,6 +46,38 @@ namespace SmartFanCooling.Services
         private readonly Computer? _computer;
         private readonly bool _lhmInitialized;
 
+        // Sensor Category Monitoring Toggles
+        public bool EnableCpuMonitoring { get; set; } = true;
+        public bool EnableGpuMonitoring { get; set; } = true;
+        public bool EnableRamMonitoring { get; set; } = true;
+        public bool EnableMotherboardMonitoring { get; set; } = true;
+        public bool EnableStorageMonitoring { get; set; } = true;
+        public bool EnableLaptopFanMonitoring { get; set; } = true;
+
+        // Granular Sub-Metric Toggles
+        public bool EnableCpuTemp { get; set; } = true;
+        public bool EnableCpuUsage { get; set; } = true;
+        public bool EnableCpuClock { get; set; } = true;
+        public bool EnableCpuPower { get; set; } = true;
+        public bool EnableCpuFanRpm { get; set; } = true;
+
+        public bool EnableGpuTemp { get; set; } = true;
+        public bool EnableGpuHotSpotTemp { get; set; } = true;
+        public bool EnableGpuMemoryTemp { get; set; } = true;
+        public bool EnableGpuUsage { get; set; } = true;
+        public bool EnableGpuClock { get; set; } = true;
+        public bool EnableGpuPower { get; set; } = true;
+        public bool EnableGpuVramUsed { get; set; } = true;
+        public bool EnableGpuFanRpm { get; set; } = true;
+
+        public bool EnableRamUsagePercent { get; set; } = true;
+        public bool EnableRamUsedGB { get; set; } = true;
+
+        public bool EnableMotherboardTemp { get; set; } = true;
+        public bool EnableVrmTemp { get; set; } = true;
+
+        public bool EnableSsdTemp { get; set; } = true;
+
         public float CpuTemperature { get; private set; }
         public float CpuUsage { get; private set; }
         public float CpuPowerW { get; private set; }
@@ -356,8 +388,15 @@ namespace SmartFanCooling.Services
             GpuHotSpotTemp = 0f;
             GpuMemoryTemp = 0f;
 
-            // Always calculate accurate system CPU Usage % via Win32 GetSystemTimes API
-            CpuUsage = CalculateCpuUsageWin32();
+            // Calculate accurate system CPU Usage % via Win32 GetSystemTimes API if CPU monitoring is enabled
+            if (EnableCpuMonitoring)
+            {
+                CpuUsage = CalculateCpuUsageWin32();
+            }
+            else
+            {
+                CpuUsage = 0f;
+            }
 
             if (_lhmInitialized && _computer != null)
             {
@@ -375,6 +414,13 @@ namespace SmartFanCooling.Services
 
                     foreach (var hardware in sortedHardware)
                     {
+                        // Skip updating hardware category if its sensor monitoring is disabled
+                        if (hardware.HardwareType == HardwareType.Cpu && !EnableCpuMonitoring) continue;
+                        if ((hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAmd || hardware.HardwareType == HardwareType.GpuIntel) && !EnableGpuMonitoring) continue;
+                        if (hardware.HardwareType == HardwareType.Memory && !EnableRamMonitoring) continue;
+                        if (hardware.HardwareType == HardwareType.Motherboard && !EnableMotherboardMonitoring) continue;
+                        if (hardware.HardwareType == HardwareType.Storage && !EnableStorageMonitoring) continue;
+
                         hardware.Update();
 
                         bool isDedicatedGpu = hardware.HardwareType == HardwareType.GpuNvidia ||
@@ -524,15 +570,19 @@ namespace SmartFanCooling.Services
                             {
                                 if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0 && sensor.Value.Value < 150)
                                 {
-                                    string nameLower = sensor.Name.ToLower();
-                                    if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
-                                    {
-                                        VrmTemp = (float)Math.Round(sensor.Value.Value);
-                                    }
-                                    else if (MotherboardTemp == 0f || nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard"))
-                                    {
-                                        MotherboardTemp = (float)Math.Round(sensor.Value.Value);
-                                    }
+                                     string nameLower = sensor.Name.ToLower();
+                                     if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
+                                     {
+                                         VrmTemp = (float)Math.Round(sensor.Value.Value);
+                                     }
+                                     else if (nameLower.Contains("pch") || nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard"))
+                                     {
+                                         MotherboardTemp = (float)Math.Round(sensor.Value.Value);
+                                     }
+                                     else if (MotherboardTemp == 0f && sensor.Value.Value <= 68f)
+                                     {
+                                         MotherboardTemp = (float)Math.Round(sensor.Value.Value);
+                                     }
                                 }
                                 else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
                                 {
@@ -747,7 +797,7 @@ namespace SmartFanCooling.Services
             }
 
             // Fallback: ASUS ATK WMI Query for ROG/TUF Laptop Fans (DSTS 0x00110013 & 0x00110014)
-            if (HardwareCpuFanRpm == 0 || HardwareGpuFanRpm == 0)
+            if (EnableLaptopFanMonitoring && (HardwareCpuFanRpm == 0 || HardwareGpuFanRpm == 0))
             {
                 try
                 {
@@ -828,7 +878,7 @@ namespace SmartFanCooling.Services
             // Fallback: ASUS ATK DSTS Smart Thermal Scan
             // G-Helper uses: Temp_CPU=0x00120094, Temp_GPU=0x00120097
             // Board temp ID varies by model — scan range 0x00120090..0x001200A0
-            if (MotherboardTemp == 0f)
+            if (EnableMotherboardMonitoring && MotherboardTemp == 0f)
             {
                 try
                 {
@@ -951,10 +1001,10 @@ namespace SmartFanCooling.Services
 
                             foreach (var (id, t) in discoveredTemps)
                             {
-                                // Skip known CPU and GPU IDs
-                                if (id == 0x00120094 || id == 0x00120097) continue;
-                                // Board temp is typically close to but lower than CPU/GPU temps
-                                if (MotherboardTemp == 0f && t > 15 && t < 100)
+                                // Skip known CPU and GPU WMI IDs (0x00120094, 0x00120095, 0x00120097)
+                                if (id == 0x00120094 || id == 0x00120095 || id == 0x00120097) continue;
+                                // Board PCH temp is typically lower than CPU core junction temp (<= 68°C)
+                                if (MotherboardTemp == 0f && t > 15 && t <= 68)
                                 {
                                     MotherboardTemp = t;
                                     System.Diagnostics.Debug.WriteLine($"[ASUS] Board temp assigned from ID=0x{id:X8} => {t}°C");
@@ -972,12 +1022,18 @@ namespace SmartFanCooling.Services
             }
 
             // Precise Motherboard & VRM thermal calculation matching GamePP / HWInfo
-            // On laptops, Board temperature equals Math.Max(GpuTemp + 2.0, CpuTemp - 12.0)
-            if (MotherboardTemp == 0f || MotherboardTemp < 35f)
+            // Laptop PCH Motherboard Ambient temperature model:
+            // Motherboard temp is closely tied to PCH chipset & chassis ambient (GamePP model: ~60-65°C under heavy CPU load)
+            if (MotherboardTemp == 0f || MotherboardTemp < 30f || MotherboardTemp > 72f)
             {
-                if (CpuTemperature > 0f || GpuTemperature > 0f)
+                if (CpuTemperature > 0f && GpuTemperature > 0f)
                 {
-                    MotherboardTemp = (float)Math.Round(Math.Max(GpuTemperature + 2.0f, CpuTemperature - 12.0f));
+                    float estimatedBoard = Math.Min(CpuTemperature - 19.0f, GpuTemperature + 2.0f);
+                    MotherboardTemp = (float)Math.Round(Math.Clamp(estimatedBoard, 38.0f, 65.0f));
+                }
+                else if (CpuTemperature > 0f)
+                {
+                    MotherboardTemp = (float)Math.Round(Math.Clamp(CpuTemperature - 21.0f, 38.0f, 65.0f));
                 }
                 else
                 {
