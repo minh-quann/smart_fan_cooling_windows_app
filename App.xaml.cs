@@ -1,4 +1,7 @@
+using System;
+using System.Linq;
 using Microsoft.UI.Xaml;
+using SmartFanCooling.Services;
 
 namespace SmartFanCooling
 {
@@ -21,15 +24,30 @@ namespace SmartFanCooling
         }
 
         /// <summary>
-        /// Invoked when the application is launched normally by the end user.
+        /// Invoked when the application is launched normally by the end user or Windows auto-start.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             try
             {
+                var settings = AppSettingsService.LoadSettings();
+                string[] cmdArgs = Environment.GetCommandLineArgs();
+                bool isAutoStart = cmdArgs.Any(a => a.Equals("/autostart", StringComparison.OrdinalIgnoreCase) ||
+                                                     a.Equals("-autostart", StringComparison.OrdinalIgnoreCase) ||
+                                                     a.Equals("/minimized", StringComparison.OrdinalIgnoreCase));
+
                 MainWindowInstance = new MainWindow();
-                MainWindowInstance.Activate();
+
+                // If launched via Windows auto-start and StartMinimizedToTray is enabled, keep window hidden in system tray
+                if (isAutoStart && settings.StartMinimizedToTray)
+                {
+                    // Do not activate window, app runs quietly in system tray
+                }
+                else
+                {
+                    MainWindowInstance.Activate();
+                }
             }
             catch (Exception ex)
             {

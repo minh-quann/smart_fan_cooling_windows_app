@@ -9,13 +9,14 @@
                 <TextBlock Text="Thiết Lập Hệ Thống &amp; Cấu Hình Ứng Dụng" FontSize="16" FontWeight="Bold"/>
                 
                 <ToggleSwitch Header="Khởi Động Cùng Windows" IsOn="{Binding StartWithWindows, Mode=TwoWay}"/>
-                <ToggleSwitch Header="Thu Nhỏ Xuống Khay Hệ Thống (System Tray) Khi Đóng" IsOn="{Binding MinimizeToTray, Mode=TwoWay}"/>
+                <ToggleSwitch Header="Khởi Động Ẩn Xuống Khay Hệ Thống (System Tray)" IsOn="{Binding StartMinimizedToTray, Mode=TwoWay}"/>
+                <ToggleSwitch Header="Thu Nhỏ Xuống Khay Hệ Thống (System Tray) Khi Đóng Window" IsOn="{Binding MinimizeToTray, Mode=TwoWay}"/>
 
-                <TextBlock Text="Mức Ưu Tiên Tiến Trình (Process Priority):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                <ComboBox ItemsSource="{Binding ProcessPriorityOptions}" 
-                          SelectedItem="{Binding SelectedProcessPriority, Mode=TwoWay}" 
+                <TextBlock Text="Mức Ưu Tiên Khởi Động (Startup Priority):" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <ComboBox ItemsSource="{Binding StartupPriorityOptions}" 
+                          SelectedItem="{Binding SelectedStartupPriority, Mode=TwoWay}" 
                           HorizontalAlignment="Stretch"/>
-                <TextBlock Text="💡 High / AboveNormal: Ưu tiên CPU cao hơn, giảm lag khi đa nhiệm. Realtime: Tối đa hiệu năng (cẩn thận khi dùng!)." 
+                <TextBlock Text="💡 Cao: Khởi động sớm với quyền Admin (Windows Task Scheduler). Bình thường: Khởi động tiêu chuẩn. Trì hoãn: Tải sau 15s để ưu tiên hệ thống." 
                            FontSize="11" Foreground="{ThemeResource TextFillColorTertiaryBrush}" TextWrapping="Wrap"/>
 
                 <TextBlock Text="Tốc Độ Baud Rate Cổng Serial COM:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>

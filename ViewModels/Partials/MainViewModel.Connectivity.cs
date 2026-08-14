@@ -27,42 +27,61 @@ namespace SmartFanCooling.ViewModels
 
         // System Settings
         [ObservableProperty] private bool _startWithWindows = false;
+        [ObservableProperty] private bool _startMinimizedToTray = true;
         [ObservableProperty] private bool _minimizeToTray = true;
         [ObservableProperty] private int _refreshIntervalMs = 1000;
         [ObservableProperty] private string _selectedBaudRate = "115200";
 
-        // Process Priority Setting (Normal, High, AboveNormal, BelowNormal, Realtime, Idle)
-        [ObservableProperty] private string _selectedProcessPriority = "Normal";
+        // Startup Priority Setting (Cao, Bình thường, Trì hoãn)
+        [ObservableProperty] private string _selectedStartupPriority = "Cao (Khởi động trước - High Priority)";
 
         /// <summary>
-        /// Available process priority options for the ComboBox.
+        /// Available startup priority options for the ComboBox.
         /// </summary>
-        public ObservableCollection<string> ProcessPriorityOptions { get; } = new()
+        public ObservableCollection<string> StartupPriorityOptions { get; } = new()
         {
-            "Realtime",
-            "High",
-            "AboveNormal",
-            "Normal",
-            "BelowNormal",
-            "Idle"
+            "Cao (Khởi động trước - High Priority)",
+            "Bình thường (Khởi động tiêu chuẩn - Normal Priority)",
+            "Trì hoãn (Khởi động sau 15s - Low/Delayed)"
         };
 
         /// <summary>
-        /// Reads the actual system state for auto-start and process priority on app launch.
-        /// Called from constructor to ensure UI reflects the real system state.
+        /// Reads saved configuration and syncs Task Scheduler auto-start state on app launch.
         /// </summary>
         private void InitializeSystemSettings()
         {
+            var settings = AppSettingsService.LoadSettings();
+
             // Intentionally bypass generated property to avoid triggering OnChanged handlers during init
 #pragma warning disable MVVMTK0034
-            // Sync StartWithWindows toggle with actual Task Scheduler state
             bool isRegistered = StartupService.IsStartupTaskRegistered();
             SetProperty(ref _startWithWindows, isRegistered, nameof(StartWithWindows));
+            SetProperty(ref _startMinimizedToTray, settings.StartMinimizedToTray, nameof(StartMinimizedToTray));
+            SetProperty(ref _minimizeToTray, settings.MinimizeToTray, nameof(MinimizeToTray));
+            SetProperty(ref _selectedBaudRate, settings.SelectedBaudRate, nameof(SelectedBaudRate));
+            SetProperty(ref _refreshIntervalMs, settings.RefreshIntervalMs, nameof(RefreshIntervalMs));
 
-            // Sync process priority with current process state
-            string currentPriority = ProcessPriorityService.GetCurrentPriority();
-            SetProperty(ref _selectedProcessPriority, currentPriority, nameof(SelectedProcessPriority));
+            if (!string.IsNullOrEmpty(settings.SelectedStartupPriority) && StartupPriorityOptions.Contains(settings.SelectedStartupPriority))
+            {
+                SetProperty(ref _selectedStartupPriority, settings.SelectedStartupPriority, nameof(SelectedStartupPriority));
+            }
 #pragma warning restore MVVMTK0034
+        }
+
+        /// <summary>
+        /// Saves current system configuration to disk.
+        /// </summary>
+        private void SaveCurrentSystemSettings()
+        {
+            AppSettingsService.SaveSettings(new AppSettingsModel
+            {
+                StartWithWindows = StartWithWindows,
+                StartMinimizedToTray = StartMinimizedToTray,
+                MinimizeToTray = MinimizeToTray,
+                SelectedStartupPriority = SelectedStartupPriority,
+                SelectedBaudRate = SelectedBaudRate,
+                RefreshIntervalMs = RefreshIntervalMs
+            });
         }
 
         /// <summary>
@@ -72,9 +91,9 @@ namespace SmartFanCooling.ViewModels
         {
             if (value)
             {
-                bool ok = StartupService.EnableStartup();
+                bool ok = StartupService.EnableStartup(SelectedStartupPriority);
                 StatusMessage = ok
-                    ? "✅ Đã bật khởi động cùng Windows (Task Scheduler - Admin Elevation)."
+                    ? "✅ Đã bật khởi động cùng Windows (Task Scheduler - Ưu tiên khởi động)."
                     : "❌ Không thể đăng ký tác vụ khởi động cùng Windows. Hãy kiểm tra quyền Admin.";
             }
             else
@@ -82,22 +101,30 @@ namespace SmartFanCooling.ViewModels
                 StartupService.DisableStartup();
                 StatusMessage = "🔕 Đã tắt khởi động cùng Windows.";
             }
+            SaveCurrentSystemSettings();
         }
 
         /// <summary>
-        /// Handles process priority selection change — applies new priority immediately.
+        /// Handles startup priority selection change — updates scheduled task definition.
         /// </summary>
-        partial void OnSelectedProcessPriorityChanged(string value)
+        partial void OnSelectedStartupPriorityChanged(string value)
         {
-            bool ok = ProcessPriorityService.SetPriority(value);
-            if (ok)
+            if (StartWithWindows)
             {
-                StatusMessage = $"⚡ Đã thay đổi mức ưu tiên tiến trình: {value}";
+                StartupService.EnableStartup(value);
             }
-            else
-            {
-                StatusMessage = $"❌ Không thể đặt mức ưu tiên: {value}. Hãy kiểm tra quyền hệ thống.";
-            }
+            StatusMessage = $"⚡ Đã thay đổi mức ưu tiên khởi động: {value}";
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnStartMinimizedToTrayChanged(bool value)
+        {
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnMinimizeToTrayChanged(bool value)
+        {
+            SaveCurrentSystemSettings();
         }
 
         [ObservableProperty] private bool _isAutoConnectEnabled = true;

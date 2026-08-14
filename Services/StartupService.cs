@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Security.Principal;
 
 namespace SmartFanCooling.Services
 {
     /// <summary>
     /// Manages Windows auto-start via Task Scheduler (schtasks.exe).
-    /// Uses a Scheduled Task with HIGHEST run level so the app launches elevated on boot
-    /// without needing the UAC prompt workaround through Registry + AppCompatFlags.
+    /// Supports configurable startup priority (High / Admin elevation, Normal, Low/Delayed).
     /// </summary>
     public static class StartupService
     {
@@ -39,22 +40,22 @@ namespace SmartFanCooling.Services
         }
 
         /// <summary>
-        /// Creates a Windows Scheduled Task that runs the app at user logon with highest privileges.
+        /// Creates a Windows Scheduled Task with configurable launch priority level.
         /// </summary>
-        public static bool EnableStartup()
+        public static bool EnableStartup(string priorityLevel = "Cao (Khởi động trước - High Priority)")
         {
             try
             {
                 string exePath = Process.GetCurrentProcess().MainModule?.FileName
-                    ?? System.IO.Path.Combine(AppContext.BaseDirectory, "smart_fan_cooling_windows_app.exe");
+                    ?? Path.Combine(AppContext.BaseDirectory, "smart_fan_cooling_windows_app.exe");
 
                 // Remove existing task first to avoid duplicates
                 DisableStartup();
 
-                // Build XML task definition for schtasks import (allows setting RunLevel = Highest)
-                string taskXml = BuildTaskXml(exePath);
-                string tempXmlPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{TaskName}.xml");
-                System.IO.File.WriteAllText(tempXmlPath, taskXml);
+                // Build XML task definition for schtasks import with specified startup priority
+                string taskXml = BuildTaskXml(exePath, priorityLevel);
+                string tempXmlPath = Path.Combine(Path.GetTempPath(), $"{TaskName}.xml");
+                File.WriteAllText(tempXmlPath, taskXml);
 
                 var psi = new ProcessStartInfo
                 {
@@ -69,7 +70,7 @@ namespace SmartFanCooling.Services
                 proc?.WaitForExit(10000);
 
                 // Clean up temp XML file
-                try { System.IO.File.Delete(tempXmlPath); } catch { }
+                try { File.Delete(tempXmlPath); } catch { }
 
                 return proc?.ExitCode == 0;
             }
@@ -106,33 +107,55 @@ namespace SmartFanCooling.Services
         }
 
         /// <summary>
-        /// Builds a Windows Task Scheduler XML definition that triggers at user logon
-        /// and runs with highest privileges (admin elevation).
+        /// Builds a Windows Task Scheduler XML definition with target startup priority settings.
         /// </summary>
-        private static string BuildTaskXml(string exePath)
+        private static string BuildTaskXml(string exePath, string priorityLevel)
         {
-            string workingDir = System.IO.Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory;
-            // Use current user SID for the logon trigger
-            string userId = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+            string workingDir = Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory;
+            string userId = WindowsIdentity.GetCurrent().Name;
+
+            // Configure delay, task execution priority, and admin elevation based on priority setting
+            string delay = "PT1S";
+            string taskPriority = "2";
+            string runLevel = "HighestAvailable";
+
+            if (priorityLevel != null && priorityLevel.StartsWith("Bình thường", StringComparison.OrdinalIgnoreCase))
+            {
+                delay = "PT5S";
+                taskPriority = "5";
+                runLevel = "HighestAvailable";
+            }
+            else if (priorityLevel != null && priorityLevel.StartsWith("Trì hoãn", StringComparison.OrdinalIgnoreCase))
+            {
+                delay = "PT15S";
+                taskPriority = "7";
+                runLevel = "LeastPrivilege";
+            }
+            else // Cao (High Priority)
+            {
+                delay = "PT1S";
+                taskPriority = "2";
+                runLevel = "HighestAvailable";
+            }
 
             return $@"<?xml version=""1.0"" encoding=""UTF-16""?>
 <Task version=""1.4"" xmlns=""http://schemas.microsoft.com/windows/2004/02/mit/task"">
   <RegistrationInfo>
-    <Description>Smart Fan Cooling Hub - Auto start at Windows logon with admin privileges.</Description>
+    <Description>Smart Fan Cooling Hub - Auto start at Windows logon with configurable launch priority.</Description>
     <Author>{EscapeXml(userId)}</Author>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
       <UserId>{EscapeXml(userId)}</UserId>
-      <Delay>PT5S</Delay>
+      <Delay>{delay}</Delay>
     </LogonTrigger>
   </Triggers>
   <Principals>
     <Principal id=""Author"">
       <UserId>{EscapeXml(userId)}</UserId>
       <LogonType>InteractiveToken</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
+      <RunLevel>{runLevel}</RunLevel>
     </Principal>
   </Principals>
   <Settings>
@@ -147,11 +170,12 @@ namespace SmartFanCooling.Services
     <Hidden>false</Hidden>
     <RunOnlyIfIdle>false</RunOnlyIfIdle>
     <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <Priority>5</Priority>
+    <Priority>{taskPriority}</Priority>
   </Settings>
   <Actions Context=""Author"">
     <Exec>
       <Command>{EscapeXml(exePath)}</Command>
+      <Arguments>/autostart</Arguments>
       <WorkingDirectory>{EscapeXml(workingDir)}</WorkingDirectory>
     </Exec>
   </Actions>
