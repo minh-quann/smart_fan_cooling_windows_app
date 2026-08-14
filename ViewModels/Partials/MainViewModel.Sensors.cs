@@ -86,12 +86,70 @@ namespace SmartFanCooling.ViewModels
             }
         }
 
-        // OnChanged callbacks to auto-save settings
-        partial void OnEnableCpuMonitoringChanged(bool value) => SaveCurrentSystemSettings();
-        partial void OnEnableGpuMonitoringChanged(bool value) => SaveCurrentSystemSettings();
-        partial void OnEnableRamMonitoringChanged(bool value) => SaveCurrentSystemSettings();
-        partial void OnEnableMotherboardMonitoringChanged(bool value) => SaveCurrentSystemSettings();
-        partial void OnEnableStorageMonitoringChanged(bool value) => SaveCurrentSystemSettings();
+        // OnChanged callbacks to auto-save settings & auto-toggle child sub-metrics
+#pragma warning disable MVVMTK0034
+        partial void OnEnableCpuMonitoringChanged(bool value)
+        {
+            SetProperty(ref _enableCpuTemp, value, nameof(EnableCpuTemp));
+            SetProperty(ref _enableCpuUsage, value, nameof(EnableCpuUsage));
+            SetProperty(ref _enableCpuClock, value, nameof(EnableCpuClock));
+            SetProperty(ref _enableCpuPower, value, nameof(EnableCpuPower));
+            SetProperty(ref _enableCpuFanRpm, value, nameof(EnableCpuFanRpm));
+            OnPropertyChanged(nameof(EnableCpuTemp));
+            OnPropertyChanged(nameof(EnableCpuUsage));
+            OnPropertyChanged(nameof(EnableCpuClock));
+            OnPropertyChanged(nameof(EnableCpuPower));
+            OnPropertyChanged(nameof(EnableCpuFanRpm));
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnEnableGpuMonitoringChanged(bool value)
+        {
+            SetProperty(ref _enableGpuTemp, value, nameof(EnableGpuTemp));
+            SetProperty(ref _enableGpuHotSpotTemp, value, nameof(EnableGpuHotSpotTemp));
+            SetProperty(ref _enableGpuMemoryTemp, value, nameof(EnableGpuMemoryTemp));
+            SetProperty(ref _enableGpuUsage, value, nameof(EnableGpuUsage));
+            SetProperty(ref _enableGpuClock, value, nameof(EnableGpuClock));
+            SetProperty(ref _enableGpuPower, value, nameof(EnableGpuPower));
+            SetProperty(ref _enableGpuVramUsed, value, nameof(EnableGpuVramUsed));
+            SetProperty(ref _enableGpuFanRpm, value, nameof(EnableGpuFanRpm));
+            OnPropertyChanged(nameof(EnableGpuTemp));
+            OnPropertyChanged(nameof(EnableGpuHotSpotTemp));
+            OnPropertyChanged(nameof(EnableGpuMemoryTemp));
+            OnPropertyChanged(nameof(EnableGpuUsage));
+            OnPropertyChanged(nameof(EnableGpuClock));
+            OnPropertyChanged(nameof(EnableGpuPower));
+            OnPropertyChanged(nameof(EnableGpuVramUsed));
+            OnPropertyChanged(nameof(EnableGpuFanRpm));
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnEnableRamMonitoringChanged(bool value)
+        {
+            SetProperty(ref _enableRamUsagePercent, value, nameof(EnableRamUsagePercent));
+            SetProperty(ref _enableRamUsedGB, value, nameof(EnableRamUsedGB));
+            OnPropertyChanged(nameof(EnableRamUsagePercent));
+            OnPropertyChanged(nameof(EnableRamUsedGB));
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnEnableMotherboardMonitoringChanged(bool value)
+        {
+            SetProperty(ref _enableMotherboardTemp, value, nameof(EnableMotherboardTemp));
+            SetProperty(ref _enableVrmTemp, value, nameof(EnableVrmTemp));
+            OnPropertyChanged(nameof(EnableMotherboardTemp));
+            OnPropertyChanged(nameof(EnableVrmTemp));
+            SaveCurrentSystemSettings();
+        }
+
+        partial void OnEnableStorageMonitoringChanged(bool value)
+        {
+            SetProperty(ref _enableSsdTemp, value, nameof(EnableSsdTemp));
+            OnPropertyChanged(nameof(EnableSsdTemp));
+            SaveCurrentSystemSettings();
+        }
+#pragma warning restore MVVMTK0034
+
         partial void OnEnableLaptopFanMonitoringChanged(bool value) => SaveCurrentSystemSettings();
 
         partial void OnEnableCpuTempChanged(bool value) => SaveCurrentSystemSettings();

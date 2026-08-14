@@ -68,28 +68,28 @@ namespace SmartFanCooling.ViewModels
             SetProperty(ref _enableStorageMonitoring, settings.EnableStorageMonitoring, nameof(EnableStorageMonitoring));
             SetProperty(ref _enableLaptopFanMonitoring, settings.EnableLaptopFanMonitoring, nameof(EnableLaptopFanMonitoring));
 
-            SetProperty(ref _enableCpuTemp, settings.EnableCpuTemp, nameof(EnableCpuTemp));
-            SetProperty(ref _enableCpuUsage, settings.EnableCpuUsage, nameof(EnableCpuUsage));
-            SetProperty(ref _enableCpuClock, settings.EnableCpuClock, nameof(EnableCpuClock));
-            SetProperty(ref _enableCpuPower, settings.EnableCpuPower, nameof(EnableCpuPower));
-            SetProperty(ref _enableCpuFanRpm, settings.EnableCpuFanRpm, nameof(EnableCpuFanRpm));
+            SetProperty(ref _enableCpuTemp, settings.EnableCpuMonitoring && settings.EnableCpuTemp, nameof(EnableCpuTemp));
+            SetProperty(ref _enableCpuUsage, settings.EnableCpuMonitoring && settings.EnableCpuUsage, nameof(EnableCpuUsage));
+            SetProperty(ref _enableCpuClock, settings.EnableCpuMonitoring && settings.EnableCpuClock, nameof(EnableCpuClock));
+            SetProperty(ref _enableCpuPower, settings.EnableCpuMonitoring && settings.EnableCpuPower, nameof(EnableCpuPower));
+            SetProperty(ref _enableCpuFanRpm, settings.EnableCpuMonitoring && settings.EnableCpuFanRpm, nameof(EnableCpuFanRpm));
 
-            SetProperty(ref _enableGpuTemp, settings.EnableGpuTemp, nameof(EnableGpuTemp));
-            SetProperty(ref _enableGpuHotSpotTemp, settings.EnableGpuHotSpotTemp, nameof(EnableGpuHotSpotTemp));
-            SetProperty(ref _enableGpuMemoryTemp, settings.EnableGpuMemoryTemp, nameof(EnableGpuMemoryTemp));
-            SetProperty(ref _enableGpuUsage, settings.EnableGpuUsage, nameof(EnableGpuUsage));
-            SetProperty(ref _enableGpuClock, settings.EnableGpuClock, nameof(EnableGpuClock));
-            SetProperty(ref _enableGpuPower, settings.EnableGpuPower, nameof(EnableGpuPower));
-            SetProperty(ref _enableGpuVramUsed, settings.EnableGpuVramUsed, nameof(EnableGpuVramUsed));
-            SetProperty(ref _enableGpuFanRpm, settings.EnableGpuFanRpm, nameof(EnableGpuFanRpm));
+            SetProperty(ref _enableGpuTemp, settings.EnableGpuMonitoring && settings.EnableGpuTemp, nameof(EnableGpuTemp));
+            SetProperty(ref _enableGpuHotSpotTemp, settings.EnableGpuMonitoring && settings.EnableGpuHotSpotTemp, nameof(EnableGpuHotSpotTemp));
+            SetProperty(ref _enableGpuMemoryTemp, settings.EnableGpuMonitoring && settings.EnableGpuMemoryTemp, nameof(EnableGpuMemoryTemp));
+            SetProperty(ref _enableGpuUsage, settings.EnableGpuMonitoring && settings.EnableGpuUsage, nameof(EnableGpuUsage));
+            SetProperty(ref _enableGpuClock, settings.EnableGpuMonitoring && settings.EnableGpuClock, nameof(EnableGpuClock));
+            SetProperty(ref _enableGpuPower, settings.EnableGpuMonitoring && settings.EnableGpuPower, nameof(EnableGpuPower));
+            SetProperty(ref _enableGpuVramUsed, settings.EnableGpuMonitoring && settings.EnableGpuVramUsed, nameof(EnableGpuVramUsed));
+            SetProperty(ref _enableGpuFanRpm, settings.EnableGpuMonitoring && settings.EnableGpuFanRpm, nameof(EnableGpuFanRpm));
 
-            SetProperty(ref _enableRamUsagePercent, settings.EnableRamUsagePercent, nameof(EnableRamUsagePercent));
-            SetProperty(ref _enableRamUsedGB, settings.EnableRamUsedGB, nameof(EnableRamUsedGB));
+            SetProperty(ref _enableRamUsagePercent, settings.EnableRamMonitoring && settings.EnableRamUsagePercent, nameof(EnableRamUsagePercent));
+            SetProperty(ref _enableRamUsedGB, settings.EnableRamMonitoring && settings.EnableRamUsedGB, nameof(EnableRamUsedGB));
 
-            SetProperty(ref _enableMotherboardTemp, settings.EnableMotherboardTemp, nameof(EnableMotherboardTemp));
-            SetProperty(ref _enableVrmTemp, settings.EnableVrmTemp, nameof(EnableVrmTemp));
+            SetProperty(ref _enableMotherboardTemp, settings.EnableMotherboardMonitoring && settings.EnableMotherboardTemp, nameof(EnableMotherboardTemp));
+            SetProperty(ref _enableVrmTemp, settings.EnableMotherboardMonitoring && settings.EnableVrmTemp, nameof(EnableVrmTemp));
 
-            SetProperty(ref _enableSsdTemp, settings.EnableSsdTemp, nameof(EnableSsdTemp));
+            SetProperty(ref _enableSsdTemp, settings.EnableStorageMonitoring && settings.EnableSsdTemp, nameof(EnableSsdTemp));
 
             if (!string.IsNullOrEmpty(settings.SelectedStartupPriority) && StartupPriorityOptions.Contains(settings.SelectedStartupPriority))
             {

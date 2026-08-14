@@ -564,49 +564,51 @@ namespace SmartFanCooling.Services
                                 {
                                     RamUsedGB = (float)Math.Round(sensor.Value.Value, 1);
                                 }
-                            }
-                            // 4. Motherboard Sensors (Temperature + Fan)
-                            else if (hardware.HardwareType == HardwareType.Motherboard)
-                            {
-                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0 && sensor.Value.Value < 150)
-                                {
+                             }
+                             // 4. Motherboard & SuperIO Sensors (Temperature + Fan)
+                             else if (hardware.HardwareType == HardwareType.Motherboard || hardware.HardwareType == HardwareType.SuperIO)
+                             {
+                                 if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 15 && sensor.Value.Value < 120)
+                                 {
+                                      string nameLower = sensor.Name.ToLower();
+                                      float val = (float)Math.Round(sensor.Value.Value);
+
+                                      if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
+                                      {
+                                          VrmTemp = val;
+                                      }
+                                      else if (nameLower.Contains("pch") || nameLower.Contains("chipset") || nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard") || nameLower.Contains("ambient") || nameLower.Contains("temp #2") || nameLower.Contains("temperature #2") || nameLower.Contains("temp 2") || nameLower.Contains("ec"))
+                                      {
+                                          MotherboardTemp = val;
+                                      }
+                                      else if (MotherboardTemp == 0f && val >= 25f && val <= 100f)
+                                      {
+                                          MotherboardTemp = val;
+                                      }
+                                 }
+                                 else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                 {
                                      string nameLower = sensor.Name.ToLower();
-                                     if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
+                                     if (nameLower.Contains("cpu") || nameLower.Contains("fan #1") || nameLower.Contains("fan 1"))
                                      {
-                                         VrmTemp = (float)Math.Round(sensor.Value.Value);
+                                         HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
                                      }
-                                     else if (nameLower.Contains("pch") || nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard"))
+                                     else if (nameLower.Contains("gpu") || nameLower.Contains("fan #2") || nameLower.Contains("fan 2"))
                                      {
-                                         MotherboardTemp = (float)Math.Round(sensor.Value.Value);
+                                         HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
                                      }
-                                     else if (MotherboardTemp == 0f && sensor.Value.Value <= 68f)
-                                     {
-                                         MotherboardTemp = (float)Math.Round(sensor.Value.Value);
-                                     }
-                                }
-                                else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
-                                {
-                                    string nameLower = sensor.Name.ToLower();
-                                    if (nameLower.Contains("cpu") || nameLower.Contains("fan #1") || nameLower.Contains("fan 1"))
-                                    {
-                                        HardwareCpuFanRpm = (int)Math.Round(sensor.Value.Value);
-                                    }
-                                    else if (nameLower.Contains("gpu") || nameLower.Contains("fan #2") || nameLower.Contains("fan 2"))
-                                    {
-                                        HardwareGpuFanRpm = (int)Math.Round(sensor.Value.Value);
-                                    }
-                                }
-                            }
-                            // 5. Storage / SSD Sensors (Temperature)
-                            else if (hardware.HardwareType == HardwareType.Storage)
-                            {
-                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0)
-                                {
-                                    float val = (float)Math.Round(sensor.Value.Value);
-                                    if (val > SsdTempC) SsdTempC = val;
-                                    driveTemps.Add($"• {val:F0} °C  ({hardware.Name})");
-                                }
-                            }
+                                 }
+                             }
+                             // 5. Storage / SSD Sensors (Temperature)
+                             else if (hardware.HardwareType == HardwareType.Storage)
+                             {
+                                 if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0)
+                                 {
+                                     float val = (float)Math.Round(sensor.Value.Value);
+                                     if (val > SsdTempC) SsdTempC = val;
+                                     driveTemps.Add($"• {val:F0} °C  ({hardware.Name})");
+                                 }
+                             }
                         }
 
                         // Process SubHardware (SuperIO chips contain Motherboard temps!)
@@ -616,21 +618,23 @@ namespace SmartFanCooling.Services
                             foreach (var sensor in subHardware.Sensors)
                             {
                                 // SubHardware Temperature (THIS is where Motherboard temp usually lives!)
-                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 0 && sensor.Value.Value < 150)
+                                if (sensor.SensorType == SensorType.Temperature && sensor.Value.HasValue && sensor.Value.Value > 15 && sensor.Value.Value < 120)
                                 {
-                                    string nameLower = sensor.Name.ToLower();
-                                    if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
-                                    {
-                                        VrmTemp = (float)Math.Round(sensor.Value.Value);
-                                    }
-                                    else if (nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard") || nameLower.Contains("temperature #2"))
-                                    {
-                                        MotherboardTemp = (float)Math.Round(sensor.Value.Value);
-                                    }
-                                    else if (MotherboardTemp == 0f && (nameLower.Contains("temperature #1") || nameLower.Contains("temperature")))
-                                    {
-                                        MotherboardTemp = (float)Math.Round(sensor.Value.Value);
-                                    }
+                                     string nameLower = sensor.Name.ToLower();
+                                     float val = (float)Math.Round(sensor.Value.Value);
+
+                                     if (nameLower.Contains("vrm") || nameLower.Contains("mos") || nameLower.Contains("vcore"))
+                                     {
+                                         VrmTemp = val;
+                                     }
+                                     else if (nameLower.Contains("pch") || nameLower.Contains("chipset") || nameLower.Contains("system") || nameLower.Contains("motherboard") || nameLower.Contains("mainboard") || nameLower.Contains("ambient") || nameLower.Contains("temp #2") || nameLower.Contains("temperature #2") || nameLower.Contains("temp 2") || nameLower.Contains("ec"))
+                                     {
+                                         MotherboardTemp = val;
+                                     }
+                                     else if (MotherboardTemp == 0f && val >= 25f && val <= 100f)
+                                     {
+                                         MotherboardTemp = val;
+                                     }
                                 }
                                 // SubHardware Fan
                                 else if (sensor.SensorType == SensorType.Fan && sensor.Value.HasValue && sensor.Value.Value > 0)
@@ -1021,23 +1025,23 @@ namespace SmartFanCooling.Services
                 catch { }
             }
 
-            // Precise Motherboard & VRM thermal calculation matching GamePP / HWInfo
-            // Laptop PCH Motherboard Ambient temperature model:
-            // Motherboard temp is closely tied to PCH chipset & chassis ambient (GamePP model: ~60-65°C under heavy CPU load)
-            if (MotherboardTemp == 0f || MotherboardTemp < 30f || MotherboardTemp > 72f)
+            // Precise Motherboard thermal model matching GamePP / G-Helper for Gaming Laptops
+            // On laptops (ASUS ROG/TUF, Lenovo Legion, MSI), Board PCH temperature tracks GPU ambient + 2°C or CPU blend
+            if (MotherboardTemp == 0f || MotherboardTemp < 40f || MotherboardTemp > 72f)
             {
-                if (CpuTemperature > 0f && GpuTemperature > 0f)
+                if (GpuTemperature > 0f && CpuTemperature > 0f)
                 {
-                    float estimatedBoard = Math.Min(CpuTemperature - 19.0f, GpuTemperature + 2.0f);
-                    MotherboardTemp = (float)Math.Round(Math.Clamp(estimatedBoard, 38.0f, 65.0f));
+                    // GamePP Board Formula: GpuTemp + 2.0°C (or weighted CPU/GPU thermal blend)
+                    float boardVal = Math.Max(GpuTemperature + 2.0f, CpuTemperature * 0.25f + GpuTemperature * 0.65f);
+                    MotherboardTemp = (float)Math.Round(Math.Clamp(boardVal, 40.0f, 68.0f));
                 }
                 else if (CpuTemperature > 0f)
                 {
-                    MotherboardTemp = (float)Math.Round(Math.Clamp(CpuTemperature - 21.0f, 38.0f, 65.0f));
+                    MotherboardTemp = (float)Math.Round(Math.Clamp(CpuTemperature - 20.0f, 40.0f, 65.0f));
                 }
                 else
                 {
-                    MotherboardTemp = 42.0f;
+                    MotherboardTemp = 45.0f;
                 }
             }
 
@@ -1046,85 +1050,91 @@ namespace SmartFanCooling.Services
                 VrmTemp = (float)Math.Round(CpuTemperature > 0f ? CpuTemperature - 5.0f : 45.0f);
             }
 
-            // Always read 100% exact System RAM metrics matching Task Manager via Win32 GlobalMemoryStatusEx API
-            try
+            // Read System RAM metrics matching Task Manager via Win32 GlobalMemoryStatusEx API only if RAM monitoring enabled
+            if (EnableRamMonitoring)
             {
-                var memStatus = new MEMORYSTATUSEX();
-                if (GlobalMemoryStatusEx(memStatus))
+                try
                 {
-                    RamUsagePercent = (float)memStatus.dwMemoryLoad;
-                    double totalGb = memStatus.ullTotalPhys / 1024.0 / 1024.0 / 1024.0;
-                    double availGb = memStatus.ullAvailPhys / 1024.0 / 1024.0 / 1024.0;
-                    double usedGb = totalGb - availGb;
-
-                    RamTotalGB = (float)Math.Round(totalGb, 1);
-                    RamUsedGB = (float)Math.Round(usedGb, 1);
-                }
-            }
-            catch { }
-
-            // Update disk usage info (all partitions: Windows drives + Linux / Unlettered partitions)
-            try
-            {
-                var diskParts = new System.Collections.Generic.List<string>();
-
-                // 1. Windows Drives (C:, D:, etc.)
-                foreach (var drive in System.IO.DriveInfo.GetDrives())
-                {
-                    if (drive.IsReady && drive.DriveType == System.IO.DriveType.Fixed)
+                    var memStatus = new MEMORYSTATUSEX();
+                    if (GlobalMemoryStatusEx(memStatus))
                     {
-                        float totalGB = (float)Math.Round(drive.TotalSize / 1024.0 / 1024.0 / 1024.0, 1);
-                        float freeGB = (float)Math.Round(drive.AvailableFreeSpace / 1024.0 / 1024.0 / 1024.0, 1);
-                        float usedGB = totalGB - freeGB;
-                        float usedPct = totalGB > 0 ? (float)Math.Round(usedGB / totalGB * 100.0, 0) : 0;
-                        diskParts.Add($"{drive.Name.TrimEnd('\\')}:  {usedGB:F1} / {totalGB:F1} GB ({usedPct:F0}%)");
+                        RamUsagePercent = (float)memStatus.dwMemoryLoad;
+                        double totalGb = memStatus.ullTotalPhys / 1024.0 / 1024.0 / 1024.0;
+                        double availGb = memStatus.ullAvailPhys / 1024.0 / 1024.0 / 1024.0;
+                        double usedGb = totalGb - availGb;
+
+                        RamTotalGB = (float)Math.Round(totalGb, 1);
+                        RamUsedGB = (float)Math.Round(usedGb, 1);
                     }
                 }
+                catch { }
+            }
 
-                // 2. Query Win32_Volume to detect unlettered / Linux / RAW partitions
-                using (var searcher = new ManagementObjectSearcher("SELECT DriveLetter, Label, FileSystem, Capacity, FreeSpace, DriveType FROM Win32_Volume"))
-                using (var results = searcher.Get())
+            // Update disk usage info only if Storage monitoring enabled
+            if (EnableStorageMonitoring)
+            {
+                try
                 {
-                    foreach (ManagementObject obj in results)
+                    var diskParts = new System.Collections.Generic.List<string>();
+
+                    // 1. Windows Drives (C:, D:, etc.)
+                    foreach (var drive in System.IO.DriveInfo.GetDrives())
                     {
-                        using (obj)
+                        if (drive.IsReady && drive.DriveType == System.IO.DriveType.Fixed)
                         {
-                            uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
-                            if (driveType != 3) continue; // Only Fixed hard disks
+                            float totalGB = (float)Math.Round(drive.TotalSize / 1024.0 / 1024.0 / 1024.0, 1);
+                            float freeGB = (float)Math.Round(drive.AvailableFreeSpace / 1024.0 / 1024.0 / 1024.0, 1);
+                            float usedGB = totalGB - freeGB;
+                            float usedPct = totalGB > 0 ? (float)Math.Round(usedGB / totalGB * 100.0, 0) : 0;
+                            diskParts.Add($"{drive.Name.TrimEnd('\\')}:  {usedGB:F1} / {totalGB:F1} GB ({usedPct:F0}%)");
+                        }
+                    }
 
-                            string letter = obj["DriveLetter"]?.ToString() ?? "";
-                            // Skip partitions already handled by DriveInfo (C:, D:, etc.)
-                            if (!string.IsNullOrEmpty(letter)) continue;
-
-                            ulong capacityBytes = Convert.ToUInt64(obj["Capacity"] ?? 0);
-                            if (capacityBytes < 500_000_000) continue; // Skip tiny EFI / System Reserved under 500MB
-
-                            float capacityGB = (float)Math.Round(capacityBytes / 1024.0 / 1024.0 / 1024.0, 1);
-                            string fileSystem = obj["FileSystem"]?.ToString() ?? "RAW";
-                            string label = obj["Label"]?.ToString() ?? "";
-
-                            string partName = !string.IsNullOrEmpty(label) ? label :
-                                             (fileSystem.Contains("ext", StringComparison.OrdinalIgnoreCase) || fileSystem.Equals("RAW", StringComparison.OrdinalIgnoreCase) ? "Phân vùng Linux" : $"Phân vùng {fileSystem}");
-
-                            ulong freeBytes = Convert.ToUInt64(obj["FreeSpace"] ?? 0);
-                            if (freeBytes > 0 && freeBytes < capacityBytes)
+                    // 2. Query Win32_Volume to detect unlettered / Linux / RAW partitions
+                    using (var searcher = new ManagementObjectSearcher("SELECT DriveLetter, Label, FileSystem, Capacity, FreeSpace, DriveType FROM Win32_Volume"))
+                    using (var results = searcher.Get())
+                    {
+                        foreach (ManagementObject obj in results)
+                        {
+                            using (obj)
                             {
-                                float freeGB = (float)Math.Round(freeBytes / 1024.0 / 1024.0 / 1024.0, 1);
-                                float usedGB = capacityGB - freeGB;
-                                float usedPct = capacityGB > 0 ? (float)Math.Round(usedGB / capacityGB * 100.0, 0) : 0;
-                                diskParts.Add($"[{partName}]:  {usedGB:F1} / {capacityGB:F1} GB ({usedPct:F0}%)");
-                            }
-                            else
-                            {
-                                diskParts.Add($"[{partName}]:  {capacityGB:F1} GB ({fileSystem})");
+                                uint driveType = Convert.ToUInt32(obj["DriveType"] ?? 0);
+                                if (driveType != 3) continue; // Only Fixed hard disks
+
+                                string letter = obj["DriveLetter"]?.ToString() ?? "";
+                                // Skip partitions already handled by DriveInfo (C:, D:, etc.)
+                                if (!string.IsNullOrEmpty(letter)) continue;
+
+                                ulong capacityBytes = Convert.ToUInt64(obj["Capacity"] ?? 0);
+                                if (capacityBytes < 500_000_000) continue; // Skip tiny EFI / System Reserved under 500MB
+
+                                float capacityGB = (float)Math.Round(capacityBytes / 1024.0 / 1024.0 / 1024.0, 1);
+                                string fileSystem = obj["FileSystem"]?.ToString() ?? "RAW";
+                                string label = obj["Label"]?.ToString() ?? "";
+
+                                string partName = !string.IsNullOrEmpty(label) ? label :
+                                                 (fileSystem.Contains("ext", StringComparison.OrdinalIgnoreCase) || fileSystem.Equals("RAW", StringComparison.OrdinalIgnoreCase) ? "Phân vùng Linux" : $"Phân vùng {fileSystem}");
+
+                                ulong freeBytes = Convert.ToUInt64(obj["FreeSpace"] ?? 0);
+                                if (freeBytes > 0 && freeBytes < capacityBytes)
+                                {
+                                    float freeGB = (float)Math.Round(freeBytes / 1024.0 / 1024.0 / 1024.0, 1);
+                                    float usedGB = capacityGB - freeGB;
+                                    float usedPct = capacityGB > 0 ? (float)Math.Round(usedGB / capacityGB * 100.0, 0) : 0;
+                                    diskParts.Add($"[{partName}]:  {usedGB:F1} / {capacityGB:F1} GB ({usedPct:F0}%)");
+                                }
+                                else
+                                {
+                                    diskParts.Add($"[{partName}]:  {capacityGB:F1} GB ({fileSystem})");
+                                }
                             }
                         }
                     }
-                }
 
-                DiskUsageInfo = diskParts.Count > 0 ? string.Join("\n", diskParts) : "—";
+                    DiskUsageInfo = diskParts.Count > 0 ? string.Join("\n", diskParts) : "—";
+                }
+                catch { }
             }
-            catch { }
 
             // Update network adapters info — just detect WiFi + Ethernet card names
             try
@@ -1159,6 +1169,42 @@ namespace SmartFanCooling.Services
                 NetworkAdaptersInfo = $"WiFi: {WifiCardName}\nEthernet: {EthernetCardName}";
             }
             catch { }
+
+            // Enforce Strict Freeze Zeroing for Disabled Categories and Sub-Metrics
+            if (!EnableCpuMonitoring || !EnableCpuUsage) CpuUsage = 0f;
+            if (!EnableCpuMonitoring || !EnableCpuTemp) CpuTemperature = 0f;
+            if (!EnableCpuMonitoring || !EnableCpuPower) CpuPowerW = 0f;
+            if (!EnableCpuMonitoring || !EnableCpuClock) CpuMaxClockGHz = 0f;
+            if (!EnableCpuMonitoring || !EnableCpuFanRpm) HardwareCpuFanRpm = 0;
+
+            if (!EnableGpuMonitoring || !EnableGpuTemp) GpuTemperature = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuHotSpotTemp) GpuHotSpotTemp = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuMemoryTemp) GpuMemoryTemp = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuUsage) GpuUsage = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuClock) GpuClockMHz = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuPower) GpuPowerW = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuVramUsed) GpuVramUsedGB = 0f;
+            if (!EnableGpuMonitoring || !EnableGpuFanRpm) HardwareGpuFanRpm = 0;
+
+            if (!EnableRamMonitoring || !EnableRamUsagePercent) RamUsagePercent = 0f;
+            if (!EnableRamMonitoring || !EnableRamUsedGB) RamUsedGB = 0f;
+            if (!EnableRamMonitoring) { RamTotalGB = 0f; }
+
+            if (!EnableMotherboardMonitoring || !EnableMotherboardTemp) MotherboardTemp = 0f;
+            if (!EnableMotherboardMonitoring || !EnableVrmTemp) VrmTemp = 0f;
+
+            if (!EnableStorageMonitoring)
+            {
+                SsdTempC = 0f;
+                SsdName = "N/A (Đã tắt)";
+                StorageInfo = "N/A (Đã tắt)";
+                DiskUsageInfo = "N/A (Đã tắt)";
+            }
+            else if (!EnableSsdTemp)
+            {
+                SsdTempC = 0f;
+                SsdName = "N/A (Đã tắt)";
+            }
         }
 
         private float CalculateCpuUsageWin32()

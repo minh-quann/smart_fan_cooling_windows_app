@@ -140,42 +140,67 @@ namespace SmartFanCooling.ViewModels
                 await System.Threading.Tasks.Task.Run(() => _hardwareService.UpdateSensors());
 
                 // CPU Telemetry
-                CpuTemp = _hardwareService.CpuTemperature;
-                CpuUsage = _hardwareService.CpuUsage;
-                CpuPowerW = _hardwareService.CpuPowerW;
-                CpuMaxClockGHz = _hardwareService.CpuMaxClockGHz;
+                CpuTemp = (EnableCpuMonitoring && EnableCpuTemp) ? _hardwareService.CpuTemperature : 0f;
+                CpuUsage = (EnableCpuMonitoring && EnableCpuUsage) ? _hardwareService.CpuUsage : 0f;
+                CpuPowerW = (EnableCpuMonitoring && EnableCpuPower) ? _hardwareService.CpuPowerW : 0f;
+                CpuMaxClockGHz = (EnableCpuMonitoring && EnableCpuClock) ? _hardwareService.CpuMaxClockGHz : 0f;
                 if (!string.IsNullOrEmpty(_hardwareService.CpuName) && _hardwareService.CpuName != "CPU")
                 {
                     CpuName = _hardwareService.CpuName;
                 }
 
                 // GPU Telemetry
-                GpuTemp = _hardwareService.GpuTemperature;
-                GpuUsage = _hardwareService.GpuUsage;
-                GpuPowerW = _hardwareService.GpuPowerW;
-                GpuClockMHz = _hardwareService.GpuClockMHz;
-                GpuVramUsedGB = _hardwareService.GpuVramUsedGB;
-                GpuHotSpotTemp = _hardwareService.GpuHotSpotTemp;
-                GpuMemoryTemp = _hardwareService.GpuMemoryTemp;
+                GpuTemp = (EnableGpuMonitoring && EnableGpuTemp) ? _hardwareService.GpuTemperature : 0f;
+                GpuUsage = (EnableGpuMonitoring && EnableGpuUsage) ? _hardwareService.GpuUsage : 0f;
+                GpuPowerW = (EnableGpuMonitoring && EnableGpuPower) ? _hardwareService.GpuPowerW : 0f;
+                GpuClockMHz = (EnableGpuMonitoring && EnableGpuClock) ? _hardwareService.GpuClockMHz : 0f;
+                GpuVramUsedGB = (EnableGpuMonitoring && EnableGpuVramUsed) ? _hardwareService.GpuVramUsedGB : 0f;
+                GpuHotSpotTemp = (EnableGpuMonitoring && EnableGpuHotSpotTemp) ? _hardwareService.GpuHotSpotTemp : 0f;
+                GpuMemoryTemp = (EnableGpuMonitoring && EnableGpuMemoryTemp) ? _hardwareService.GpuMemoryTemp : 0f;
                 if (!string.IsNullOrEmpty(_hardwareService.GpuName) && _hardwareService.GpuName != "GPU")
                 {
                     GpuName = _hardwareService.GpuName;
                 }
 
                 // System RAM Telemetry
-                RamUsagePercent = _hardwareService.RamUsagePercent;
-                RamUsedGB = _hardwareService.RamUsedGB;
+                RamUsagePercent = (EnableRamMonitoring && EnableRamUsagePercent) ? _hardwareService.RamUsagePercent : 0f;
+                RamUsedGB = (EnableRamMonitoring && EnableRamUsedGB) ? _hardwareService.RamUsedGB : 0f;
                 if (_hardwareService.RamTotalGB > 0) RamTotalGB = _hardwareService.RamTotalGB;
-                RamStatusText = $"Bộ nhớ đã dùng: {RamUsedGB:F1} GB / {RamTotalGB:F1} GB";
+                if (EnableRamMonitoring && (EnableRamUsagePercent || EnableRamUsedGB))
+                {
+                    RamStatusText = $"Bộ nhớ đã dùng: {RamUsedGB:F1} GB / {RamTotalGB:F1} GB";
+                }
+                else
+                {
+                    RamStatusText = "N/A (Đã tắt)";
+                }
 
                 // Motherboard / VRM Telemetry
-                MotherboardTemp = _hardwareService.MotherboardTemp;
-                VrmTemp = _hardwareService.VrmTemp;
+                MotherboardTemp = (EnableMotherboardMonitoring && EnableMotherboardTemp) ? _hardwareService.MotherboardTemp : 0f;
+                VrmTemp = (EnableMotherboardMonitoring && EnableVrmTemp) ? _hardwareService.VrmTemp : 0f;
 
                 // SSD / Storage Telemetry
-                SsdTempC = _hardwareService.SsdTempC;
-                SsdName = _hardwareService.SsdName;
-                DiskUsageInfo = _hardwareService.DiskUsageInfo;
+                if (!EnableStorageMonitoring || !EnableSsdTemp)
+                {
+                    SsdTempC = 0f;
+                    SsdName = "N/A (Đã tắt)";
+                }
+                else
+                {
+                    SsdTempC = _hardwareService.SsdTempC;
+                    SsdName = _hardwareService.SsdName;
+                }
+
+                if (!EnableStorageMonitoring)
+                {
+                    DiskUsageInfo = "N/A (Đã tắt)";
+                    StorageInfo = "N/A (Đã tắt)";
+                }
+                else
+                {
+                    DiskUsageInfo = _hardwareService.DiskUsageInfo;
+                    StorageInfo = _hardwareService.StorageInfo;
+                }
 
                 // Network Adapters
                 NetworkAdaptersInfo = _hardwareService.NetworkAdaptersInfo;
@@ -183,8 +208,8 @@ namespace SmartFanCooling.ViewModels
                 EthernetCardName = _hardwareService.EthernetCardName;
 
                 // Laptop Fans
-                CpuFanRpm = _hardwareService.HardwareCpuFanRpm;
-                GpuFanRpm = _hardwareService.HardwareGpuFanRpm;
+                CpuFanRpm = (EnableCpuMonitoring && EnableCpuFanRpm) ? _hardwareService.HardwareCpuFanRpm : 0;
+                GpuFanRpm = (EnableGpuMonitoring && EnableGpuFanRpm) ? _hardwareService.HardwareGpuFanRpm : 0;
 
                 float maxTemp = Math.Max(CpuTemp, GpuTemp);
 
