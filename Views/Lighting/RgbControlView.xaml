@@ -52,6 +52,12 @@
                     <ComboBoxItem Content="7. Sao Băng Chạy Vòng (Comet / Chase)"/>
                     <ComboBoxItem Content="8. Mạch Đập (Pulse)"/>
                     <ComboBoxItem Content="9. Xoay Đôi 2 Nửa (Dual Spin)"/>
+                    <ComboBoxItem Content="10. Mưa Sao Băng (Meteor Rain)"/>
+                    <ComboBoxItem Content="11. Lấp Lánh Sao Trời (Twinkle Star)"/>
+                    <ComboBoxItem Content="12. Quét Màu Tuần Tự (Color Wipe)"/>
+                    <ComboBoxItem Content="13. Rạp Hát Broadway (Theater Chase)"/>
+                    <ComboBoxItem Content="14. Quét Qua Lại KITT (Larson Scanner)"/>
+                    <ComboBoxItem Content="15. Dòng Gradient Chảy (Gradient Flow)"/>
                 </ComboBox>
 
                 <!-- Rainbow Color Count Option (Only visible for Rainbow mode 2 & Wave mode 5) -->

@@ -330,6 +330,186 @@ static void effectDualSpin() {
   }
 }
 
+// ---- Meteor Rain: falling particles with decaying trails ----
+static void effectMeteor() {
+  static uint16_t meteorPos = 0;
+  static uint32_t lastMove = 0;
+  uint16_t speedDelay = map(_speed, 1, 100, 80, 8);
+
+  if (millis() - lastMove > speedDelay) {
+    meteorPos = (meteorPos + 1) % (_numLeds * 2);
+    lastMove = millis();
+  }
+
+  // Decay existing pixels randomly for organic trail
+  for (uint16_t i = 0; i < _numLeds; i++) {
+    if (random(0, 10) > 4) {
+      uint32_t c = _strip.getPixelColor(i);
+      uint8_t r = (uint8_t)(c >> 16);
+      uint8_t g = (uint8_t)(c >> 8);
+      uint8_t b = (uint8_t)(c);
+      r = (r > 20) ? r - 20 : 0;
+      g = (g > 20) ? g - 20 : 0;
+      b = (b > 20) ? b - 20 : 0;
+      _strip.setPixelColor(i, r, g, b);
+    }
+  }
+
+  // Draw meteor head (size = 4 bright pixels)
+  int meteorSize = 4;
+  uint16_t pos = _reverse ? (_numLeds - 1 - (meteorPos % _numLeds)) : (meteorPos % _numLeds);
+  for (int j = 0; j < meteorSize; j++) {
+    int idx = pos - j;
+    if (_reverse) idx = pos + j;
+    if (idx >= 0 && idx < _numLeds) {
+      uint32_t hue = (millis() * 6) + (idx * 500);
+      uint32_t c = _strip.gamma32(_strip.ColorHSV(hue));
+      _strip.setPixelColor(idx, scaleColor32(c, _brightness));
+    }
+  }
+}
+
+// ---- Twinkle Star: random LEDs sparkle like stars ----
+static void effectTwinkle() {
+  static uint32_t lastTwinkle = 0;
+  uint16_t interval = map(_speed, 1, 100, 120, 15);
+
+  // Fade all pixels gradually
+  for (uint16_t i = 0; i < _numLeds; i++) {
+    uint32_t c = _strip.getPixelColor(i);
+    uint8_t r = (uint8_t)(c >> 16);
+    uint8_t g = (uint8_t)(c >> 8);
+    uint8_t b = (uint8_t)(c);
+    r = (r > 15) ? r - 15 : 0;
+    g = (g > 15) ? g - 15 : 0;
+    b = (b > 15) ? b - 15 : 0;
+    _strip.setPixelColor(i, r, g, b);
+  }
+
+  // Spark new random pixels
+  if (millis() - lastTwinkle > interval) {
+    uint16_t numSparks = max(1, (int)(_numLeds / 8));
+    for (uint16_t s = 0; s < numSparks; s++) {
+      uint16_t idx = random(0, _numLeds);
+      uint32_t hue = random(0, 65536);
+      uint32_t c = _strip.gamma32(_strip.ColorHSV(hue, 200, 255));
+      _strip.setPixelColor(idx, scaleColor32(c, _brightness));
+    }
+    lastTwinkle = millis();
+  }
+}
+
+// ---- Color Wipe: fill strip pixel-by-pixel then clear ----
+static void effectColorWipe() {
+  static uint16_t wipePos = 0;
+  static bool wipeFilling = true;
+  static uint32_t wipeHue = 0;
+  static uint32_t lastMove = 0;
+  uint16_t speedDelay = map(_speed, 1, 100, 80, 5);
+
+  if (millis() - lastMove > speedDelay) {
+    uint16_t idx = _reverse ? (_numLeds - 1 - wipePos) : wipePos;
+    if (wipeFilling) {
+      uint32_t c = _strip.gamma32(_strip.ColorHSV(wipeHue));
+      _strip.setPixelColor(idx, scaleColor32(c, _brightness));
+    } else {
+      _strip.setPixelColor(idx, 0);
+    }
+
+    wipePos++;
+    if (wipePos >= _numLeds) {
+      wipePos = 0;
+      wipeFilling = !wipeFilling;
+      if (wipeFilling) {
+        wipeHue += 8000;  // Shift color each cycle
+      }
+    }
+    lastMove = millis();
+  }
+}
+
+// ---- Theater Chase: classic Broadway marquee chasing lights ----
+static void effectTheater() {
+  static uint8_t theaterStep = 0;
+  static uint32_t lastMove = 0;
+  static uint32_t theaterHue = 0;
+  uint16_t speedDelay = map(_speed, 1, 100, 150, 25);
+
+  if (millis() - lastMove > speedDelay) {
+    _strip.clear();
+    for (uint16_t i = 0; i < _numLeds; i++) {
+      uint16_t idx = _reverse ? (_numLeds - 1 - i) : i;
+      if ((i + theaterStep) % 3 == 0) {
+        uint32_t hue = theaterHue + (idx * 65536L / _numLeds);
+        uint32_t c = _strip.gamma32(_strip.ColorHSV(hue));
+        _strip.setPixelColor(idx, scaleColor32(c, _brightness));
+      }
+    }
+    theaterStep = (theaterStep + 1) % 3;
+    theaterHue += 400;
+    lastMove = millis();
+  }
+}
+
+// ---- Larson Scanner: KITT-style bouncing beam ----
+static void effectScanner() {
+  static int scanPos = 0;
+  static int scanDir = 1;
+  static uint32_t lastMove = 0;
+  uint16_t speedDelay = map(_speed, 1, 100, 80, 8);
+
+  if (millis() - lastMove > speedDelay) {
+    // Decay existing pixels for smooth trail
+    for (uint16_t i = 0; i < _numLeds; i++) {
+      uint32_t c = _strip.getPixelColor(i);
+      uint8_t r = (uint8_t)(c >> 16);
+      uint8_t g = (uint8_t)(c >> 8);
+      uint8_t b = (uint8_t)(c);
+      r = (r > 30) ? r - 30 : 0;
+      g = (g > 30) ? g - 30 : 0;
+      b = (b > 30) ? b - 30 : 0;
+      _strip.setPixelColor(i, r, g, b);
+    }
+
+    // Draw scanner beam (3 pixels wide)
+    int beamWidth = 3;
+    for (int j = -beamWidth / 2; j <= beamWidth / 2; j++) {
+      int idx = scanPos + j;
+      if (idx >= 0 && idx < _numLeds) {
+        uint8_t fade = 255 - abs(j) * 80;
+        uint32_t c = scaleColor(_staticR, _staticG, _staticB, fade);
+        _strip.setPixelColor(idx, scaleColor32(c, _brightness));
+      }
+    }
+
+    // Bounce direction
+    scanPos += _reverse ? -scanDir : scanDir;
+    if (scanPos >= (int)_numLeds - 1 || scanPos <= 0) {
+      scanDir = -scanDir;
+    }
+    lastMove = millis();
+  }
+}
+
+// ---- Gradient Flow: smooth multi-color gradient scrolling ----
+static void effectGradient() {
+  uint32_t step = map(_speed, 1, 100, 15, 300);
+  _hueStep += _reverse ? -step : step;
+
+  for (uint16_t i = 0; i < _numLeds; i++) {
+    // Create a smooth 3-color gradient using sine waves for organic blending
+    float pos = (float)i / _numLeds;
+    float phase = (_hueStep / 65536.0f) + pos;
+
+    // Generate smooth RGB using offset sine waves
+    uint8_t r = (uint8_t)(127.0f + 127.0f * sin(phase * 6.2832f));
+    uint8_t g = (uint8_t)(127.0f + 127.0f * sin(phase * 6.2832f + 2.094f));
+    uint8_t b = (uint8_t)(127.0f + 127.0f * sin(phase * 6.2832f + 4.189f));
+
+    _strip.setPixelColor(i, scaleColor(r, g, b, _brightness));
+  }
+}
+
 void updateLeds() {
   if (!_ledOn || _mode == LED_OFF) {
     _strip.clear();
@@ -349,6 +529,12 @@ void updateLeds() {
     case LED_COMET:      effectComet();     break;
     case LED_PULSE:      effectPulse();     break;
     case LED_DUAL_SPIN:  effectDualSpin();  break;
+    case LED_METEOR:     effectMeteor();    break;
+    case LED_TWINKLE:    effectTwinkle();   break;
+    case LED_COLOR_WIPE: effectColorWipe(); break;
+    case LED_THEATER:    effectTheater();   break;
+    case LED_SCANNER:    effectScanner();   break;
+    case LED_GRADIENT:   effectGradient();  break;
     default:             break;
   }
 

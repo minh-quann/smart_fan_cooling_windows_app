@@ -105,5 +105,11 @@ enum LedMode : uint8_t {
   LED_COMET      = 7,
   LED_PULSE      = 8,
   LED_DUAL_SPIN  = 9,
-  LED_MODE_COUNT = 10
+  LED_METEOR     = 10,   // Meteor rain falling effect
+  LED_TWINKLE    = 11,   // Random twinkling stars
+  LED_COLOR_WIPE = 12,   // Sequential color wipe
+  LED_THEATER    = 13,   // Theater chase marquee
+  LED_SCANNER    = 14,   // Larson scanner (KITT style)
+  LED_GRADIENT   = 15,   // Smooth gradient flow
+  LED_MODE_COUNT = 16
 };

@@ -57,7 +57,10 @@ namespace SmartFanCooling.ViewModels
                 if (FanRpm != calculatedRpm) FanRpm = calculatedRpm;
                 _isSyncingFromHardware = false;
 
-                if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+                // Only send fan commands after the first telemetry sync from ESP32.
+                // This prevents the app's default FanPwm=0 from stopping the fan
+                // that ESP32 already restored from NVS on boot.
+                if (_hasReceivedInitialSync && IsConnected && ActiveConnectionType == "USB_SERIAL")
                 {
                     _serialService.SetFanSpeed(value);
                 }
@@ -90,7 +93,7 @@ namespace SmartFanCooling.ViewModels
                 FanRpm = value;
                 _isSyncingFromHardware = false;
 
-                if (IsConnected && ActiveConnectionType == "USB_SERIAL")
+                if (_hasReceivedInitialSync && IsConnected && ActiveConnectionType == "USB_SERIAL")
                 {
                     _serialService.SetTargetRpm(value);
                     _serialService.SetFanSpeed(pct);

@@ -126,11 +126,25 @@ namespace SmartFanCooling
 
         public MainViewModel ViewModel { get; }
 
-        public MainWindow()
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_HIDE = 0;
+
+        public MainWindow(bool startHidden = false)
         {
             this.InitializeComponent();
             this.Title = "Smart Fan Cooling Hub";
             _hwnd = WindowNative.GetWindowHandle(this);
+
+            // Force hide the window immediately via Win32 if starting minimized to tray.
+            // In WinUI 3, the window may become visible during construction;
+            // AppWindow.Hide() alone is not reliable in the constructor,
+            // so we use the native ShowWindow(SW_HIDE) API to guarantee invisibility.
+            if (startHidden)
+            {
+                ShowWindow(_hwnd, SW_HIDE);
+            }
 
             try
             {
@@ -156,6 +170,12 @@ namespace SmartFanCooling
             }
 
             Microsoft.Win32.SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+
+            // Also use AppWindow.Hide() for belt-and-suspenders approach
+            if (startHidden && this.AppWindow != null)
+            {
+                this.AppWindow.Hide();
+            }
         }
 
         private void SystemEvents_SessionEnding(object sender, Microsoft.Win32.SessionEndingEventArgs e)

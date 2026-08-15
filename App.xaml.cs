@@ -37,14 +37,10 @@ namespace SmartFanCooling
                                                      a.Equals("-autostart", StringComparison.OrdinalIgnoreCase) ||
                                                      a.Equals("/minimized", StringComparison.OrdinalIgnoreCase));
 
-                MainWindowInstance = new MainWindow();
+                bool startHidden = isAutoStart && settings.StartMinimizedToTray;
+                MainWindowInstance = new MainWindow(startHidden);
 
-                // If launched via Windows auto-start and StartMinimizedToTray is enabled, keep window hidden in system tray
-                if (isAutoStart && settings.StartMinimizedToTray)
-                {
-                    // Do not activate window, app runs quietly in system tray
-                }
-                else
+                if (!startHidden)
                 {
                     MainWindowInstance.Activate();
                 }

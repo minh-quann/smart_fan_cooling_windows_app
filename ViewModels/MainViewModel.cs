@@ -28,6 +28,12 @@ namespace SmartFanCooling.ViewModels
         private bool _isUpdatingHardware = false;
         private bool _staticInfoLoaded = false;
 
+        // Prevents the app from sending fan/LED commands to ESP32 before receiving
+        // the first telemetry packet with actual hardware state. Without this guard,
+        // the app's default FanPwm=0 would be sent immediately on connection,
+        // momentarily stopping the fan that ESP32 had already restored from NVS.
+        private bool _hasReceivedInitialSync = false;
+
         // Selected Navigation Tab Index (0: Overview, 1: Fan Curve, 2: RGB, 3: App Profiles, 4: Hardware, 5: GPIO & Mouse Test, 6: HUD Overlay, 7: Settings)
         [ObservableProperty]
         private int _selectedTabIndex = 0;
@@ -85,6 +91,9 @@ namespace SmartFanCooling.ViewModels
             {
                 App.MainWindowInstance?.DispatcherQueue.TryEnqueue(() =>
                 {
+                    // Mark initial sync complete — ESP32 has reported its actual fan state
+                    _hasReceivedInitialSync = true;
+
                     if (FanPwm != fanPct)
                     {
                         _isSyncingFromHardware = true;

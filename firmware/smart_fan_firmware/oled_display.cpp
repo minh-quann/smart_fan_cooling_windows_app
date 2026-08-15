@@ -50,7 +50,8 @@ static bool _oled2ConfigMode = false;
 
 // LED mode names for display
 static const char* LED_MODE_NAMES[] = {
-  "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE", "COMET", "PULSE", "DUAL SPIN"
+  "OFF", "STATIC", "RAINBOW", "BREATH", "SYNC", "WAVE", "FIRE", "COMET", "PULSE", "DUAL SPIN",
+  "METEOR", "TWINKLE", "WIPE", "THEATER", "SCANNER", "GRADIENT"
 };
 
 // ---- NVS Persistence ----

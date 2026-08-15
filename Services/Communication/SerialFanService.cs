@@ -42,8 +42,12 @@ namespace SmartFanCooling.Services
                     StopBits = StopBits.One,
                     Handshake = Handshake.None,
                     Encoding = System.Text.Encoding.UTF8,
-                    DtrEnable = true,
-                    RtsEnable = true,
+                    // CRITICAL: DtrEnable and RtsEnable MUST be false to prevent
+                    // ESP32-S3 hardware reset via DTR/RTS signals when the serial port opens.
+                    // Without this, opening the port triggers a full ESP32 reboot,
+                    // causing the fan to stop for ~1-2s even though NVS restores settings.
+                    DtrEnable = false,
+                    RtsEnable = false,
                     NewLine = "\n"
                 };
 
