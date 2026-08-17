@@ -262,7 +262,6 @@ namespace SmartFanCooling.ViewModels
                 if (ActiveConnectionType == "USB_SERIAL" && IsConnected)
                 {
                     _serialService.Disconnect();
-                    _hasReceivedInitialSync = false;
                     IsConnected = false;
                     ActiveConnectionType = "DISCONNECTED";
                     ConnectionStatusText = "OFFLINE";
@@ -459,7 +458,6 @@ namespace SmartFanCooling.ViewModels
             {
                 _serialService.Disconnect();
                 _bleService.Disconnect();
-                _hasReceivedInitialSync = false;
                 IsConnected = false;
                 ActiveConnectionType = "DISCONNECTED";
                 ConnectionStatusText = "OFFLINE";
