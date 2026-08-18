@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using SmartFanCooling.ViewModels;
 using SmartFanCooling.Models;
+using SmartFanCooling.Views;
 using WinRT.Interop;
 
 namespace SmartFanCooling
@@ -48,7 +49,25 @@ namespace SmartFanCooling
         [DllImport("user32.dll")]
         private static extern bool GetCursorPos(out POINT lpPoint);
 
+        // Low-level mouse hook for scroll-to-adjust fan speed over tray icon
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr GetModuleHandle(string? lpModuleName);
+
+        // Get tray icon bounding rectangle (Windows 7+)
+        [DllImport("shell32.dll")]
+        private static extern int Shell_NotifyIconGetRect(ref NOTIFYICONIDENTIFIER identifier, out RECT iconRect);
+
         private delegate IntPtr SubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, nuint uIdSubclass, nuint dwRefData);
+        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         private const int NIM_ADD = 0x00000000;
         private const int NIM_MODIFY = 0x00000001;
@@ -71,11 +90,49 @@ namespace SmartFanCooling
         private const nuint ID_TRAY_OPEN = 2001;
         private const nuint ID_TRAY_EXIT = 2002;
 
+        // Tray fan speed preset command IDs
+        private const nuint ID_TRAY_FAN_0 = 3001;
+        private const nuint ID_TRAY_FAN_30 = 3002;
+        private const nuint ID_TRAY_FAN_50 = 3003;
+        private const nuint ID_TRAY_FAN_70 = 3004;
+        private const nuint ID_TRAY_FAN_100 = 3005;
+
+        // Mouse hook constants
+        private const int WH_MOUSE_LL = 14;
+        private const int WM_MOUSEWHEEL = 0x020A;
+        private const uint MF_CHECKED = 0x0008;
+        private const uint MF_GRAYED = 0x0001;
+
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT
         {
             public int X;
             public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NOTIFYICONIDENTIFIER
+        {
+            public uint cbSize;
+            public IntPtr hWnd;
+            public uint uID;
+            public Guid guidItem;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSLLHOOKSTRUCT
+        {
+            public POINT pt;
+            public int mouseData;
+            public int flags;
+            public int time;
+            public IntPtr dwExtraInfo;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -123,6 +180,9 @@ namespace SmartFanCooling
         private IntPtr _hwnd;
         private IntPtr _msgHwnd = IntPtr.Zero;
         private SubclassProc? _wndProc; // prevent GC collection
+        private LowLevelMouseProc? _mouseHookProc; // prevent GC collection of hook delegate
+        private IntPtr _mouseHook = IntPtr.Zero;
+        private TrayFanSpeedPopup? _trayFanPopup;
 
         public MainViewModel ViewModel { get; }
 
@@ -209,6 +269,9 @@ namespace SmartFanCooling
 
                 _wndProc = new SubclassProc(TrayIconSubclassProc);
                 SetWindowSubclass(targetHwnd, _wndProc, 1, 0);
+
+                // Install low-level mouse hook for scroll-to-adjust fan speed over tray icon
+                InstallTrayMouseWheelHook();
             }
             catch { }
         }
@@ -225,16 +288,39 @@ namespace SmartFanCooling
                 }
                 else if (lEvt == WM_RBUTTONUP)
                 {
-                    ShowTrayContextMenu();
+                    ShowTrayFanPopup();
                     return IntPtr.Zero;
                 }
             }
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
 
+        /// <summary>
+        /// Shows enhanced tray context menu with current fan status, speed presets, and app controls.
+        /// </summary>
         private void ShowTrayContextMenu()
         {
             IntPtr hMenu = CreatePopupMenu();
+
+            // Current fan status (disabled info line)
+            string fanInfo = ViewModel.IsConnected
+                ? $"Quạt: {ViewModel.FanPwm}% ({ViewModel.FanRpm} RPM)"
+                : "Quạt: OFFLINE";
+            AppendMenu(hMenu, MF_STRING | MF_GRAYED, 0, fanInfo);
+            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
+
+            // Fan speed presets with checkmark on current speed
+            bool canControl = ViewModel.IsConnected && !ViewModel.IsAutoMode;
+            uint disabledFlag = canControl ? 0 : MF_GRAYED;
+            int pwm = ViewModel.FanPwm;
+
+            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 0 ? MF_CHECKED : 0), ID_TRAY_FAN_0, "Tắt quạt");
+            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 30 ? MF_CHECKED : 0), ID_TRAY_FAN_30, "30% (~840 RPM)");
+            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 50 ? MF_CHECKED : 0), ID_TRAY_FAN_50, "50% (~1400 RPM)");
+            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 70 ? MF_CHECKED : 0), ID_TRAY_FAN_70, "70% (~1960 RPM)");
+            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 100 ? MF_CHECKED : 0), ID_TRAY_FAN_100, "100% Max (2800 RPM)");
+            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
+
             AppendMenu(hMenu, MF_STRING, ID_TRAY_OPEN, "Mở ứng dụng");
             AppendMenu(hMenu, MF_SEPARATOR, 0, null);
             AppendMenu(hMenu, MF_STRING, ID_TRAY_EXIT, "Thoát");
@@ -247,14 +333,36 @@ namespace SmartFanCooling
             DestroyMenu(hMenu);
             PostMessage(targetHwnd, 0x0000 /* WM_NULL */, IntPtr.Zero, IntPtr.Zero);
 
-            if (cmd == (int)ID_TRAY_OPEN)
+            // Handle menu selection
+            if (cmd == (int)ID_TRAY_OPEN) ShowMainWindow();
+            else if (cmd == (int)ID_TRAY_EXIT) ExitApplication();
+            else if (cmd == (int)ID_TRAY_FAN_0) SetTrayFanSpeed(0);
+            else if (cmd == (int)ID_TRAY_FAN_30) SetTrayFanSpeed(30);
+            else if (cmd == (int)ID_TRAY_FAN_50) SetTrayFanSpeed(50);
+            else if (cmd == (int)ID_TRAY_FAN_70) SetTrayFanSpeed(70);
+            else if (cmd == (int)ID_TRAY_FAN_100) SetTrayFanSpeed(100);
+        }
+
+        /// <summary>
+        /// Creates and shows a borderless popup with a fan speed slider near the tray icon.
+        /// Replaces the traditional context menu for a more intuitive UX.
+        /// </summary>
+        private void ShowTrayFanPopup()
+        {
+            // Create popup on first use, reuse on subsequent calls
+            if (_trayFanPopup == null)
             {
-                ShowMainWindow();
+                _trayFanPopup = new TrayFanSpeedPopup();
+                _trayFanPopup.FanSpeedChanged += SetTrayFanSpeed;
+                _trayFanPopup.OpenAppRequested += ShowMainWindow;
+                _trayFanPopup.ExitRequested += ExitApplication;
             }
-            else if (cmd == (int)ID_TRAY_EXIT)
-            {
-                ExitApplication();
-            }
+
+            // Use cursor position for compatibility with third-party docks (MyDock Finder, etc.)
+            // Shell_NotifyIconGetRect returns native Windows tray position, which may differ from
+            // the actual icon location when a dock app moves icons to another screen edge.
+            GetCursorPos(out POINT pt);
+            _trayFanPopup.ShowNear(pt.X, pt.Y, ViewModel);
         }
 
         private void ShowMainWindow()
@@ -263,10 +371,105 @@ namespace SmartFanCooling
             this.Activate();
         }
 
+        /// <summary>
+        /// Installs a global low-level mouse hook to capture scroll wheel events over the tray icon.
+        /// </summary>
+        private void InstallTrayMouseWheelHook()
+        {
+            _mouseHookProc = TrayMouseHookCallback;
+            _mouseHook = SetWindowsHookEx(WH_MOUSE_LL, _mouseHookProc, GetModuleHandle(null), 0);
+        }
+
+        /// <summary>
+        /// Low-level mouse hook callback. Intercepts WM_MOUSEWHEEL when cursor is over our tray icon
+        /// and adjusts fan speed ±4% per scroll notch (matches firmware encoder step).
+        /// </summary>
+        private IntPtr TrayMouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && (int)wParam == WM_MOUSEWHEEL)
+            {
+                var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+
+                // Check if cursor is precisely over our tray icon using Shell_NotifyIconGetRect
+                var nii = new NOTIFYICONIDENTIFIER
+                {
+                    cbSize = (uint)Marshal.SizeOf<NOTIFYICONIDENTIFIER>(),
+                    hWnd = _nid.hWnd,
+                    uID = (uint)_nid.uID,
+                    guidItem = Guid.Empty
+                };
+
+                if (Shell_NotifyIconGetRect(ref nii, out RECT iconRect) == 0) // S_OK
+                {
+                    if (hookStruct.pt.X >= iconRect.Left && hookStruct.pt.X <= iconRect.Right &&
+                        hookStruct.pt.Y >= iconRect.Top && hookStruct.pt.Y <= iconRect.Bottom)
+                    {
+                        // Only adjust if connected and not in auto fan curve mode
+                        if (ViewModel.IsConnected && !ViewModel.IsAutoMode)
+                        {
+                            // Extract wheel delta: HIWORD of mouseData (positive = scroll up, negative = scroll down)
+                            int delta = (short)((hookStruct.mouseData >> 16) & 0xFFFF);
+                            int step = delta > 0 ? 4 : -4; // 4% per notch (matches firmware ENCODER_STEP)
+                            SetTrayFanSpeed(Math.Clamp(ViewModel.FanPwm + step, 0, 100));
+                        }
+                        return (IntPtr)1; // Consume scroll event over our tray icon
+                    }
+                }
+            }
+
+            return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+        }
+
+        /// <summary>
+        /// Sets fan speed from tray controls (context menu presets or scroll wheel).
+        /// Disables auto mode and updates tray tooltip.
+        /// </summary>
+        private void SetTrayFanSpeed(int percent)
+        {
+            if (!ViewModel.IsConnected) return;
+            ViewModel.IsAutoMode = false;
+            ViewModel.FanPwm = Math.Clamp(percent, 0, 100);
+            ViewModel.IsFanStateOn = percent > 0;
+            UpdateTrayTooltip();
+        }
+
+        /// <summary>
+        /// Updates the tray icon tooltip to show current fan speed and connection status.
+        /// </summary>
+        private void UpdateTrayTooltip()
+        {
+            try
+            {
+                string status = ViewModel.IsConnected
+                    ? $"Smart Fan Cooling Hub — Quạt: {ViewModel.FanPwm}% ({ViewModel.FanRpm} RPM)"
+                    : "Smart Fan Cooling Hub (OFFLINE)";
+
+                // szTip max length = 128 chars
+                if (status.Length > 127) status = status.Substring(0, 127);
+                _nid.szTip = status;
+                Shell_NotifyIcon(NIM_MODIFY, ref _nid);
+            }
+            catch { }
+        }
+
         private void ExitApplication()
         {
             try
             {
+                // Close tray fan speed popup
+                if (_trayFanPopup != null)
+                {
+                    _trayFanPopup.Close();
+                    _trayFanPopup = null;
+                }
+
+                // Unhook low-level mouse hook
+                if (_mouseHook != IntPtr.Zero)
+                {
+                    UnhookWindowsHookEx(_mouseHook);
+                    _mouseHook = IntPtr.Zero;
+                }
+
                 Microsoft.Win32.SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
                 Shell_NotifyIcon(NIM_DELETE, ref _nid);
 

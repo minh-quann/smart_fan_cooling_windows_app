@@ -42,8 +42,8 @@ namespace SmartFanCooling.Services
                     StopBits = StopBits.One,
                     Handshake = Handshake.None,
                     Encoding = System.Text.Encoding.UTF8,
-                    DtrEnable = true,
-                    RtsEnable = true,
+                    DtrEnable = false,
+                    RtsEnable = false,
                     NewLine = "\n"
                 };
 
