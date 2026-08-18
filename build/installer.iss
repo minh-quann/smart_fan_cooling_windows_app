@@ -37,6 +37,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=yes
 CloseApplicationsFilter=*smart_fan_cooling_windows_app*
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=..\app_icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
