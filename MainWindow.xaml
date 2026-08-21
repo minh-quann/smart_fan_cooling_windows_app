@@ -93,11 +93,16 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                            <FontIcon Glyph="&#xE9CA;" FontSize="22" Foreground="{ThemeResource SystemAccentColor}"/>
-                            <StackPanel>
-                                <TextBlock Text="SMART FAN COOLING HUB" FontSize="15" FontWeight="Bold"/>
-                                <TextBlock Text="UNIVERSAL SYSTEM CONTROL HUB" FontSize="10" Foreground="{ThemeResource SystemAccentColor}" FontWeight="Bold"/>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE9CA;" FontSize="22" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Text="SMART FAN COOLING HUB" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="6,1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AppVersion}" FontSize="10" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="UNIVERSAL SYSTEM CONTROL HUB" FontSize="10" Foreground="{ThemeResource SystemAccentColor}" FontWeight="Bold" Margin="0,1,0,0"/>
                             </StackPanel>
                         </StackPanel>
 

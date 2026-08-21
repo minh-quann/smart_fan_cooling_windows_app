@@ -27,18 +27,7 @@ namespace SmartFanCooling
         [DllImport("comctl32.dll")]
         private static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
-        // Context menu Win32 API
-        [DllImport("user32.dll")]
-        private static extern IntPtr CreatePopupMenu();
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern bool AppendMenu(IntPtr hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
-
-        [DllImport("user32.dll")]
-        private static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
-
-        [DllImport("user32.dll")]
-        private static extern bool DestroyMenu(IntPtr hMenu);
 
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -80,28 +69,9 @@ namespace SmartFanCooling
         private const int WM_LBUTTONDBLCLK = 0x0203;
         private const int WM_RBUTTONUP = 0x0205;
         private const int WM_COMMAND = 0x0111;
-        private const uint MF_STRING = 0x0000;
-        private const uint MF_SEPARATOR = 0x0800;
-        private const uint TPM_BOTTOMALIGN = 0x0020;
-        private const uint TPM_LEFTALIGN = 0x0000;
-        private const uint TPM_RETURNCMD = 0x0100;
-
-        // Tray context menu command IDs
-        private const nuint ID_TRAY_OPEN = 2001;
-        private const nuint ID_TRAY_EXIT = 2002;
-
-        // Tray fan speed preset command IDs
-        private const nuint ID_TRAY_FAN_0 = 3001;
-        private const nuint ID_TRAY_FAN_30 = 3002;
-        private const nuint ID_TRAY_FAN_50 = 3003;
-        private const nuint ID_TRAY_FAN_70 = 3004;
-        private const nuint ID_TRAY_FAN_100 = 3005;
-
         // Mouse hook constants
         private const int WH_MOUSE_LL = 14;
         private const int WM_MOUSEWHEEL = 0x020A;
-        private const uint MF_CHECKED = 0x0008;
-        private const uint MF_GRAYED = 0x0001;
 
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT
@@ -173,6 +143,20 @@ namespace SmartFanCooling
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool DestroyWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
+
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool DestroyIcon(IntPtr hIcon);
+
+        private const uint IMAGE_ICON = 1;
+        private const uint LR_LOADFROMFILE = 0x00000010;
+        private const int SM_CXSMICON = 49;
+        private const int SM_CYSMICON = 50;
 
         private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
 
@@ -259,7 +243,18 @@ namespace SmartFanCooling
                 _nid.uCallbackMessage = WM_TRAYICON;
                 _nid.szTip = "Smart Fan Cooling Hub (ONLINE)";
                 
-                IntPtr hIcon = SendMessage(_hwnd, 0x007F /* WM_GETICON */, (IntPtr)1 /* ICON_BIG */, IntPtr.Zero);
+                IntPtr hIcon = IntPtr.Zero;
+                string iconPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "app_icon.ico");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    int smCx = GetSystemMetrics(SM_CXSMICON);
+                    int smCy = GetSystemMetrics(SM_CYSMICON);
+                    hIcon = LoadImage(IntPtr.Zero, iconPath, IMAGE_ICON, smCx, smCy, LR_LOADFROMFILE);
+                }
+                if (hIcon == IntPtr.Zero)
+                {
+                    hIcon = SendMessage(_hwnd, 0x007F /* WM_GETICON */, (IntPtr)0 /* ICON_SMALL */, IntPtr.Zero);
+                }
                 if (hIcon != IntPtr.Zero)
                 {
                     _nid.hIcon = hIcon;
@@ -295,53 +290,7 @@ namespace SmartFanCooling
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
 
-        /// <summary>
-        /// Shows enhanced tray context menu with current fan status, speed presets, and app controls.
-        /// </summary>
-        private void ShowTrayContextMenu()
-        {
-            IntPtr hMenu = CreatePopupMenu();
 
-            // Current fan status (disabled info line)
-            string fanInfo = ViewModel.IsConnected
-                ? $"Quạt: {ViewModel.FanPwm}% ({ViewModel.FanRpm} RPM)"
-                : "Quạt: OFFLINE";
-            AppendMenu(hMenu, MF_STRING | MF_GRAYED, 0, fanInfo);
-            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
-
-            // Fan speed presets with checkmark on current speed
-            bool canControl = ViewModel.IsConnected && !ViewModel.IsAutoMode;
-            uint disabledFlag = canControl ? 0 : MF_GRAYED;
-            int pwm = ViewModel.FanPwm;
-
-            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 0 ? MF_CHECKED : 0), ID_TRAY_FAN_0, "Tắt quạt");
-            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 30 ? MF_CHECKED : 0), ID_TRAY_FAN_30, "30% (~840 RPM)");
-            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 50 ? MF_CHECKED : 0), ID_TRAY_FAN_50, "50% (~1400 RPM)");
-            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 70 ? MF_CHECKED : 0), ID_TRAY_FAN_70, "70% (~1960 RPM)");
-            AppendMenu(hMenu, MF_STRING | disabledFlag | (pwm == 100 ? MF_CHECKED : 0), ID_TRAY_FAN_100, "100% Max (2800 RPM)");
-            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
-
-            AppendMenu(hMenu, MF_STRING, ID_TRAY_OPEN, "Mở ứng dụng");
-            AppendMenu(hMenu, MF_SEPARATOR, 0, null);
-            AppendMenu(hMenu, MF_STRING, ID_TRAY_EXIT, "Thoát");
-
-            IntPtr targetHwnd = (_msgHwnd != IntPtr.Zero) ? _msgHwnd : _hwnd;
-            SetForegroundWindow(targetHwnd);
-
-            GetCursorPos(out POINT pt);
-            int cmd = TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN | TPM_RETURNCMD, pt.X, pt.Y, 0, targetHwnd, IntPtr.Zero);
-            DestroyMenu(hMenu);
-            PostMessage(targetHwnd, 0x0000 /* WM_NULL */, IntPtr.Zero, IntPtr.Zero);
-
-            // Handle menu selection
-            if (cmd == (int)ID_TRAY_OPEN) ShowMainWindow();
-            else if (cmd == (int)ID_TRAY_EXIT) ExitApplication();
-            else if (cmd == (int)ID_TRAY_FAN_0) SetTrayFanSpeed(0);
-            else if (cmd == (int)ID_TRAY_FAN_30) SetTrayFanSpeed(30);
-            else if (cmd == (int)ID_TRAY_FAN_50) SetTrayFanSpeed(50);
-            else if (cmd == (int)ID_TRAY_FAN_70) SetTrayFanSpeed(70);
-            else if (cmd == (int)ID_TRAY_FAN_100) SetTrayFanSpeed(100);
-        }
 
         /// <summary>
         /// Creates and shows a borderless popup with a fan speed slider near the tray icon.

@@ -62,6 +62,12 @@ namespace SmartFanCooling.ViewModels
                     _serialService.SetFanSpeed(value);
                 }
             }
+
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.FanPwm = value;
+                SaveProfilesToDisk();
+            }
         }
 
         private void NotifyFanStatsChanged()
@@ -96,6 +102,13 @@ namespace SmartFanCooling.ViewModels
                     _serialService.SetFanSpeed(pct);
                 }
             }
+
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.TargetRpm = value;
+                ActiveProfile.FanPwm = FanPwm;
+                SaveProfilesToDisk();
+            }
         }
 
         // Customizable Quick RPM Presets
@@ -108,6 +121,8 @@ namespace SmartFanCooling.ViewModels
 
         [ObservableProperty]
         private FanProfile _activeProfile = null!;
+
+        private bool _isApplyingProfile = false;
 
         // Fan Curve Points (°C -> PWM %)
         [ObservableProperty] private int _curveP30 = 20;
@@ -142,6 +157,11 @@ namespace SmartFanCooling.ViewModels
                 ActiveProfile.CurvePoints[90] = CurveP90;
             }
 
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                SaveProfilesToDisk();
+            }
+
             OnPropertyChanged(nameof(FanCurveLinePoints));
             OnPropertyChanged(nameof(FanCurveFillPoints));
             OnPropertyChanged(nameof(Node30_Y));
@@ -173,10 +193,57 @@ namespace SmartFanCooling.ViewModels
         partial void OnIsAutoModeChanged(bool value)
         {
             OnPropertyChanged(nameof(CanControlFanSpeed));
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.IsAutoMode = value;
+                SaveProfilesToDisk();
+            }
+        }
+
+        public void LoadProfiles()
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartFanCooling");
+                string file = System.IO.Path.Combine(dir, "fan_profiles.json");
+                if (System.IO.File.Exists(file))
+                {
+                    string json = System.IO.File.ReadAllText(file);
+                    var list = System.Text.Json.JsonSerializer.Deserialize<List<FanProfile>>(json);
+                    if (list != null && list.Count > 0)
+                    {
+                        Profiles.Clear();
+                        foreach (var p in list) Profiles.Add(p);
+
+                        var active = Profiles.FirstOrDefault(p => p.Name == "Balanced") ?? Profiles[0];
+                        ApplyProfile(active);
+                        return;
+                    }
+                }
+            }
+            catch { }
+
+            InitializeDefaultProfiles();
+        }
+
+        public void SaveProfilesToDisk()
+        {
+            try
+            {
+                string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SmartFanCooling");
+                System.IO.Directory.CreateDirectory(dir);
+                string file = System.IO.Path.Combine(dir, "fan_profiles.json");
+                string json = System.Text.Json.JsonSerializer.Serialize(Profiles.ToList(), new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                System.IO.File.WriteAllText(file, json);
+            }
+            catch { }
         }
 
         private void InitializeDefaultProfiles()
         {
+            Profiles.Clear();
+
+            // 1. Quiet Profile (800 RPM, Emerald Static LED)
             Profiles.Add(new FanProfile
             {
                 Name = "Quiet",
@@ -184,9 +251,17 @@ namespace SmartFanCooling.ViewModels
                 ColorHex = AppColors.Emerald500Hex,
                 IconGlyph = "\uE706",
                 MaxFanPwm = 50,
+                IsAutoMode = false,
+                TargetRpm = 800,
+                FanPwm = 28,
+                LedMode = 1, // Static
+                LedColorHex = AppColors.Emerald500Hex,
+                LedBrightness = 50,
+                LedSpeed = 30,
                 CurvePoints = new Dictionary<int, int> { { 30, 15 }, { 40, 25 }, { 50, 35 }, { 60, 45 }, { 70, 60 }, { 80, 75 }, { 90, 85 } }
             });
 
+            // 2. Balanced Profile (1400 RPM, Cyan Rainbow LED)
             Profiles.Add(new FanProfile
             {
                 Name = "Balanced",
@@ -194,9 +269,17 @@ namespace SmartFanCooling.ViewModels
                 ColorHex = AppColors.Cyan500Hex,
                 IconGlyph = "\uE9CA",
                 MaxFanPwm = 75,
+                IsAutoMode = false,
+                TargetRpm = 1400,
+                FanPwm = 50,
+                LedMode = 2, // Rainbow
+                LedColorHex = AppColors.Cyan500Hex,
+                LedBrightness = 80,
+                LedSpeed = 50,
                 CurvePoints = new Dictionary<int, int> { { 30, 20 }, { 40, 30 }, { 50, 45 }, { 60, 60 }, { 70, 75 }, { 80, 90 }, { 90, 100 } }
             });
 
+            // 3. Turbo Profile (2000 RPM, Fire Orange/Red LED)
             Profiles.Add(new FanProfile
             {
                 Name = "Turbo",
@@ -204,12 +287,83 @@ namespace SmartFanCooling.ViewModels
                 ColorHex = AppColors.Orange500Hex,
                 IconGlyph = "\uEBA3",
                 MaxFanPwm = 100,
+                IsAutoMode = false,
+                TargetRpm = 2000,
+                FanPwm = 71,
+                LedMode = 6, // Fire
+                LedColorHex = AppColors.Orange500Hex,
+                LedBrightness = 100,
+                LedSpeed = 80,
                 CurvePoints = new Dictionary<int, int> { { 30, 40 }, { 40, 60 }, { 50, 75 }, { 60, 85 }, { 70, 95 }, { 80, 100 }, { 90, 100 } }
             });
 
-            ActiveProfile = Profiles[1]; // Balanced
-            LoadCurveFromProfile(ActiveProfile);
+            var defaultProfile = Profiles.Count > 1 ? Profiles[1] : Profiles[0];
+            ApplyProfile(defaultProfile);
         }
+
+        public void ApplyProfile(FanProfile profile)
+        {
+            _isApplyingProfile = true;
+            try
+            {
+                ActiveProfile = profile;
+                SelectedFanCurve = profile.Name;
+
+                foreach (var p in Profiles)
+                {
+                    p.IsActive = (p == profile || p.Id == profile.Id);
+                }
+
+                // 1. Load fan curve
+                LoadCurveFromProfile(profile);
+
+                // 2. Load fan mode and target RPM
+                IsAutoMode = profile.IsAutoMode;
+                if (!profile.IsAutoMode)
+                {
+                    int rpm = profile.TargetRpm > 0 ? profile.TargetRpm : 800;
+                    TargetRpm = rpm;
+                    IsFanStateOn = TargetRpm > 0;
+                }
+
+                // 3. Load LED lighting configuration
+                SelectedLedMode = profile.LedMode;
+                SelectedRgbColorHex = string.IsNullOrWhiteSpace(profile.LedColorHex) ? AppColors.Cyan500Hex : profile.LedColorHex;
+                RgbBrightness = profile.LedBrightness;
+                RgbSpeed = profile.LedSpeed;
+                IsLedReverse = profile.IsLedReverse;
+                RainbowColorCountIndex = profile.RainbowColorCountIndex;
+
+                StatusMessage = $"Đã chuyển Profile: {profile.Name} ({profile.TargetRpm} RPM | LED {GetLedModeDisplayName(profile.LedMode)})";
+            }
+            finally
+            {
+                _isApplyingProfile = false;
+            }
+
+            SaveProfilesToDisk();
+        }
+
+        public static string GetLedModeDisplayName(int mode) => mode switch
+        {
+            0 => "Tắt",
+            1 => "Static",
+            2 => "Rainbow",
+            3 => "Breathing",
+            4 => "Speed Sync",
+            5 => "Wave",
+            6 => "Fire",
+            7 => "Comet",
+            8 => "Pulse",
+            9 => "Dual Spin",
+            10 => "Meteor",
+            11 => "Twinkle",
+            12 => "Color Wipe",
+            13 => "Theater",
+            14 => "Scanner",
+            15 => "Gradient Flow",
+            _ => "Custom"
+        };
 
         private void LoadCurveFromProfile(FanProfile profile)
         {
@@ -237,20 +391,19 @@ namespace SmartFanCooling.ViewModels
         [RelayCommand]
         public void SelectProfile(object? parameter)
         {
+            FanProfile? target = null;
             if (parameter is FanProfile profile)
             {
-                ActiveProfile = profile;
+                target = profile;
             }
             else if (parameter is string name)
             {
-                var found = Profiles.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-                if (found != null) ActiveProfile = found;
+                target = Profiles.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             }
-            if (ActiveProfile != null)
+
+            if (target != null)
             {
-                SelectedFanCurve = ActiveProfile.Name;
-                LoadCurveFromProfile(ActiveProfile);
-                StatusMessage = $"Đã kích hoạt Profile: {ActiveProfile.Name}";
+                ApplyProfile(target);
             }
         }
 
@@ -261,10 +414,19 @@ namespace SmartFanCooling.ViewModels
             var newProfile = new FanProfile
             {
                 Name = $"Custom {nextNum}",
-                Description = "Đường cong tùy chỉnh cá nhân",
+                Description = "Profile tùy chỉnh cá nhân",
                 ColorHex = AppColors.Violet500Hex,
                 IconGlyph = "\uE9CA",
                 MaxFanPwm = 100,
+                IsAutoMode = IsAutoMode,
+                TargetRpm = TargetRpm > 0 ? TargetRpm : 1400,
+                FanPwm = FanPwm > 0 ? FanPwm : 50,
+                LedMode = SelectedLedMode,
+                LedColorHex = SelectedRgbColorHex,
+                LedBrightness = RgbBrightness,
+                LedSpeed = RgbSpeed,
+                IsLedReverse = IsLedReverse,
+                RainbowColorCountIndex = RainbowColorCountIndex,
                 CurvePoints = new Dictionary<int, int>
                 {
                     { 30, CurveP30 },
@@ -278,8 +440,7 @@ namespace SmartFanCooling.ViewModels
             };
 
             Profiles.Add(newProfile);
-            ActiveProfile = newProfile;
-            LoadCurveFromProfile(newProfile);
+            ApplyProfile(newProfile);
             StatusMessage = $"Đã tạo Profile mới: {newProfile.Name}";
         }
 
@@ -296,8 +457,8 @@ namespace SmartFanCooling.ViewModels
             {
                 string deletedName = ActiveProfile.Name;
                 Profiles.Remove(ActiveProfile);
-                ActiveProfile = Profiles[0];
-                LoadCurveFromProfile(ActiveProfile);
+                var next = Profiles[0];
+                ApplyProfile(next);
                 StatusMessage = $"Đã xóa Profile: {deletedName}";
             }
         }

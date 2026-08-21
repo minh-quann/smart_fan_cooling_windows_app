@@ -1,12 +1,14 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace SmartFanCooling.Models
 {
-    public class AppMapping
+    public partial class AppMapping : ObservableObject
     {
-        public string AppName { get; set; } = "";
-        public string ExecutablePath { get; set; } = "";
-        public string ProcessName { get; set; } = "";
-        public string ProfileId { get; set; } = "";
-        public string ProfileName { get; set; } = "";
-        public bool IsEnabled { get; set; } = true;
+        [ObservableProperty] private string _appName = "";
+        [ObservableProperty] private string _executablePath = "";
+        [ObservableProperty] private string _processName = "";
+        [ObservableProperty] private string _profileId = "";
+        [ObservableProperty] private string _profileName = "";
+        [ObservableProperty] private bool _isEnabled = true;
     }
 }

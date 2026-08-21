@@ -4,10 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="">
 
-    <!-- Borderless popup with fan speed slider for tray icon right-click -->
+    <!-- Outer grid matches DWM border color; inner Border adds extra rounding -->
     <Grid RequestedTheme="Dark"
-          Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
-          Padding="20,14,20,12">
+          Background="#1E1E22">
+        <Border Background="#1E1E22"
+                CornerRadius="28"
+                Padding="20,14,20,12">
         <StackPanel Spacing="4">
             <!-- Title row with close button -->
             <Grid>
@@ -36,40 +38,72 @@
                     SnapsTo="StepValues"
                     Value="0"
                     ValueChanged="FanSlider_ValueChanged"
-                    Margin="0,6,0,0"/>
+                    Margin="0,4,0,0"/>
+
+            <!-- Quick Profiles Selector Row -->
+            <Grid Margin="0,2,0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Chế độ Profile:" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="ActiveProfileText" Grid.Column="2" Text="Balanced" FontSize="10" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Centered Profiles Row -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Center" Margin="0,0,0,2">
+                <ItemsControl x:Name="ProfilesItemsControl" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Click="ProfileButton_Click" Tag="{Binding}" Padding="10,4" FontSize="10" CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding ColorHex}" FontSize="11"/>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
             <!-- RPM preset buttons (200 RPM steps, Tag = PWM%) -->
-            <StackPanel Orientation="Horizontal" Spacing="3" Margin="0,6,0,0"
+            <StackPanel Orientation="Horizontal" Spacing="3" Margin="0,4,0,0"
                         HorizontalAlignment="Center">
                 <Button Content="Tắt" Click="PresetRpm_Click" Tag="0"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="600" Click="PresetRpm_Click" Tag="20"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="800" Click="PresetRpm_Click" Tag="28"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="1000" Click="PresetRpm_Click" Tag="36"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="1200" Click="PresetRpm_Click" Tag="44"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="1400" Click="PresetRpm_Click" Tag="50"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="1600" Click="PresetRpm_Click" Tag="56"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Spacing="3" Margin="0,2,0,0"
                         HorizontalAlignment="Center">
                 <Button Content="1800" Click="PresetRpm_Click" Tag="64"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="2000" Click="PresetRpm_Click" Tag="72"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="2200" Click="PresetRpm_Click" Tag="80"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="2400" Click="PresetRpm_Click" Tag="84"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="2600" Click="PresetRpm_Click" Tag="92"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
                 <Button Content="2800" Click="PresetRpm_Click" Tag="100"
-                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0"/>
+                        Padding="7,3" FontSize="10" MinWidth="0" MinHeight="0" CornerRadius="6"/>
             </StackPanel>
 
             <!-- Bottom bar: connection status + action buttons -->
@@ -89,11 +123,14 @@
                 <Button Grid.Column="1" Content="Mở app"
                         Click="OpenApp_Click"
                         Padding="10,4" FontSize="11"
-                        Margin="0,0,6,0"/>
+                        Margin="0,0,6,0"
+                        CornerRadius="8"/>
                 <Button Grid.Column="2" Content="Thoát"
                         Click="Exit_Click"
-                        Padding="10,4" FontSize="11"/>
+                        Padding="10,4" FontSize="11"
+                        CornerRadius="8"/>
             </Grid>
         </StackPanel>
+        </Border>
     </Grid>
 </Window>

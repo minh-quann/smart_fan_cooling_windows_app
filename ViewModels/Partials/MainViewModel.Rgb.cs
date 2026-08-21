@@ -18,6 +18,24 @@ namespace SmartFanCooling.ViewModels
         [ObservableProperty] private int _rgbSpeed = 50;
         [ObservableProperty] private bool _isLedReverse = false;
         [ObservableProperty] private int _rainbowColorCountIndex = 0; // 0: Full (0), 1: 7 Colors, 2: 5 Colors, 3: 3 Colors, 4: 2 Colors
+        [ObservableProperty] private int _lastActiveLedMode = 1; // Remember last mode before toggling off
+
+        public bool IsLedPowerOn
+        {
+            get => SelectedLedMode > 0;
+            set
+            {
+                if (value && SelectedLedMode == 0)
+                {
+                    SelectedLedMode = LastActiveLedMode > 0 ? LastActiveLedMode : 1;
+                }
+                else if (!value && SelectedLedMode != 0)
+                {
+                    LastActiveLedMode = SelectedLedMode;
+                    SelectedLedMode = 0;
+                }
+            }
+        }
 
         public bool IsRainbowColorCountVisible => SelectedLedMode == 2 || SelectedLedMode == 5;
         public bool IsStaticColorPickerVisible => SelectedLedMode == 1 || SelectedLedMode == 3;
@@ -25,9 +43,21 @@ namespace SmartFanCooling.ViewModels
 
         partial void OnSelectedLedModeChanged(int value)
         {
+            if (value > 0)
+            {
+                LastActiveLedMode = value;
+            }
+
+            OnPropertyChanged(nameof(IsLedPowerOn));
             OnPropertyChanged(nameof(IsRainbowColorCountVisible));
             OnPropertyChanged(nameof(IsStaticColorPickerVisible));
             OnPropertyChanged(nameof(IsDirectionToggleVisible));
+
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.LedMode = value;
+                SaveProfilesToDisk();
+            }
 
             if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
@@ -56,6 +86,12 @@ namespace SmartFanCooling.ViewModels
         partial void OnSelectedRgbColorHexChanged(string value)
         {
             SendCurrentColorToHardware(value);
+
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.LedColorHex = value;
+                SaveProfilesToDisk();
+            }
         }
 
         partial void OnRainbowColorCountIndexChanged(int value)
@@ -68,6 +104,12 @@ namespace SmartFanCooling.ViewModels
                 4 => 2,
                 _ => 0
             };
+
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.RainbowColorCountIndex = value;
+                SaveProfilesToDisk();
+            }
 
             if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
@@ -92,6 +134,12 @@ namespace SmartFanCooling.ViewModels
 
         partial void OnRgbBrightnessChanged(int value)
         {
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.LedBrightness = value;
+                SaveProfilesToDisk();
+            }
+
             if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
                 int byteVal = Math.Clamp((int)(value * 2.55), 0, 255);
@@ -101,6 +149,12 @@ namespace SmartFanCooling.ViewModels
 
         partial void OnRgbSpeedChanged(int value)
         {
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.LedSpeed = value;
+                SaveProfilesToDisk();
+            }
+
             if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
                 _serialService.SetLedSpeed(Math.Clamp(value, 1, 100));
@@ -109,6 +163,12 @@ namespace SmartFanCooling.ViewModels
 
         partial void OnIsLedReverseChanged(bool value)
         {
+            if (!_isApplyingProfile && ActiveProfile != null)
+            {
+                ActiveProfile.IsLedReverse = value;
+                SaveProfilesToDisk();
+            }
+
             if (!_isSyncingFromHardware && IsConnected && ActiveConnectionType == "USB_SERIAL")
             {
                 _serialService.SetLedDirection(value);

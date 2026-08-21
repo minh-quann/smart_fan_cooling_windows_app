@@ -196,4 +196,21 @@ namespace SmartFanCooling.Converters
             throw new NotImplementedException();
         }
     }
+
+    /// <summary>
+    /// Converts bool to a thicker border (2px for active state, 1px for inactive).
+    /// </summary>
+    public class BoolToAccentBorderConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            bool isTrue = value is bool b && b;
+            return isTrue ? new Microsoft.UI.Xaml.Thickness(2) : new Microsoft.UI.Xaml.Thickness(1);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

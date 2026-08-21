@@ -9,6 +9,7 @@
         <converters:FloatFormatConverter x:Key="FloatFormatConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:BoolToAccentBorderConverter x:Key="BoolToAccentBorderConverter"/>
     </UserControl.Resources>
 
     <StackPanel Spacing="18">
@@ -36,10 +37,15 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Click="ProfileBtn_Click" Tag="{Binding}" Padding="10,6">
+                                <Button Click="ProfileBtn_Click" Tag="{Binding}" Padding="10,6" CornerRadius="8">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <FontIcon Glyph="{Binding IconGlyph}" Foreground="{Binding ColorHex}" FontSize="13"/>
                                         <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                        <!-- Remembered RPM badge -->
+                                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="5,1">
+                                            <TextBlock Text="{Binding TargetRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} RPM'}"
+                                                       FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
                                     </StackPanel>
                                 </Button>
                             </DataTemplate>
@@ -60,245 +66,80 @@
             </Grid>
         </Border>
 
-        <!-- Overview Dashboard View (Cyber Tachometer Gauge Enabled) -->
-        <Grid ColumnSpacing="18">
+        <!-- Overview Dashboard View (Paired 3-Row Grid for Perfect Parallel Alignment) -->
+        <Grid ColumnSpacing="18" RowSpacing="18">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="5*"/>
-                <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             
-            <!-- LEFT COLUMN: RPM Gauge Widget & Quick Fan Control Widget -->
-            <StackPanel Grid.Column="0" Spacing="16">
-                
-                <!-- RPM Radial Cyber Gauge Card Widget (Sci-Fi Futuristic HUD Design) -->
-                <Border Background="{StaticResource Gray900Brush}" BorderBrush="{StaticResource Gray700Brush}" BorderThickness="1" CornerRadius="16" Padding="20">
-                    <Grid>
-                        <StackPanel Spacing="0" HorizontalAlignment="Center">
-                            <!-- Circular Sci-Fi Cyber Tachometer Gauge Display -->
-                            <Grid Width="250" Height="250" HorizontalAlignment="Center" Margin="0,2">
+            <!-- ========================================================================= -->
+            <!-- ROW 0: HARDWARE TELEMETRY (Left: RPM Gauge Card | Right: CPU & GPU Cards) -->
+            <!-- ========================================================================= -->
+            
+            <!-- Left: RPM Radial Cyber Gauge Card Widget (Sci-Fi Futuristic HUD Design) -->
+            <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource Gray900Brush}" BorderBrush="{StaticResource Gray700Brush}" BorderThickness="1" CornerRadius="16" Padding="20">
+                <Grid>
+                    <StackPanel Spacing="0" HorizontalAlignment="Center">
+                        <!-- Circular Sci-Fi Cyber Tachometer Gauge Display -->
+                        <Grid Width="250" Height="250" HorizontalAlignment="Center" Margin="0,2">
 
-                                <!-- Sci-Fi HUD Outer Reticle Box / Corner Marks -->
-                                <Canvas Width="250" Height="250">
-                                    <Path Data="M 10,25 L 10,10 L 25,10" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
-                                    <Path Data="M 225,10 L 240,10 L 240,25" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
-                                    <Path Data="M 10,225 L 10,240 L 25,240" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
-                                    <Path Data="M 225,240 L 240,240 L 240,225" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                            <!-- Sci-Fi HUD Outer Reticle Box / Corner Marks -->
+                            <Canvas Width="250" Height="250">
+                                <Path Data="M 10,25 L 10,10 L 25,10" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                <Path Data="M 225,10 L 240,10 L 240,25" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                <Path Data="M 10,225 L 10,240 L 25,240" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
+                                <Path Data="M 225,240 L 240,240 L 240,225" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1.5" Opacity="0.7"/>
 
-                                    <Ellipse Canvas.Left="10" Canvas.Top="10" Width="230" Height="230" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1"/>
-                                    <Ellipse Canvas.Left="18" Canvas.Top="18" Width="214" Height="214" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1" Opacity="0.5"/>
+                                <Ellipse Canvas.Left="10" Canvas.Top="10" Width="230" Height="230" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1"/>
+                                <Ellipse Canvas.Left="18" Canvas.Top="18" Width="214" Height="214" Stroke="{StaticResource Gray700Brush}" StrokeThickness="1" Opacity="0.5"/>
 
-                                    <!-- Tachometer Scale Labels (Positioned Outside Arc) -->
-                                    <TextBlock Text="0%" Canvas.Left="30" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
-                                    <TextBlock Text="25%" Canvas.Left="4" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
-                                    <TextBlock Text="50%" Canvas.Left="112" Canvas.Top="2" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Cyan500Brush}"/>
-                                    <TextBlock Text="75%" Canvas.Left="220" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
-                                    <TextBlock Text="100%" Canvas.Left="194" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
-                                </Canvas>
+                                <!-- Tachometer Scale Labels (Positioned Outside Arc) -->
+                                <TextBlock Text="0%" Canvas.Left="30" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                <TextBlock Text="25%" Canvas.Left="4" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                <TextBlock Text="50%" Canvas.Left="112" Canvas.Top="2" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Cyan500Brush}"/>
+                                <TextBlock Text="75%" Canvas.Left="220" Canvas.Top="115" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                                <TextBlock Text="100%" Canvas.Left="194" Canvas.Top="208" FontSize="9" FontWeight="Bold" Foreground="{StaticResource Gray300Brush}"/>
+                            </Canvas>
 
-                                <!-- LAYER 1: Animated 6-Blade Fan Rotor Visualizer -->
-                                <Canvas x:Name="FanRotorCanvas" Width="240" Height="240" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <!-- LAYER 1: Animated 6-Blade Fan Rotor Visualizer -->
+                            <Canvas x:Name="FanRotorCanvas" Width="240" Height="240" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                <!-- LAYER 2 & 3: Gauge Track & Dynamic Progress Arc Path -->
-                                <Canvas x:Name="GaugeArcCanvas" Width="240" Height="240">
-                                    <Ellipse Canvas.Left="34" Canvas.Top="34" Width="172" Height="172" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
-                                </Canvas>
+                            <!-- LAYER 2 & 3: Gauge Track & Dynamic Progress Arc Path -->
+                            <Canvas x:Name="GaugeArcCanvas" Width="240" Height="240">
+                                <Ellipse Canvas.Left="34" Canvas.Top="34" Width="172" Height="172" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
+                            </Canvas>
 
-                                <!-- LAYER 4: Solid Cyber Core Center Hub Disc (Hides blade overlap) -->
-                                <Grid Width="136" Height="136" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Ellipse Width="136" Height="136" Fill="{StaticResource Gray950Brush}" Stroke="{StaticResource Gray700Brush}" StrokeThickness="2"/>
-                                    <Ellipse Width="124" Height="124" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
-                                    
-                                    <!-- Center Telemetry Readout -->
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
-                                        <FontIcon Glyph="&#xE9CA;" Foreground="{StaticResource Cyan500Brush}" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,1"/>
-                                        <TextBlock Text="{Binding FormattedFanRpmDisplay}" FontSize="32" FontWeight="ExtraBold" HorizontalAlignment="Center" Foreground="{Binding FanRpmTextColor}" CharacterSpacing="50"/>
-                                        <TextBlock Text="RPM" FontSize="10" FontWeight="ExtraBold" Foreground="{StaticResource Cyan500Brush}" HorizontalAlignment="Center" Margin="0,-2,0,4"/>
+                            <!-- LAYER 4: Solid Cyber Core Center Hub Disc (Hides blade overlap) -->
+                            <Grid Width="136" Height="136" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Ellipse Width="136" Height="136" Fill="{StaticResource Gray950Brush}" Stroke="{StaticResource Gray700Brush}" StrokeThickness="2"/>
+                                <Ellipse Width="124" Height="124" Stroke="{StaticResource Cyan500Brush}" StrokeThickness="1" Opacity="0.3"/>
+                                
+                                <!-- Center Telemetry Readout -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="0">
+                                    <FontIcon Glyph="&#xE9CA;" Foreground="{StaticResource Cyan500Brush}" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,1"/>
+                                    <TextBlock Text="{Binding FormattedFanRpmDisplay}" FontSize="32" FontWeight="ExtraBold" HorizontalAlignment="Center" Foreground="{Binding FanRpmTextColor}" CharacterSpacing="50"/>
+                                    <TextBlock Text="RPM" FontSize="10" FontWeight="ExtraBold" Foreground="{StaticResource Cyan500Brush}" HorizontalAlignment="Center" Margin="0,-2,0,4"/>
 
-                                        <!-- Live Telemetry Badge (PWM Only) -->
-                                        <Border Background="{StaticResource Gray800Brush}" CornerRadius="6" Padding="8,3" Margin="0,2,0,0" BorderBrush="{StaticResource Gray600Brush}" BorderThickness="1" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}PWM: {0}%'}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Green500Brush}"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-
+                                    <!-- Live Telemetry Badge (PWM Only) -->
+                                    <Border Background="{StaticResource Gray800Brush}" CornerRadius="6" Padding="8,3" Margin="0,2,0,0" BorderBrush="{StaticResource Gray600Brush}" BorderThickness="1" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding FanPwm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}PWM: {0}%'}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Green500Brush}"/>
+                                    </Border>
+                                </StackPanel>
                             </Grid>
-                        </StackPanel>
-                    </Grid>
-                </Border>
 
-                <!-- Dashboard Telemetry Refresh Rate Card Widget -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16,14">
-                    <StackPanel Spacing="10">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <FontIcon Glyph="&#xE916;" Foreground="{ThemeResource SystemAccentColor}" FontSize="15"/>
-                                <TextBlock Text="TẦN SỐ CẬP NHẬT DASHBOARD" FontWeight="Bold" FontSize="12"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
-                                <TextBlock Text="{Binding DashboardRefreshIntervalText}" FontWeight="Bold" FontSize="11" Foreground="{ThemeResource SystemAccentColor}"/>
-                            </Border>
-                        </Grid>
-                        <Slider Minimum="100" Maximum="3000" StepFrequency="100" Value="{Binding DashboardRefreshIntervalMs, Mode=TwoWay}"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Quick Fan Control Card Widget -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="14">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="ĐIỀU CHỈNH TỐC ĐỘ QUẠT" FontWeight="Bold" FontSize="14"/>
-                            <ToggleSwitch Grid.Column="1" Header="Tự Động Fan Curve" IsOn="{Binding IsAutoMode, Mode=TwoWay}"/>
-                        </Grid>
-
-                        <!-- Auto Fan Curve Graph Panel (Visible when Tự Động Fan Curve is ON) -->
-                        <StackPanel Visibility="{Binding IsAutoMode, Converter={StaticResource BoolToVisibilityConverter}}" Spacing="10" Margin="0,4,0,0">
-                            <Border Background="#101217" BorderBrush="#252936" BorderThickness="1" CornerRadius="10" Padding="12">
-                                <StackPanel Spacing="8">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE9D2;" Foreground="{ThemeResource SystemAccentColor}" FontSize="13"/>
-                                        <TextBlock Text="ĐƯỜNG CONG TẠO TỰ ĐỘNG (KÉO TRỰC TIẾP ĐỂ ĐIỀU CHỈNH)" FontWeight="Bold" FontSize="11"/>
-                                    </StackPanel>
-
-                                    <Grid Margin="24,0,12,0">
-                                        <Canvas x:Name="OverviewFanCurveCanvas" Height="170" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"
-                                                SizeChanged="OverviewFanCurveCanvas_SizeChanged"
-                                                PointerPressed="OverviewFanCurveCanvas_PointerPressed"
-                                                PointerMoved="OverviewFanCurveCanvas_PointerMoved"
-                                                PointerReleased="OverviewFanCurveCanvas_PointerReleased"
-                                                PointerCanceled="OverviewFanCurveCanvas_PointerReleased">
-                                            <!-- Grid Horizontal Lines -->
-                                            <Line x:Name="O_GridH_100" X1="0" Y1="10" X2="400" Y2="10" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridH_75"  X1="0" Y1="45" X2="400" Y2="45" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridH_50"  X1="0" Y1="80" X2="400" Y2="80" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridH_25"  X1="0" Y1="115" X2="400" Y2="115" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridH_0"   X1="0" Y1="150" X2="400" Y2="150" Stroke="#1E222F" StrokeThickness="1"/>
-
-                                            <!-- Y-Axis Labels -->
-                                            <TextBlock Text="100%" Canvas.Left="-28" Canvas.Top="4" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock Text="75%"  Canvas.Left="-24" Canvas.Top="39" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock Text="50%"  Canvas.Left="-24" Canvas.Top="74" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock Text="25%"  Canvas.Left="-24" Canvas.Top="109" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock Text="0%"   Canvas.Left="-18" Canvas.Top="144" FontSize="9" Foreground="#8A92A6"/>
-
-                                            <!-- Grid Vertical Lines -->
-                                            <Line x:Name="O_GridV_30" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_40" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_50" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_60" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_70" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_80" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-                                            <Line x:Name="O_GridV_90" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
-
-                                            <!-- Polygon Area Fill Under Curve -->
-                                            <Polygon x:Name="O_CurvePolygonFill" Fill="{ThemeResource SystemAccentColor}" Opacity="0.15"/>
-
-                                            <!-- Pure White Polyline Curve -->
-                                            <Polyline x:Name="O_CurvePolyline" Stroke="White" StrokeThickness="2" StrokeLineJoin="Round"/>
-
-                                            <!-- 7 Solid White Square Handles -->
-                                            <Rectangle x:Name="O_NodeRect_30" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_40" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_50" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_60" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_70" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_80" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-                                            <Rectangle x:Name="O_NodeRect_90" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
-
-                                            <!-- X-Axis Temperature Labels -->
-                                            <TextBlock x:Name="O_TxtLabel_30" Text="30°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_40" Text="40°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_50" Text="50°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_60" Text="60°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_70" Text="70°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_80" Text="80°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                            <TextBlock x:Name="O_TxtLabel_90" Text="90°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
-                                        </Canvas>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-
-                        <!-- Preset Speed Buttons (Dynamic & Customizable) -->
-                        <Grid Margin="0,0,0,4">
-                            <TextBlock Text="Mức Tốc Độ Nhanh (Nhấp chọn - Chuột phải để Xóa):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                            <Button HorizontalAlignment="Right" Command="{Binding ResetDefaultRpmPresetsCommand}" ToolTipService.ToolTip="Khôi phục các mốc mặc định (Tắt, 800, 1200, 1600, 2000, 2800)">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <FontIcon Glyph="&#xE72C;" FontSize="10"/>
-                                    <TextBlock Text="Mặc định" FontSize="11"/>
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-
-                        <!-- ItemsControl for Dynamic Preset Buttons -->
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,2,0,4">
-                            <ItemsControl ItemsSource="{Binding QuickRpmPresets}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="6"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Content="{Binding Label}"
-                                                Click="OnPresetButtonClick"
-                                                Tag="{Binding}"
-                                                Padding="12,6" CornerRadius="6">
-                                            <Button.ContextFlyout>
-                                                <MenuFlyout>
-                                                    <MenuFlyoutItem Text="Xóa mốc này" Click="OnDeletePresetClick" Tag="{Binding}">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <FontIcon Glyph="&#xE74D;"/>
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                </MenuFlyout>
-                                            </Button.ContextFlyout>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-
-                        <!-- Add New Custom Preset Bar -->
-                        <Expander ExpandDirection="Down" HorizontalAlignment="Stretch" Margin="0,2,0,4">
-                            <Expander.Header>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
-                                    <TextBlock Text="Thêm mốc tốc độ mới" FontWeight="SemiBold"/>
-                                </StackPanel>
-                            </Expander.Header>
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                                <NumberBox PlaceholderText="Nhập RPM (VD: 500)" Value="{Binding NewPresetRpm, Mode=TwoWay}" SmallChange="100" LargeChange="100" Minimum="0" Maximum="2800" Width="180"/>
-                                <Button Content="Thêm Mốc" Command="{Binding AddCustomRpmPresetCommand}" Style="{StaticResource AccentButtonStyle}"/>
-                            </StackPanel>
-                        </Expander>
-
-                        <!-- Target RPM Slider -->
-                        <TextBlock Text="Tốc Độ Quạt Mục Tiêu (RPM):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
-                        <Slider Minimum="0" Maximum="2800" StepFrequency="100" Value="{Binding TargetRpm, Mode=TwoWay}" IsEnabled="{Binding CanControlFanSpeed}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Đặt Trước Tốc Độ:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Grid.Column="2" Text="{Binding TargetRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} RPM'}" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource SystemAccentColor}"/>
                         </Grid>
                     </StackPanel>
-                </Border>
-            </StackPanel>
+                </Grid>
+            </Border>
 
-            <!-- RIGHT COLUMN: Hardware Cards for CPU, GPU, RAM -->
-            <StackPanel Grid.Column="1" Spacing="16">
-                
+            <!-- Right: CPU & GPU Telemetry Cards Stack -->
+            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="16">
                 <!-- CPU Telemetry Card -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="12">
@@ -385,42 +226,336 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+            </StackPanel>
 
-                <!-- RAM Telemetry Card -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <FontIcon Glyph="&#xE7FA;" Foreground="#9C27B0" FontSize="20"/>
-                                <StackPanel>
-                                    <TextBlock Text="Mức Sử Dụng RAM Hệ Thống" FontWeight="Bold" FontSize="14"/>
-                                    <TextBlock Text="DDR4/DDR5 High Performance System RAM" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
+            <!-- ========================================================================= -->
+            <!-- ROW 1: SYSTEM & MEMORY (Left: Refresh Rate Card | Right: RAM Card)        -->
+            <!-- ========================================================================= -->
+
+            <!-- Left: Dashboard Telemetry Refresh Rate Card Widget -->
+            <Border Grid.Row="1" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE916;" Foreground="{ThemeResource SystemAccentColor}" FontSize="15"/>
+                            <TextBlock Text="TẦN SỐ CẬP NHẬT DASHBOARD" FontWeight="Bold" FontSize="12"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2">
+                            <TextBlock Text="{Binding DashboardRefreshIntervalText}" FontWeight="Bold" FontSize="11" Foreground="{ThemeResource SystemAccentColor}"/>
+                        </Border>
+                    </Grid>
+                    <Slider Minimum="100" Maximum="3000" StepFrequency="100" Value="{Binding DashboardRefreshIntervalMs, Mode=TwoWay}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Right: RAM Telemetry Card -->
+            <Border Grid.Row="1" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon Glyph="&#xE7FA;" Foreground="#9C27B0" FontSize="20"/>
+                            <StackPanel>
+                                <TextBlock Text="Mức Sử Dụng RAM Hệ Thống" FontWeight="Bold" FontSize="14"/>
+                                <TextBlock Text="DDR4/DDR5 High Performance System RAM" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding RamUsagePercent, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontSize="28" FontWeight="Bold" Foreground="#9C27B0"/>
-                                <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="#9C27B0" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RamUsagePercent, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0:F0}'}" FontSize="28" FontWeight="Bold" Foreground="#9C27B0"/>
+                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="#9C27B0" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- RAM Usage Progress Bar -->
+                    <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" Height="6" Foreground="#9C27B0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                            <TextBlock Text="{Binding RamStatusText}" FontSize="11" Foreground="#9C27B0" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
+                            <TextBlock Text="Trạng thái: Optimal Performance" FontSize="11" Foreground="#4CAF50" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- ROW 2: CORE HARDWARE CONTROLS (Left: Fan Speed | Right: LED RGB Lighting) -->
+            <!-- ========================================================================= -->
+
+            <!-- Left: Quick Fan Control Card Widget -->
+            <Border Grid.Row="2" Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="ĐIỀU CHỈNH TỐC ĐỘ QUẠT" FontWeight="Bold" FontSize="14"/>
+                        <ToggleSwitch Grid.Column="1" Header="Tự Động Fan Curve" IsOn="{Binding IsAutoMode, Mode=TwoWay}"/>
+                    </Grid>
+
+                    <!-- Auto Fan Curve Graph Panel (Visible when Tự Động Fan Curve is ON) -->
+                    <StackPanel Visibility="{Binding IsAutoMode, Converter={StaticResource BoolToVisibilityConverter}}" Spacing="10" Margin="0,4,0,0">
+                        <Border Background="#101217" BorderBrush="#252936" BorderThickness="1" CornerRadius="10" Padding="12">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9D2;" Foreground="{ThemeResource SystemAccentColor}" FontSize="13"/>
+                                    <TextBlock Text="ĐƯỜNG CONG TẠO TỰ ĐỘNG (KÉO TRỰC TIẾP ĐỂ ĐIỀU CHỈNH)" FontWeight="Bold" FontSize="11"/>
+                                </StackPanel>
+
+                                <Grid Margin="24,0,12,0">
+                                    <Canvas x:Name="OverviewFanCurveCanvas" Height="170" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"
+                                            SizeChanged="OverviewFanCurveCanvas_SizeChanged"
+                                            PointerPressed="OverviewFanCurveCanvas_PointerPressed"
+                                            PointerMoved="OverviewFanCurveCanvas_PointerMoved"
+                                            PointerReleased="OverviewFanCurveCanvas_PointerReleased"
+                                            PointerCanceled="OverviewFanCurveCanvas_PointerReleased">
+                                        <!-- Grid Horizontal Lines -->
+                                        <Line x:Name="O_GridH_100" X1="0" Y1="10" X2="400" Y2="10" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridH_75"  X1="0" Y1="45" X2="400" Y2="45" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridH_50"  X1="0" Y1="80" X2="400" Y2="80" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridH_25"  X1="0" Y1="115" X2="400" Y2="115" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridH_0"   X1="0" Y1="150" X2="400" Y2="150" Stroke="#1E222F" StrokeThickness="1"/>
+
+                                        <!-- Y-Axis Labels -->
+                                        <TextBlock Text="100%" Canvas.Left="-28" Canvas.Top="4" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock Text="75%"  Canvas.Left="-24" Canvas.Top="39" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock Text="50%"  Canvas.Left="-24" Canvas.Top="74" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock Text="25%"  Canvas.Left="-24" Canvas.Top="109" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock Text="0%"   Canvas.Left="-18" Canvas.Top="144" FontSize="9" Foreground="#8A92A6"/>
+
+                                        <!-- Grid Vertical Lines -->
+                                        <Line x:Name="O_GridV_30" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_40" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_50" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_60" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_70" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_80" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+                                        <Line x:Name="O_GridV_90" Y1="10" Y2="150" Stroke="#1E222F" StrokeDashArray="3 3" StrokeThickness="1"/>
+
+                                        <!-- Polygon Area Fill Under Curve -->
+                                        <Polygon x:Name="O_CurvePolygonFill" Fill="{ThemeResource SystemAccentColor}" Opacity="0.15"/>
+
+                                        <!-- Pure White Polyline Curve -->
+                                        <Polyline x:Name="O_CurvePolyline" Stroke="White" StrokeThickness="2" StrokeLineJoin="Round"/>
+
+                                        <!-- 7 Solid White Square Handles -->
+                                        <Rectangle x:Name="O_NodeRect_30" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_40" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_50" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_60" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_70" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_80" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+                                        <Rectangle x:Name="O_NodeRect_90" Width="8" Height="8" Fill="White" Stroke="#101217" StrokeThickness="1" Canvas.Left="0" Canvas.Top="0"/>
+
+                                        <!-- X-Axis Temperature Labels -->
+                                        <TextBlock x:Name="O_TxtLabel_30" Text="30°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_40" Text="40°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_50" Text="50°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_60" Text="60°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_70" Text="70°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_80" Text="80°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                        <TextBlock x:Name="O_TxtLabel_90" Text="90°C" Canvas.Top="155" FontSize="9" Foreground="#8A92A6"/>
+                                    </Canvas>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Preset Speed Buttons (Dynamic & Customizable) -->
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="Mức Tốc Độ Nhanh (Nhấp chọn - Chuột phải để Xóa):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                        <Button HorizontalAlignment="Right" Command="{Binding ResetDefaultRpmPresetsCommand}" ToolTipService.ToolTip="Khôi phục các mốc mặc định (Tắt, 800, 1200, 1600, 2000, 2800)">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon Glyph="&#xE72C;" FontSize="10"/>
+                                <TextBlock Text="Mặc định" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- ItemsControl for Dynamic Preset Buttons -->
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,2,0,4">
+                        <ItemsControl ItemsSource="{Binding QuickRpmPresets}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Label}"
+                                            Click="OnPresetButtonClick"
+                                            Tag="{Binding}"
+                                            Padding="12,6" CornerRadius="6">
+                                        <Button.ContextFlyout>
+                                            <MenuFlyout>
+                                                <MenuFlyoutItem Text="Xóa mốc này" Click="OnDeletePresetClick" Tag="{Binding}">
+                                                    <MenuFlyoutItem.Icon>
+                                                        <FontIcon Glyph="&#xE74D;"/>
+                                                    </MenuFlyoutItem.Icon>
+                                                </MenuFlyoutItem>
+                                            </MenuFlyout>
+                                        </Button.ContextFlyout>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Add New Custom Preset Bar -->
+                    <Expander ExpandDirection="Down" HorizontalAlignment="Stretch" Margin="0,2,0,4">
+                        <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE710;" FontSize="12" Foreground="{ThemeResource SystemAccentColor}"/>
+                                <TextBlock Text="Thêm mốc tốc độ mới" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                            <NumberBox PlaceholderText="Nhập RPM (VD: 500)" Value="{Binding NewPresetRpm, Mode=TwoWay}" SmallChange="100" LargeChange="100" Minimum="0" Maximum="2800" Width="180"/>
+                            <Button Content="Thêm Mốc" Command="{Binding AddCustomRpmPresetCommand}" Style="{StaticResource AccentButtonStyle}"/>
+                        </StackPanel>
+                    </Expander>
+
+                    <!-- Target RPM Slider -->
+                    <TextBlock Text="Tốc Độ Quạt Mục Tiêu (RPM):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
+                    <Slider Minimum="0" Maximum="2800" StepFrequency="100" Value="{Binding TargetRpm, Mode=TwoWay}" IsEnabled="{Binding CanControlFanSpeed}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Đặt Trước Tốc Độ:" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding TargetRpm, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0} RPM'}" FontWeight="Bold" FontSize="16" Foreground="{ThemeResource SystemAccentColor}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Right: Quick LED RGB Lighting Control Card Widget -->
+            <Border Grid.Row="2" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE790;" Foreground="{ThemeResource SystemAccentColor}" FontSize="20"/>
+                            <StackPanel>
+                                <TextBlock Text="ĐIỀU KHIỂN ĐÈN LED RGB" FontWeight="Bold" FontSize="14"/>
+                                <TextBlock Text="FastLED / WS2812B Dynamic Effects" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1" Header="Đèn LED" IsOn="{Binding IsLedPowerOn, Mode=TwoWay}"/>
+                    </Grid>
+
+                    <!-- Mini LED Live Preview Strip -->
+                    <Border Background="#0D111A" BorderBrush="#1C2638" BorderThickness="1" CornerRadius="8" Height="36" Padding="14,0">
+                        <Grid VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
+                                <Border Width="10" Height="10" CornerRadius="5" Background="{Binding SelectedRgbColorHex}"/>
                             </StackPanel>
                         </Grid>
+                    </Border>
 
-                        <!-- RAM Usage Progress Bar -->
-                        <ProgressBar Value="{Binding RamUsagePercent}" Maximum="100" Height="6" Foreground="#9C27B0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
+                    <!-- LED Mode ComboBox -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Hiệu Ứng LED RGB:" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <ComboBox SelectedIndex="{Binding SelectedLedMode, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="0. Tắt Đèn (Off)"/>
+                            <ComboBoxItem Content="1. Màu Cố Định (Static)"/>
+                            <ComboBoxItem Content="2. Vòng Cầu Vồng (Rainbow)"/>
+                            <ComboBoxItem Content="3. Nhịp Thở Đơn Màu (Breathing)"/>
+                            <ComboBoxItem Content="4. Đồng Bộ Tốc Độ Quạt (Speed Sync)"/>
+                            <ComboBoxItem Content="5. Sóng Cầu Vồng (Wave)"/>
+                            <ComboBoxItem Content="6. Ngọn Lửa (Fire)"/>
+                            <ComboBoxItem Content="7. Sao Băng Chạy Vòng (Comet / Chase)"/>
+                            <ComboBoxItem Content="8. Mạch Đập (Pulse)"/>
+                            <ComboBoxItem Content="9. Xoay Đôi 2 Nửa (Dual Spin)"/>
+                            <ComboBoxItem Content="10. Mưa Sao Băng (Meteor Rain)"/>
+                            <ComboBoxItem Content="11. Lấp Lánh Sao Trời (Twinkle Star)"/>
+                            <ComboBoxItem Content="12. Quét Màu Tuần Tự (Color Wipe)"/>
+                            <ComboBoxItem Content="13. Rạp Hát Broadway (Theater Chase)"/>
+                            <ComboBoxItem Content="14. Quét Qua Lại KITT (Larson Scanner)"/>
+                            <ComboBoxItem Content="15. Dòng Gradient Chảy (Gradient Flow)"/>
+                        </ComboBox>
+                    </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
-                                <TextBlock Text="{Binding RamStatusText}" FontSize="11" Foreground="#9C27B0" FontWeight="SemiBold"/>
-                            </Border>
-                            <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6" Padding="8,4" Margin="0,0,6,6">
-                                <TextBlock Text="Trạng thái: Optimal Performance" FontSize="11" Foreground="#4CAF50" FontWeight="SemiBold"/>
-                            </Border>
+                    <!-- Rainbow Color Count Option (Only visible for Rainbow mode 2 & Wave mode 5) -->
+                    <StackPanel Spacing="6" Visibility="{Binding IsRainbowColorCountVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Chế Độ Dải Màu (Rainbow / Wave):" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <ComboBox SelectedIndex="{Binding RainbowColorCountIndex, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="Vô cực / 360° Mượt (Continuous)"/>
+                            <ComboBoxItem Content="7 Sắc Cầu Vồng (Đỏ, Cam, Vàng, Lục, Lam, Chàm, Tím)"/>
+                            <ComboBoxItem Content="5 Sắc (Đỏ, Vàng, Lục, Lam, Tím)"/>
+                            <ComboBoxItem Content="3 Sắc Cơ Bản (Đỏ, Lục, Lam)"/>
+                            <ComboBoxItem Content="2 Sắc Tương Phản (Cyan &amp; Magenta)"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Quick 1-Click Color Preset Palette -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="Chọn Màu Nhanh 1-Chạm:" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#00BCD4" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#00BCD4" ToolTipService.ToolTip="Cyan Neon"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#10B981" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#10B981" ToolTipService.ToolTip="Emerald Green"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#3B82F6" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#3B82F6" ToolTipService.ToolTip="Electric Blue"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#A855F7" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#A855F7" ToolTipService.ToolTip="Cyber Purple"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#F97316" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#F97316" ToolTipService.ToolTip="Vivid Orange"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EF4444" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#EF4444" ToolTipService.ToolTip="Crimson Red"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EC4899" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#EC4899" ToolTipService.ToolTip="Neon Pink"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#EAB308" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#EAB308" ToolTipService.ToolTip="Amber Yellow"/>
+                            <Button Command="{Binding SelectRgbPresetColorCommand}" CommandParameter="#FFFFFF" Padding="0" Width="28" Height="28" CornerRadius="14" Background="#FFFFFF" ToolTipService.ToolTip="Pure White"/>
                         </StackPanel>
                     </StackPanel>
-                </Border>
-            </StackPanel>
+
+                    <!-- Brightness and Speed Dual Sliders -->
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Brightness Slider -->
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <Grid>
+                                <TextBlock Text="Độ Sáng:" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding RgbBrightness, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0}%'}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                            </Grid>
+                            <Slider Minimum="0" Maximum="100" StepFrequency="5" Value="{Binding RgbBrightness, Mode=TwoWay}"/>
+                        </StackPanel>
+
+                        <!-- Speed Slider -->
+                        <StackPanel Grid.Column="1" Spacing="4">
+                            <Grid>
+                                <TextBlock Text="Tốc Độ:" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock HorizontalAlignment="Right" Text="{Binding RgbSpeed, Converter={StaticResource FloatFormatConverter}, ConverterParameter='{}{0}'}" FontSize="11" FontWeight="Bold" Foreground="{ThemeResource SystemAccentColor}"/>
+                            </Grid>
+                            <Slider Minimum="1" Maximum="100" StepFrequency="5" Value="{Binding RgbSpeed, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </Grid>
     </StackPanel>
 </UserControl>

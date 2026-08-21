@@ -24,8 +24,25 @@ namespace SmartFanCooling.Views
         [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
         private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+        [DllImport("gdi32.dll")]
+        private static extern IntPtr CreateRoundRectRgn(int x1, int y1, int x2, int y2, int cx, int cy);
+
+        [DllImport("user32.dll")]
+        private static extern int SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool bRedraw);
+
         private const int GWL_EXSTYLE = -20;
         private const int WS_EX_TOOLWINDOW = 0x0080;
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        private const int DWMWA_BORDER_COLOR = 34;
+        private const int DWMWA_CAPTION_COLOR = 35;
+        private const int DWMWCP_ROUND = 2; // Windows 11 rounded corners
+
+        // Dark card color #1E1E22 in Win32 COLORREF format (0x00BBGGRR)
+        private const int DARK_CARD_COLORREF = 0x00221E1E;
 
         private MainViewModel? _viewModel;
         private bool _isSyncing = false;
@@ -42,22 +59,38 @@ namespace SmartFanCooling.Views
             this.InitializeComponent();
             this.Title = "";
 
-            // Configure borderless, always-on-top popup style
+            // Keep border enabled so DWM lets us color it; hide title bar only
             if (this.AppWindow.Presenter is OverlappedPresenter presenter)
             {
-                presenter.SetBorderAndTitleBar(false, false);
+                presenter.SetBorderAndTitleBar(true, false);
                 presenter.IsResizable = false;
                 presenter.IsAlwaysOnTop = true;
                 presenter.IsMinimizable = false;
                 presenter.IsMaximizable = false;
             }
 
-            // Set WS_EX_TOOLWINDOW so popup doesn't appear in taskbar or Alt+Tab
             IntPtr hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+
+            // Hide from taskbar and Alt+Tab
             IntPtr exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
             SetWindowLongPtr(hwnd, GWL_EXSTYLE, (IntPtr)((long)exStyle | WS_EX_TOOLWINDOW));
 
-            // Auto-hide when popup loses focus (user clicks outside)
+            // Force dark mode on DWM frame
+            int darkMode = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+
+            // Color the DWM border to exactly match card background (#1E1E22)
+            int borderColor = DARK_CARD_COLORREF;
+            DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+            DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref borderColor, sizeof(int));
+
+            // Rounded corners
+            int cornerPref = DWMWCP_ROUND;
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPref, sizeof(int));
+
+            this.ExtendsContentIntoTitleBar = true;
+
+            // Auto-hide when popup loses focus
             this.Activated += OnWindowActivated;
         }
 
@@ -79,6 +112,13 @@ namespace SmartFanCooling.Views
         {
             _viewModel = vm;
 
+            // Sync profiles list & active profile name
+            ProfilesItemsControl.ItemsSource = vm.Profiles;
+            if (ActiveProfileText != null && vm.ActiveProfile != null)
+            {
+                ActiveProfileText.Text = vm.ActiveProfile.Name;
+            }
+
             // Sync slider to current fan state without triggering FanSpeedChanged
             _isSyncing = true;
             FanSlider.Value = vm.FanPwm;
@@ -91,8 +131,8 @@ namespace SmartFanCooling.Views
             uint dpi = GetDpiForWindow(hwnd);
             if (dpi == 0) dpi = 96;
             float scale = dpi / 96f;
-            int width = (int)(350 * scale);
-            int height = (int)(240 * scale);
+            int width = (int)(360 * scale);
+            int height = (int)(295 * scale);
 
             // Auto-detect tray position: try above cursor first, flip below if off-screen
             // This handles both standard Windows taskbar (bottom) and MyDock Finder (top)
@@ -111,8 +151,31 @@ namespace SmartFanCooling.Views
             if (posX < 0) posX = 0;
 
             this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(posX, posY, width, height));
+
+            // Re-assert DWM dark border color matching card
+            int darkBorderColor = DARK_CARD_COLORREF;
+            DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref darkBorderColor, sizeof(int));
+            DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref darkBorderColor, sizeof(int));
+
             this.AppWindow.Show();
             this.Activate();
+        }
+
+        private void ProfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is Models.FanProfile profile && _viewModel != null)
+            {
+                _viewModel.ApplyProfile(profile);
+                _isSyncing = true;
+                FanSlider.Value = _viewModel.FanPwm;
+                FanSlider.IsEnabled = _viewModel.IsConnected && !_viewModel.IsAutoMode;
+                _isSyncing = false;
+                UpdateSpeedDisplay((int)FanSlider.Value);
+                if (ActiveProfileText != null)
+                {
+                    ActiveProfileText.Text = profile.Name;
+                }
+            }
         }
 
         private void FanSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

@@ -38,6 +38,45 @@ namespace SmartFanCooling.ViewModels
 
         public string DashboardRefreshIntervalText => $"{DashboardRefreshIntervalMs} ms";
 
+        public string AppVersion
+        {
+            get
+            {
+                try
+                {
+                    string[] candidatePaths = new[]
+                    {
+                        System.IO.Path.Combine(AppContext.BaseDirectory, "version.json"),
+                        System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "version.json"),
+                        System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "version.json"),
+                        System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "version.json"),
+                        "version.json"
+                    };
+
+                    foreach (var path in candidatePaths)
+                    {
+                        if (System.IO.File.Exists(path))
+                        {
+                            string json = System.IO.File.ReadAllText(path);
+                            using var doc = System.Text.Json.JsonDocument.Parse(json);
+                            if (doc.RootElement.TryGetProperty("version", out var verProp))
+                            {
+                                string? ver = verProp.GetString();
+                                if (!string.IsNullOrWhiteSpace(ver))
+                                {
+                                    return ver.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? ver : $"v{ver}";
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                var asmVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                return asmVer != null ? $"v{asmVer.Major}.{asmVer.Minor}.{asmVer.Build}" : "v1.0.0";
+            }
+        }
+
         partial void OnDashboardRefreshIntervalMsChanged(int value)
         {
             OnPropertyChanged(nameof(DashboardRefreshIntervalText));
@@ -117,7 +156,8 @@ namespace SmartFanCooling.ViewModels
                 });
             };
 
-            InitializeDefaultProfiles();
+            LoadProfiles();
+            LoadAppMappings();
             LoadRpmPresets();
             RefreshComPorts();
             CheckAndAutoConnectDevices();
@@ -220,6 +260,7 @@ namespace SmartFanCooling.ViewModels
 
                 CheckAndAutoConnectDevices();
                 UpdateEspHardwareTelemetry(IsConnected);
+                CheckActiveAppAndAutoSwitchProfile();
 
                 // When offline, Llano Hub RPM is strictly 0 — sync all fan state
                 if (!IsConnected)
